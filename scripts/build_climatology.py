@@ -15,6 +15,9 @@ Usage
   python scripts/build_climatology.py climo  [--start 1996 --end 2025]
   python scripts/build_climatology.py recent [--days 60]
   python scripts/build_climatology.py climo --csv-dir path/  # use local IEM-format CSVs
+  python scripts/build_climatology.py import-table --table xmr.csv --station KXMR --start 1996 --end 2025
+      # wide per-launch parameter table -> data/climo_KXMR.json, which the
+      # climo run then uses in place of downloading that station
 
 Pure standard library: runs on a stock GitHub Actions runner.
 """
@@ -308,6 +311,96 @@ def percentiles(vals):
 def doy(dt): return dt.timetuple().tm_yday
 
 
+def station_climo(by, label, doys):
+    """by[cycle][doy] -> list of metric dicts. Returns the station entry for climo.json."""
+    n12 = sum(len(v) for v in by["12"].values())
+    if n12 < 200:
+        print(f"  skipped: only {n12} 12Z soundings", file=sys.stderr); return None
+    sres = {"label": label, "n12": n12}
+    for cyc in ("12", "00"):
+        cres = {v: [] for v in VARS}
+        freq = []
+        for d in doys:
+            pool = []
+            for off in range(-WINDOW, WINDOW + 1):
+                pool.extend(by[cyc].get((d - 1 + off) % 366 + 1, []))
+            for v in VARS: cres[v].append(percentiles([m.get(v) for m in pool]))
+            if cyc == "12":
+                cnt = [0] * 9; tot = 0
+                for m in pool:
+                    r = m.get("regime")
+                    if r: cnt[r - 1] += 1; tot += 1
+                freq.append([round(c / tot, 3) for c in cnt] if tot >= 20 else None)
+        sres[cyc] = cres
+        if cyc == "12": sres["regimeFreq"] = freq
+    br = {v: {} for v in VARS}
+    wet = [m for d, ms in by["12"].items() if 152 <= d <= 273 for m in ms]
+    for r in range(1, 10):
+        sub = [m for m in wet if m.get("regime") == r]
+        for v in VARS:
+            q = percentiles([m.get(v) for m in sub])
+            if q: br[v][str(r)] = q
+        br.setdefault("_n", {})[str(r)] = len(sub)
+    sres["byRegime"] = br
+    return sres
+
+
+def import_table(args):
+    """Wide per-sounding parameter table (one row per launch) -> data/climo_<ST>.json.
+    Uses the table's full-resolution PWAT, ML lifted index, Thompson, MLCAPE and
+    1000-700 hPa mean vector; mid-level RH is rebuilt from the 850/700/500 columns
+    so it matches the dashboard's definition."""
+    def f(row, k):
+        v = fnum(row.get(k)); return v
+    best = {}  # (date, cycle) -> (distance from synoptic hour, metrics)
+    nrows = 0
+    with open(args.table, newline="", encoding="utf-8", errors="replace") as fh:
+        for row in csv.DictReader(fh):
+            nrows += 1
+            hr = fnum(row.get("nominal_hour_utc"))
+            if hr is None or not row.get("date"): continue
+            if 11 <= hr <= 13: cyc, dist = "12", abs(hr - 12)
+            elif hr >= 23 or hr <= 1: cyc, dist = "00", min(abs(hr - 0), abs(hr - 24))
+            else: continue
+            d = datetime.strptime(row["date"][:10], "%Y-%m-%d").replace(tzinfo=timezone.utc)
+            if hr >= 23: d += timedelta(days=1)  # late launch belongs to the next 00Z date
+            if not (args.start <= d.year <= args.end): continue
+            m = {"pwat": f(row, "pwat_mm"), "ki": f(row, "k_index"), "li": f(row, "lifted_index"),
+                 "ti": f(row, "thompson_index"), "mlcape": f(row, "mlcape"), "t500": f(row, "t500"),
+                 "lr75": f(row, "lr_700_500")}
+            rh = [f(row, k) for k in ("rh850", "rh700", "rh500")]
+            rh = [x for x in rh if isnum(x)]
+            if len(rh) >= 2: m["rhmid"] = sum(rh) / len(rh)
+            u, v = f(row, "u_1000_700"), f(row, "v_1000_700")
+            if isnum(u) and isnum(v):
+                wd, ws = from_uv(u, v)
+                m.update({"u": u, "v": v, "mwdir": wd, "mwspd": ws, "regime": classify(wd, ws)})
+            key = (d.strftime("%Y-%m-%d"), cyc)
+            if key not in best or dist < best[key][0]: best[key] = (dist, d, m)
+    by = {"12": defaultdict(list), "00": defaultdict(list)}
+    for (ds, cyc), (_, d, m) in best.items(): by[cyc][doy(d)].append(m)
+    doys = list(range(1, 367, DOY_STEP))
+    sres = station_climo(by, args.label or STATIONS.get(args.station, args.station), doys)
+    if not sres: sys.exit("Not enough 12Z soundings in the table.")
+    yrs = sorted({k[0][:4] for k in best})
+    sres["source"] = {"file": os.path.basename(args.table), "rows": nrows, "years": [int(yrs[0]), int(yrs[-1])],
+                      "n00": sum(len(x) for x in by["00"].values())}
+    os.makedirs("data", exist_ok=True)
+    out = os.path.join("data", f"climo_{args.station}.json")
+    with open(out, "w") as fh: json.dump(sres, fh, separators=(",", ":"))
+    print(f"wrote {out}: {sres['n12']} 12Z and {sres['source']['n00']} 00Z soundings, {yrs[0]}-{yrs[-1]}", file=sys.stderr)
+    if args.merge:
+        path = os.path.join("data", "climo.json")
+        if os.path.exists(path): base = json.load(open(path))
+        else:
+            base = {"meta": {"source": "Station override files", "years": [int(yrs[0]), int(yrs[-1])], "window_days": WINDOW,
+                             "built": datetime.now(timezone.utc).isoformat(timespec="minutes"), "regime_thresholds_kt": [LIGHT, STRONG]},
+                    "pcts": PCTS, "doys": doys, "doyStep": DOY_STEP, "stations": {}}
+        base["stations"][args.station] = sres
+        with open(path, "w") as fh: json.dump(base, fh, separators=(",", ":"))
+        print(f"merged into {path}", file=sys.stderr)
+
+
 def build_climo(args):
     start = datetime(args.start, 1, 1, tzinfo=timezone.utc)
     end = datetime(args.end + 1, 1, 1, tzinfo=timezone.utc)
@@ -319,42 +412,17 @@ def build_climo(args):
                        "regime_thresholds_kt": [LIGHT, STRONG]},
               "pcts": PCTS, "doys": doys, "doyStep": DOY_STEP, "stations": {}}
     for st, label in STATIONS.items():
+        override = os.path.join("data", f"climo_{st}.json")
+        if os.path.exists(override) and not args.csv_dir:
+            result["stations"][st] = json.load(open(override))
+            print(f"{st} {label}: using {override}", file=sys.stderr)
+            continue
         print(f"{st} {label}", file=sys.stderr)
         by = {"12": defaultdict(list), "00": defaultdict(list)}
         for dt, cyc, m in soundings_for(st, start, end, args.csv_dir):
             by[cyc][doy(dt)].append(m)
-        n12 = sum(len(v) for v in by["12"].values())
-        if n12 < 200:
-            print(f"  skipped {st}: only {n12} 12Z soundings", file=sys.stderr); continue
-        sres = {"label": label, "n12": n12}
-        for cyc in ("12", "00"):
-            cres = {v: [] for v in VARS}
-            freq = []
-            for d in doys:
-                pool = []
-                for off in range(-WINDOW, WINDOW + 1):
-                    dd = (d - 1 + off) % 366 + 1
-                    pool.extend(by[cyc].get(dd, []))
-                for v in VARS: cres[v].append(percentiles([m.get(v) for m in pool]))
-                if cyc == "12":
-                    cnt = [0] * 9; tot = 0
-                    for m in pool:
-                        r = m.get("regime")
-                        if r: cnt[r - 1] += 1; tot += 1
-                    freq.append([round(c / tot, 3) for c in cnt] if tot >= 20 else None)
-            sres[cyc] = cres
-            if cyc == "12": sres["regimeFreq"] = freq
-        # within-regime percentiles for the wet season (Jun-Sep, 12Z)
-        br = {v: {} for v in VARS}
-        wet = [m for d, ms in by["12"].items() if 152 <= d <= 273 for m in ms]
-        for r in range(1, 10):
-            sub = [m for m in wet if m.get("regime") == r]
-            for v in VARS:
-                q = percentiles([m.get(v) for m in sub])
-                if q: br[v][str(r)] = q
-            br.setdefault("_n", {})[str(r)] = len(sub)
-        sres["byRegime"] = br
-        result["stations"][st] = sres
+        sres = station_climo(by, label, doys)
+        if sres: result["stations"][st] = sres
     if not result["stations"]:
         sys.exit("No station had enough soundings. Check the IEM request URL or --csv-dir input.")
     os.makedirs("data", exist_ok=True)
@@ -394,14 +462,19 @@ def build_recent(args):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("mode", choices=["climo", "recent", "selftest"])
+    ap.add_argument("mode", choices=["climo", "recent", "import-table", "selftest"])
     ap.add_argument("--start", type=int, default=1996)
     ap.add_argument("--end", type=int, default=2025)
     ap.add_argument("--days", type=int, default=60)
     ap.add_argument("--csv-dir", default=None)
+    ap.add_argument("--table", help="wide per-sounding parameter CSV for import-table")
+    ap.add_argument("--station", default="KXMR")
+    ap.add_argument("--label", default=None)
+    ap.add_argument("--merge", action="store_true", help="also merge into data/climo.json")
     a = ap.parse_args()
     if a.mode == "climo": build_climo(a)
     elif a.mode == "recent": build_recent(a)
+    elif a.mode == "import-table": import_table(a)
     else:
         levels = json.load(open(sys.argv[3] if len(sys.argv) > 3 else "/tmp/synth.json"))
         print(json.dumps({k: round(v, 3) if isinstance(v, float) else v for k, v in metrics(levels).items()}))

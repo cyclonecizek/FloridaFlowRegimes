@@ -259,6 +259,21 @@ dialog h2 { margin: 0 0 10px; font-family: "Barlow Condensed", sans-serif; font-
 :root[data-theme="light"] .rg7, :root[data-theme="light"] .rg9 { color: #ffffff; }
 .good { color: var(--good); } .bad { color: var(--bad); }
 
+/* ensembles */
+.ecell { width: 100%; min-width: 78px; border: 1px solid var(--line-soft); background: var(--panel-2); border-radius: 6px; padding: 6px 6px 4px; cursor: pointer; display: grid; gap: 3px; text-align: center; font-size: 12.5px; color: var(--ink-2); }
+.ecell b { font-size: 17px; color: var(--ink); margin-right: 2px; }
+.ecell.sel { outline: 2px solid var(--ink); outline-offset: 1px; }
+.ens-detail { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 28px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line-soft); }
+.ens-detail h3 { margin: 0 0 8px; font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 18px; }
+.probs { display: grid; gap: 5px; }
+.prow { display: grid; grid-template-columns: 30px 1fr 42px; align-items: center; gap: 10px; }
+.prow b { text-align: right; font-weight: 600; }
+.ptrack { position: relative; height: 14px; background: var(--panel-2); border-radius: 4px; }
+.pfill { position: absolute; inset: 0 auto 0 0; border-radius: 4px; }
+.ptrack i { position: absolute; top: -3px; bottom: -3px; width: 0; border-left: 2.5px solid; transform: translateX(-1px); }
+.ens-facts { margin-top: 0; grid-template-columns: 1fr; }
+@media (max-width: 860px) { .ens-detail { grid-template-columns: 1fr; } }
+
 </style>
 </head>
 <body>
@@ -290,6 +305,11 @@ dialog h2 { margin: 0 0 10px; font-family: "Barlow Condensed", sans-serif; font-
     <div class="body matrix-scroll"><table class="matrix" id="matrix"></table></div>
   </section>
 
+  <section class="panel">
+    <header><h2>Ensemble regime probabilities</h2><span class="note">Share of GEFS and EC ENS members in each regime at 12Z. Select a day for the detail.</span></header>
+    <div class="body" id="ensBody"></div>
+  </section>
+
   <div class="two">
     <section class="panel">
       <header>
@@ -305,7 +325,7 @@ dialog h2 { margin: 0 0 10px; font-family: "Barlow Condensed", sans-serif; font-
     <section class="panel">
       <header>
         <h2>Coverage ingredients vs normal</h2>
-        <div class="seg" id="srcSeg"><button data-s="model" aria-pressed="true">Model</button><button data-s="obs">Latest sounding</button></div>
+        <div class="seg" id="srcSeg"><button data-s="model" aria-pressed="true">Model</button><button data-s="ens">Ensemble</button><button data-s="obs">Latest sounding</button></div>
       </header>
       <div class="body">
         <div class="sites" id="siteSeg"></div>
@@ -671,6 +691,9 @@ const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } cat
 let S = { ...DEFAULTS, ...(load('ffr-settings') || {}) };
 
 const OM = 'https://api.open-meteo.com/v1/forecast';
+const OME = 'https://ensemble-api.open-meteo.com/v1/ensemble';
+const ENS_T_LV = [1000, 925, 850, 700, 600, 500, 400, 300, 250, 200];
+const ENS_TTL = 3 * 3600e3; // cache processed ensemble guidance for 3 hours
 const IEMJ = 'https://mesonet.agron.iastate.edu/json/raob.py';
 const WIND_LV = [1000, 925, 850, 700];
 const THERMO_LV = [1000, 975, 950, 925, 900, 850, 800, 700, 600, 500, 400, 300, 250, 200];
@@ -691,6 +714,12 @@ const MODELS = [
   { key: 'gem', name: 'GEM', ids: ['gem_seamless'], c: '#b3a6d9' },
   { key: 'hrrr', name: 'HRRR', ids: ['gfs_hrrr', 'ncep_hrrr_conus'], c: '#57d39b' },
 ];
+
+const ENS = [
+  { key: 'ecens', name: 'EC ENS', full: 'ECMWF IFS ensemble', ids: ['ecmwf_ifs025_ensemble', 'ecmwf_ifs025'], c: '#f2b33d' },
+  { key: 'gefs', name: 'GEFS', full: 'NCEP GEFS', ids: ['ncep_gefs025', 'gfs025', 'ncep_gefs05', 'gfs05', 'gfs_seamless'], c: '#5cc9d8' },
+];
+const SECTOR_OF_REG = { 1: 'Light', 2: 'NE/E', 3: 'NE/E', 4: 'SW/W', 5: 'SW/W', 6: 'SE/S', 7: 'SE/S', 8: 'NW/N', 9: 'NW/N' };
 
 const REG = {
   1: { name: 'Light and variable', sector: 'Light', days: 98,
@@ -751,6 +780,7 @@ const POP = [
 const state = {
   model: load('ffr-model') || 'gfs', day: 0, site: 'TBW', mapHour: 12, src: 'model', pop: '12-1',
   dates: [], core: {}, grid: {}, thermo: {}, obs: {}, climo: null, recent: null, geo: null, status: {},
+  ens: {}, ensThermo: {}, ensSel: 'ecens', showMembers: load('ffr-members') !== false,
 };
 if (!MODELS.find((m) => m.key === state.model)) state.model = 'gfs';
 
@@ -767,7 +797,7 @@ const kt = (x) => (isNum(x) ? Math.round(x) : '–');
 const deg = (x) => (isNum(x) ? String(Math.round(x)).padStart(3, '0') + '°' : '–');
 const median = (xs) => { const a = xs.filter(isNum).sort((x, y) => x - y); if (!a.length) return null; const m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
 const ordinal = (n) => { const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
-function setStatus(key, cls, text) { state.status[key] = { cls, text }; renderStatus(); }
+function setStatus(key, cls, text, tip) { state.status[key] = { cls, text, tip }; renderStatus(); }
 
 function idxOf(times, date, hour) {
   const d = hour === 0 ? addDays(date, 1) : date;
@@ -777,15 +807,44 @@ function idxOf(times, date, hour) {
 async function omFetch(model, pts, vars) {
   const lat = pts.map((p) => p.lat.toFixed(3)).join(','), lon = pts.map((p) => p.lon.toFixed(3)).join(',');
   let err = null;
+  // try each model id; if a model rejects the 9-day window, retry with its default range
   for (const id of model.ids) {
-    const url = `${OM}?latitude=${lat}&longitude=${lon}&hourly=${vars.join(',')}&models=${id}&wind_speed_unit=kn&timezone=GMT&past_days=1&forecast_days=9`;
-    try {
-      const r = await fetch(url); const j = await r.json();
-      if (!r.ok || j.error) throw new Error(j.reason || `HTTP ${r.status}`);
-      return Array.isArray(j) ? j : [j];
-    } catch (e) { err = e; }
+    for (const span of ['&past_days=1&forecast_days=9', '&forecast_days=8', '']) {
+      const url = `${OM}?latitude=${lat}&longitude=${lon}&hourly=${vars.join(',')}&models=${id}&wind_speed_unit=kn&timezone=GMT${span}`;
+      try {
+        const r = await fetch(url); const j = await r.json();
+        if (!r.ok || j.error) throw new Error(`${id}: ${j.reason || 'HTTP ' + r.status}`);
+        return Array.isArray(j) ? j : [j];
+      } catch (e) { err = e; if (!/day|range|forecast/i.test(e.message)) break; }
+    }
   }
   throw err || new Error('request failed');
+}
+
+// ensemble API: start/end hour limits the payload; 6-hourly output when the server supports it
+async function omEnsFetch(model, pts, vars, valid) {
+  const lat = pts.map((p) => p.lat.toFixed(3)).join(','), lon = pts.map((p) => p.lon.toFixed(3)).join(',');
+  const t0 = `${state.dates[0]}T12:00`, t1 = `${state.dates[state.dates.length - 1]}T12:00`;
+  let err = null;
+  for (const id of model.ids) {
+    for (const extra of ['&temporal_resolution=hourly_6', '']) {
+      const url = `${OME}?latitude=${lat}&longitude=${lon}&hourly=${vars.join(',')}&models=${id}&wind_speed_unit=kn&timezone=GMT&start_hour=${t0}&end_hour=${t1}${extra}`;
+      try {
+        const r = await fetch(url); const j = await r.json();
+        if (!r.ok || j.error) throw new Error(`${id}: ${j.reason || 'HTTP ' + r.status}`);
+        const res = Array.isArray(j) ? j : [j];
+        if (valid && !valid(res)) { err = new Error(`${id}: required pressure levels missing`); break; }
+        return { res, id };
+      } catch (e) { err = e; if (!extra) break; }
+    }
+  }
+  throw err || new Error('request failed');
+}
+const memberSuffixes = (h, base) => Object.keys(h).filter((k) => k === base || k.startsWith(base + '_member')).map((k) => k.slice(base.length)).sort();
+function lmAtM(h, i, suf) {
+  if (i < 0) return null;
+  const prof = FR.normalize(WIND_LV.map((p) => ({ p, dir: h[`wind_direction_${p}hPa${suf}`]?.[i], spd: h[`wind_speed_${p}hPa${suf}`]?.[i] })));
+  return FR.layerMeanWind(prof, 1000, 700);
 }
 
 function jsonp(url) {
@@ -849,10 +908,10 @@ async function loadCore(model) {
     });
     state.core[model.key] = { days };
     const nOk = days.filter((d) => d.regime).length;
-    setStatus('om-' + model.key, nOk ? 'ok' : 'err', `${model.name}${nOk ? '' : ' (no data)'}`);
+    setStatus('om-' + model.key, nOk ? 'ok' : 'err', `${model.name}${nOk ? '' : ' (no data)'}`, nOk ? `${nOk} of ${days.length} days` : 'Request worked but the 1000–700 mb winds came back empty');
   } catch (e) {
     state.core[model.key] = { error: e.message };
-    setStatus('om-' + model.key, 'err', `${model.name} unavailable`);
+    setStatus('om-' + model.key, 'err', `${model.name} unavailable`, e.message);
   }
 }
 
@@ -894,6 +953,121 @@ async function loadThermo(model) {
     });
     state.thermo[model.key] = out;
   } catch (e) { state.thermo[model.key] = { error: e.message }; }
+}
+
+function ensPoints() {
+  const pts = [];
+  for (const la of range(S.boxS, S.boxN, (S.boxN - S.boxS) / 2)) for (const lo of range(S.boxW, S.boxE, (S.boxE - S.boxW) / 2)) pts.push({ lat: la, lon: lo, tag: 'box' });
+  for (const la of range(24, 31.5, 0.75)) pts.push({ lat: la, lon: -82.0, tag: 'tr' });
+  for (const id of ['TBW', 'MFL', 'JAX']) { const st = SITES.find((x) => x.id === id); pts.push({ lat: st.lat, lon: st.lon, tag: 'site', site: id }); }
+  return pts;
+}
+const ensCacheKey = (k, kind) => `ffr-ens-${kind}-${k}-${state.dates[0]}-${[S.light, S.strong, S.boxS, S.boxN, S.boxW, S.boxE].join('_')}`;
+function cacheGet(key) { const c = load(key); return c && Date.now() - c.t < ENS_TTL ? c.v : null; }
+function cacheSet(key, v) { try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), v })); } catch (e) { /* storage full: skip cache */ } }
+const r2 = (x) => (isNum(x) ? Math.round(x * 100) / 100 : null);
+
+async function loadEnsemble(model) {
+  const ck = ensCacheKey(model.key, 'wind'), hit = cacheGet(ck);
+  if (hit) { state.ens[model.key] = hit; setStatus('ens-' + model.key, 'ok', `${model.name} ${hit.n} members`, `Cached ${hit.id} run, refreshed every 3 hours`); return; }
+  setStatus('ens-' + model.key, 'wait', model.name);
+  try {
+    const pts = ensPoints();
+    const valid = (res) => {
+      const h = res[0].hourly, sufs = memberSuffixes(h, 'wind_speed_850hPa');
+      const i = h.time.findIndex((t) => t.endsWith('T12:00'));
+      return sufs.length > 3 && sufs.filter((sf) => lmAtM(h, i, sf)).length >= sufs.length * 0.6;
+    };
+    const { res, id } = await omEnsFetch(model, pts, windVars(), valid);
+    const times = res[0].hourly.time, sufs = memberSuffixes(res[0].hourly, 'wind_speed_850hPa');
+    const days = state.dates.map((date) => {
+      const i = idxOf(times, date, 12);
+      const mem = [];
+      for (const sf of sufs) {
+        const box = [], tr = [], site = {};
+        pts.forEach((p, k) => {
+          const lm = lmAtM(res[k].hourly, i, sf);
+          if (p.tag === 'box') box.push(lm); else if (p.tag === 'tr') tr.push({ lat: p.lat, u: lm ? lm.u : null }); else site[p.site] = lm;
+        });
+        const mv = FR.meanVector(box);
+        if (!mv || mv.n < box.length * 0.6) continue;
+        const rl = FR.ridgeLat(tr.map((q) => q.lat), tr.map((q) => q.u));
+        mem.push({ reg: FR.classify(mv.dir, mv.spd, S), u: r2(mv.u), v: r2(mv.v), dir: r2(mv.dir), spd: r2(mv.spd),
+          rl: rl ? r2(rl.lat) : null, rw: rl ? rl.where : null, amu: FR.amuRegime(site.MFL, site.TBW, site.JAX) });
+      }
+      return summarizeEnsDay(date, mem);
+    });
+    const out = { id, n: sufs.length, days };
+    state.ens[model.key] = out; cacheSet(ck, out);
+    setStatus('ens-' + model.key, 'ok', `${model.name} ${sufs.length} members`, `Open-Meteo model ${id}`);
+  } catch (e) {
+    state.ens[model.key] = { error: e.message };
+    setStatus('ens-' + model.key, 'err', `${model.name} unavailable`, e.message);
+  }
+}
+function summarizeEnsDay(date, mem) {
+  const n = mem.length;
+  if (!n) return { date, n: 0 };
+  const probs = Array(9).fill(0); mem.forEach((m) => { if (m.reg) probs[m.reg - 1]++; });
+  for (let k = 0; k < 9; k++) probs[k] /= n;
+  const mean = FR.meanVector(mem);
+  const ins = mem.filter((m) => m.rw === 'in' && isNum(m.rl)).map((m) => m.rl).sort((a, b) => a - b);
+  const q = (f) => (ins.length ? ins[Math.min(ins.length - 1, Math.floor(f * (ins.length - 1) + 0.5))] : null);
+  const amu = {}; mem.forEach((m) => { if (m.amu) amu[m.amu] = (amu[m.amu] || 0) + 1 / n; });
+  return { date, n, mem, probs, mean, meanReg: FR.classify(mean.dir, mean.spd, S),
+    ridge: { p10: q(0.1), p50: q(0.5), p90: q(0.9), north: mem.filter((m) => m.rw === 'north').length / n, south: mem.filter((m) => m.rw === 'south').length / n, nIn: ins.length },
+    amu };
+}
+
+async function loadEnsThermo(model) {
+  const ck = ensCacheKey(model.key, 'thermo'), hit = cacheGet(ck);
+  if (hit) { state.ensThermo[model.key] = hit; return; }
+  const vars = [...ENS_T_LV.flatMap((p) => [`temperature_${p}hPa`, `relative_humidity_${p}hPa`]), 'temperature_2m', 'dew_point_2m', 'surface_pressure'];
+  const valid = (res) => memberSuffixes(res[0].hourly, 'temperature_500hPa').length > 3;
+  try {
+    const { res, id } = await omEnsFetch(model, SITES, vars, valid);
+    const out = { id, sites: {} };
+    SITES.forEach((st, k) => {
+      const h = res[k].hourly, sufs = memberSuffixes(h, 'temperature_500hPa');
+      out.sites[st.id] = state.dates.map((date) => {
+        const i = idxOf(h.time, date, 12);
+        const vals = {}; PARAMS.forEach((P) => (vals[P.k] = []));
+        if (i >= 0) for (const sf of sufs) {
+          const g = (v) => h[v + sf]?.[i];
+          const ps = g('surface_pressure'), lv = [];
+          if (isNum(ps) && isNum(g('temperature_2m'))) lv.push({ p: ps, t: g('temperature_2m'), td: g('dew_point_2m') });
+          for (const p of ENS_T_LV) {
+            if (isNum(ps) && p > ps - 2) continue;
+            const t = g(`temperature_${p}hPa`); if (!isNum(t)) continue;
+            lv.push({ p, t, td: FR.tdFromRH(t, g(`relative_humidity_${p}hPa`)) });
+          }
+          if (lv.length < 6) continue;
+          const m = FR.metrics(lv, S);
+          PARAMS.forEach((P) => { if (isNum(m[P.k])) vals[P.k].push(r2(m[P.k])); });
+        }
+        return { date, vals };
+      });
+    });
+    state.ensThermo[model.key] = out; cacheSet(ck, out);
+  } catch (e) { state.ensThermo[model.key] = { error: e.message }; }
+}
+
+// equal weight per ensemble system, so the 51-member EC ENS does not swamp the 31-member GEFS
+function ensCombined(di) {
+  const ds = ENS.map((m) => state.ens[m.key]?.days?.[di]).filter((d) => d && d.n);
+  if (!ds.length) return null;
+  const probs = Array(9).fill(0); ds.forEach((d) => d.probs.forEach((p, k) => (probs[k] += p / ds.length)));
+  const top = probs.indexOf(Math.max(...probs)) + 1;
+  const sectors = {}; probs.forEach((p, k) => { const s = SECTOR_OF_REG[k + 1]; sectors[s] = (sectors[s] || 0) + p; });
+  const amu = {}; ds.forEach((d) => Object.entries(d.amu).forEach(([k, v]) => (amu[k] = (amu[k] || 0) + v / ds.length)));
+  return { probs, top, topP: probs[top - 1], sectors, amu, systems: ds.length, members: ds.reduce((s, d) => s + d.n, 0) };
+}
+const ensMode = (d) => (d && d.n ? d.probs.indexOf(Math.max(...d.probs)) + 1 : null);
+function ensStats(xs) {
+  const a = xs.filter(isNum).sort((x, y) => x - y);
+  if (!a.length) return null;
+  const q = (f) => a[Math.min(a.length - 1, Math.floor(f * (a.length - 1) + 0.5))];
+  return { mean: a.reduce((s, x) => s + x, 0) / a.length, p10: q(0.1), p90: q(0.9), n: a.length, vals: a };
 }
 
 async function fetchSounding(site, ts) {
@@ -956,6 +1130,11 @@ function consensus(di) {
     const d = state.core[m.key]?.days?.[di];
     if (d && d.regime) { votes[d.regime] = (votes[d.regime] || 0) + 1; vecs.push(d.box); n++; }
   }
+  for (const m of ENS) {
+    const d = state.ens[m.key]?.days?.[di];
+    const mr = ensMode(d); // vote with the most likely member regime, not the damped mean vector
+    if (mr) { votes[mr] = (votes[mr] || 0) + 1; vecs.push(d.mean); n++; }
+  }
   if (!n) return null;
   const max = Math.max(...Object.values(votes));
   const tops = Object.keys(votes).filter((k) => votes[k] === max).map(Number);
@@ -997,7 +1176,7 @@ function ridgeWords(r) {
 
 // ------------------------------------------------------------------ renderers
 function renderStatus() {
-  $('#status').innerHTML = Object.values(state.status).map((s) => `<span class="${s.cls}">${esc(s.text)}</span>`).join('');
+  $('#status').innerHTML = Object.values(state.status).map((s) => `<span class="${s.cls}"${s.tip ? ` data-tip="${esc(s.tip)}"` : ''}>${esc(s.text)}</span>`).join('');
 }
 
 function renderDays() {
@@ -1016,13 +1195,18 @@ function renderCall() {
   const R = REG[c.regime], L = dayLabel(state.dates[di]);
   const srcTxt = c.src === 'obs'
     ? `From the ${state.obs.TBW.today12.valid.slice(11, 13)}Z Tampa Bay sounding`
-    : `Consensus of ${c.cons.n} models, ${c.cons.agree} agree`;
+    : `Consensus of ${c.cons.n} models and ensembles, ${c.cons.agree} agree`;
   const obs = state.obs.TBW?.today12?.m;
   const facts = [];
   if (c.vec) facts.push(['Layer-mean flow', `${deg(c.vec.dir)} at ${kt(c.vec.spd)} kt`]);
   if (md && md.box) facts.push([`${m.name} analysis box`, `${deg(md.box.dir)} at ${kt(md.box.spd)} kt, regime ${md.regime}`]);
   if (di === 0 && obs && obs.mw && c.src !== 'obs') facts.push(['TBW 12Z sounding', `${deg(obs.mw.dir)} at ${kt(obs.mw.spd)} kt, regime ${obs.regime}`]);
   if (c.src === 'obs' && c.cons) facts.push(['Model consensus', `Regime ${c.cons.regime}, ${c.cons.agree} of ${c.cons.n} models`]);
+  const ec = ensCombined(di);
+  if (ec) {
+    const top3 = ec.probs.map((p, k) => [k + 1, p]).sort((a, b) => b[1] - a[1]).filter((x) => x[1] >= 0.05).slice(0, 3);
+    facts.push([`Ensemble odds (${ec.members} members)`, top3.map(([r, p]) => `R${r} ${Math.round(p * 100)}%`).join(', ')]);
+  }
   if (md && md.ridge) facts.push([`Ridge axis (${m.name})`, ridgeWords(md.ridge)]);
   const amu = di === 0 && obsAmu() ? obsAmu() + ' (soundings)' : (md && md.amu ? md.amu + ` (${m.name})` : null);
   if (amu) facts.push(['Ridge-position regime', amu]);
@@ -1048,6 +1232,18 @@ function ingredientRows(src) {
     if (!o || !o.m) return null;
     const cyc = o.valid.slice(11, 13), date = o.valid.slice(0, 10);
     return { m: o.m, cycle: cyc, date, label: `${site.name} ${cyc}Z ${date.slice(5)}` };
+  }
+  if (src === 'ens') {
+    const e = state.ensThermo[state.ensSel];
+    const d = e && !e.error && e.sites[site.id] && e.sites[site.id][state.day];
+    if (!d) return null;
+    const m = {}, st = {};
+    PARAMS.forEach((P) => { const z = ensStats(d.vals[P.k]); if (z) { st[P.k] = z; m[P.k] = z.mean; } });
+    if (!Object.keys(st).length) return null;
+    const md = state.ens[state.ensSel]?.days?.[state.day];
+    if (md && md.n) m.regime = ensMode(md);
+    const n = Math.max(...Object.values(st).map((z) => z.n));
+    return { m, ens: st, cycle: '12', date: state.dates[state.day], label: `${ENS.find((x) => x.key === state.ensSel).name} mean of ${n} at ${site.name}, 12Z` };
   }
   const t = state.thermo[state.model];
   if (!t || t.error || !t[site.id]) return null;
@@ -1108,6 +1304,20 @@ function renderWheel() {
   }
   for (const a of [0, 120, 190, 290]) { const [x0, y0] = pt(a, R), [x1, y1] = pt(a, R + 10); s += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="var(--muted)"/>`; const [tx, ty] = pt(a, R + 22); s += `<text x="${tx}" y="${ty + 4}" font-size="11" fill="var(--muted)" text-anchor="middle">${a}°</text>`; }
   for (const [a, l] of [[45, 'NE'], [155, 'SE'], [240, 'SW'], [325, 'NW']]) { const [x, y] = pt(a, R + 26); s += `<text x="${x}" y="${y + 5}" font-size="14" font-weight="600" fill="var(--ink-2)" text-anchor="middle">${l}</text>`; }
+  // ensemble members for the selected day
+  if (state.showMembers) {
+    for (const m of ENS) {
+      const d = state.ens[m.key]?.days?.[state.day];
+      if (!d || !d.n) continue;
+      for (const q of d.mem) { const [x, y] = pt(q.dir, r(q.spd)); s += `<circle cx="${x}" cy="${y}" r="2.6" fill="${m.c}" fill-opacity="0.55" pointer-events="none"/>`; }
+    }
+  }
+  for (const m of ENS) {
+    const d = state.ens[m.key]?.days?.[state.day];
+    if (!d || !d.n) continue;
+    const [x, y] = pt(d.mean.dir, r(d.mean.spd));
+    s += `<g data-tip="${esc(m.name)} mean of ${d.n}: ${deg(d.mean.dir)} ${kt(d.mean.spd)} kt, regime ${d.meanReg}; most likely regime ${d.probs.indexOf(Math.max(...d.probs)) + 1} (${Math.round(Math.max(...d.probs) * 100)}%)"><rect x="${x - 7}" y="${y - 7}" width="14" height="14" rx="2" fill="var(--panel)" stroke="${m.c}" stroke-width="2.5"/></g>`;
+  }
   // selected model track
   const md = state.core[state.model]?.days || [];
   const tr = md.map((d, i) => (d.box ? { i, ...d.box, xy: pt(d.box.dir, r(d.box.spd)) } : null)).filter(Boolean);
@@ -1135,7 +1345,9 @@ function renderWheel() {
   $('#wheel').querySelectorAll('[data-day]').forEach((g) => g.addEventListener('click', () => selectDay(+g.dataset.day)));
   $('#wheelLegend').innerHTML = `<span><i style="background:var(--ink)"></i>${esc(curModel().name)} days 0–7</span>`
     + MODELS.filter((m) => m.key !== state.model && state.core[m.key]?.days).map((m) => `<span><i style="border:2px solid ${m.c};background:transparent"></i>${esc(m.name)}</span>`).join('')
+    + ENS.filter((m) => state.ens[m.key]?.days).map((m) => `<span><i style="background:${m.c};opacity:.7"></i>${esc(m.name)} members and mean (□)</span>`).join('')
     + `<span><i style="background:var(--ridge);border-radius:2px;transform:rotate(45deg)"></i>TBW sounding</span>`
+    + `<span><button class="btn" id="memToggle" style="padding:2px 8px;font-size:12px">${state.showMembers ? 'Hide' : 'Show'} members</button></span>`
     + `<span>Points sit in the direction the flow comes from.</span>`;
 }
 
@@ -1152,9 +1364,68 @@ function renderMatrix() {
     const c = state.core[m.key];
     rows += `<tr><th>${esc(m.name)}</th>${state.dates.map((d, i) => { const x = c?.days?.[i]; return cell(x?.regime, x?.box, i, `${m.name}: ridge ${ridgeWords(x?.ridge)}`); }).join('')}</tr>`;
   }
+  for (const m of ENS) {
+    const e = state.ens[m.key];
+    rows += `<tr><th>${esc(m.name)} mean</th>${state.dates.map((d, i) => { const x = e?.days?.[i]; return x && x.n ? cell(x.meanReg, x.mean, i, `${m.name} mean of ${x.n} members; ${Math.round(x.probs[x.meanReg - 1] * 100)}% of members in regime ${x.meanReg}`) : '<td><div class="cell na">–</div></td>'; }).join('')}</tr>`;
+  }
   rows += `<tr class="row-consensus"><th>Consensus</th>${state.dates.map((d, i) => { const c = consensus(i); return c ? cell(c.regime, c.mv, i, `${c.agree} of ${c.n} models`) : '<td><div class="cell na">–</div></td>'; }).join('')}</tr>`;
   rows += `<tr><th></th>${state.dates.map((d, i) => { const c = consensus(i); return `<td class="agree">${c ? `${c.agree}/${c.n} agree` : ''}</td>`; }).join('')}</tr>`;
   $('#matrix').innerHTML = head + `<tbody>${rows}</tbody>`;
+}
+
+// ---------- ensemble probabilities
+function stackBar(probs, h = 16) {
+  let x = 0, s = `<svg viewBox="0 0 100 ${h}" preserveAspectRatio="none" style="width:100%;height:${h}px;display:block;border-radius:4px;overflow:hidden">`;
+  probs.forEach((p, k) => { if (p > 0) { s += `<rect x="${x}" y="0" width="${p * 100}" height="${h}" fill="var(--r${k + 1})"/>`; x += p * 100; } });
+  return s + '</svg>';
+}
+function renderEnsemble() {
+  const el = $('#ensBody');
+  const any = ENS.some((m) => state.ens[m.key]?.days);
+  if (!any) {
+    const errs = ENS.map((m) => state.ens[m.key]?.error ? `${m.name}: ${state.ens[m.key].error}` : null).filter(Boolean);
+    el.innerHTML = `<div class="empty">${errs.length ? `Ensemble data did not load. ${esc(errs.join('. '))}` : 'Loading GEFS and EC ENS members…'}</div>`;
+    return;
+  }
+  const rowsDef = [{ key: 'comb', name: 'Combined', get: (i) => { const c = ensCombined(i); return c ? { probs: c.probs, n: c.members } : null; } },
+    ...ENS.map((m) => ({ key: m.key, name: `${m.name}`, get: (i) => { const d = state.ens[m.key]?.days?.[i]; return d && d.n ? { probs: d.probs, n: d.n } : null; } }))];
+  let h = `<div class="matrix-scroll"><table class="matrix ensm"><thead><tr><th></th>${state.dates.map((d, i) => { const L = dayLabel(d); return `<th>${i === 0 ? 'Today' : L.wd} ${L.md}</th>`; }).join('')}</tr></thead><tbody>`;
+  for (const R of rowsDef) {
+    h += `<tr><th>${esc(R.name)}</th>${state.dates.map((d, i) => {
+      const x = R.get(i);
+      if (!x) return '<td><div class="cell na">–</div></td>';
+      const top = x.probs.indexOf(Math.max(...x.probs)) + 1, tp = Math.round(x.probs[top - 1] * 100);
+      const tip = x.probs.map((p, k) => [k + 1, p]).filter((q) => q[1] > 0).sort((a, b) => b[1] - a[1]).map(([r, p]) => `R${r} ${Math.round(p * 100)}%`).join(', ');
+      return `<td><button class="ecell ${i === state.day ? 'sel' : ''}" data-i="${i}" data-tip="${esc(R.name)} (${x.n} members): ${esc(tip)}">${stackBar(x.probs)}<span><b class="cond">${top}</b> ${tp}%</span></button></td>`;
+    }).join('')}</tr>`;
+  }
+  h += '</tbody></table></div>';
+  // detail for the selected day
+  const di = state.day, c = ensCombined(di);
+  if (c) {
+    const per = ENS.map((m) => ({ m, d: state.ens[m.key]?.days?.[di] })).filter((x) => x.d && x.d.n);
+    h += `<div class="ens-detail"><div><h3>Regime odds, ${di === 0 ? 'today' : dayLabel(state.dates[di]).wd + ' ' + dayLabel(state.dates[di]).md}</h3><div class="probs">`;
+    for (let k = 1; k <= 9; k++) {
+      const pc = c.probs[k - 1];
+      h += `<div class="prow" data-tip="${esc(REG[k].name)}"><span class="chip ${regClass(k)}">${k}</span>
+        <div class="ptrack"><div class="pfill" style="width:${pc * 100}%;background:var(--r${k})"></div>
+        ${per.map(({ m, d }) => `<i style="left:${d.probs[k - 1] * 100}%;border-color:${m.c}" title="${esc(m.name)} ${Math.round(d.probs[k - 1] * 100)}%"></i>`).join('')}</div>
+        <b>${Math.round(pc * 100)}%</b></div>`;
+    }
+    h += `</div><p class="note">Bars are the combined odds, weighting each ensemble equally. Ticks mark ${per.map(({ m }) => `<span style="color:${m.c}">${esc(m.name)}</span>`).join(' and ')}.</p></div><div><h3>Flow pattern</h3><dl class="facts ens-facts">`;
+    const secTxt = ['SW/W', 'SE/S', 'NE/E', 'NW/N', 'Light'].map((k) => `${k} ${Math.round((c.sectors[k] || 0) * 100)}%`).join(', ');
+    h += `<div class="fact"><dt>Flow direction odds</dt><dd>${secTxt}</dd></div>`;
+    for (const { m, d } of per) {
+      const rr = d.ridge;
+      const ridgeTxt = rr.nIn >= 3 ? `median ${rr.p50.toFixed(1)}°N, 10–90% ${rr.p10.toFixed(1)}–${rr.p90.toFixed(1)}°N` : 'not resolved in most members';
+      h += `<div class="fact"><dt>${esc(m.name)} mean flow, ${d.n} members</dt><dd>${deg(d.mean.dir)} at ${kt(d.mean.spd)} kt, regime ${d.meanReg}</dd></div>`;
+      h += `<div class="fact"><dt>${esc(m.name)} ridge axis</dt><dd>${ridgeTxt}${rr.north >= 0.1 ? `; ${Math.round(rr.north * 100)}% north of 31.5°N` : ''}${rr.south >= 0.1 ? `; ${Math.round(rr.south * 100)}% south of 24°N` : ''}</dd></div>`;
+    }
+    const amu = Object.entries(c.amu).sort((a, b) => b[1] - a[1]).filter((x) => x[1] >= 0.05).map(([k, v]) => `${k} ${Math.round(v * 100)}%`).join(', ');
+    if (amu) h += `<div class="fact"><dt>Ridge-position regime odds</dt><dd>${esc(amu)}</dd></div>`;
+    h += '</dl></div></div>';
+  }
+  el.innerHTML = h;
 }
 
 // ---------- map
@@ -1225,9 +1496,9 @@ function renderMap() {
 function renderSiteSeg() {
   $('#siteSeg').innerHTML = `<div class="seg">${SITES.map((s) => `<button data-site="${s.id}" aria-pressed="${s.id === state.site}">${s.id}</button>`).join('')}</div>`;
 }
-function spark(vals, bands, selIdx, P) {
+function spark(vals, bands, selIdx, P, whisk) {
   const W = 300, H = 34, n = vals.length;
-  const all = [...vals.filter(isNum), ...bands.flatMap((b) => (b ? [b[2], b[18]] : [])).filter(isNum)];
+  const all = [...vals.filter(isNum), ...bands.flatMap((b) => (b ? [b[2], b[18]] : [])).filter(isNum), ...(whisk || []).flatMap((w) => (w ? [w[0], w[1]] : [])).filter(isNum)];
   if (!all.length) return '<svg viewBox="0 0 300 34"></svg>';
   let lo = Math.min(...all), hi = Math.max(...all); if (hi - lo < 1e-6) { hi += 1; lo -= 1; }
   const pad = (hi - lo) * 0.08; lo -= pad; hi += pad;
@@ -1241,6 +1512,7 @@ function spark(vals, bands, selIdx, P) {
   s += band(2, 18, 0.12) + band(5, 15, 0.2);
   const med = bands.map((q, i) => (q && isNum(q[10]) ? [x(i), y(q[10])] : null)).filter(Boolean);
   if (med.length > 1) s += `<path d="M${med.map((p) => p.join(',')).join('L')}" fill="none" stroke="var(--breeze)" stroke-opacity="0.6" stroke-dasharray="3 3"/>`;
+  if (whisk) whisk.forEach((w, i) => { if (w && isNum(w[0]) && isNum(w[1])) s += `<line x1="${x(i)}" x2="${x(i)}" y1="${y(w[0])}" y2="${y(w[1])}" stroke="var(--ink)" stroke-opacity="0.45" stroke-width="3" stroke-linecap="round"/>`; });
   const pts = vals.map((v, i) => (isNum(v) ? [x(i), y(v)] : null));
   const seg = pts.filter(Boolean);
   if (seg.length > 1) s += `<path d="M${seg.map((p) => p.join(',')).join('L')}" fill="none" stroke="var(--ink)" stroke-width="1.6"/>`;
@@ -1258,32 +1530,44 @@ function gauge(v, q) {
     <line x1="${x(q[10])}" x2="${x(q[10])}" y1="9" y2="25" stroke="var(--breeze)" stroke-width="1.5"/>
     <circle cx="${x(v)}" cy="17" r="6" fill="var(--ridge)" stroke="var(--panel)" stroke-width="2"/></svg>`;
 }
+const ensSegHTML = () => `<div class="seg" style="margin:-4px 0 12px">${ENS.map((m) => `<button data-ens="${m.key}" aria-pressed="${m.key === state.ensSel}">${esc(m.name)}</button>`).join('')}</div>`;
 function renderIngredients() {
   const el = $('#ingredients'), site = SITES.find((s) => s.id === state.site);
   const r = ingredientRows(state.src);
   if (!r) {
-    el.innerHTML = `<div class="empty">${state.src === 'obs' ? `No recent sounding found for ${esc(site.name)}.` : `${esc(curModel().name)} profiles for ${esc(site.name)} are not loaded yet or not available for this day.`}</div>`;
+    const e = state.ensThermo[state.ensSel];
+    el.innerHTML = `${state.src === 'ens' ? ensSegHTML() : ''}<div class="empty">${state.src === 'obs' ? `No recent sounding found for ${esc(site.name)}.`
+      : state.src === 'ens' ? (e && e.error ? `Ensemble profiles did not load: ${esc(e.error)}` : 'Loading ensemble profiles…')
+      : `${esc(curModel().name)} profiles for ${esc(site.name)} are not loaded yet or not available for this day.`}</div>`;
     return;
   }
   const regNow = r.m.regime || (callFor(state.day) || {}).regime;
-  let h = `<div class="ing"><div class="hd">${esc(r.label)}</div><div class="hd" style="text-align:right">Value</div>
-    <div class="hd h3">${state.src === 'model' ? '8-day trend vs 10–90th and 25–75th percentile bands' : 'Where it falls in the climatology'}</div><div class="hd h4">Percentile</div>`;
+  let h = `${state.src === 'ens' ? ensSegHTML() : ''}<div class="ing"><div class="hd">${esc(r.label)}</div><div class="hd" style="text-align:right">Value</div>
+    <div class="hd h3">${state.src === 'obs' ? 'Where it falls in the climatology' : state.src === 'ens' ? '8-day ensemble mean, member 10–90% range, and climatology bands' : '8-day trend vs 10–90th and 25–75th percentile bands'}</div><div class="hd h4">Percentile</div>`;
   for (const P of PARAMS) {
     const v = r.m[P.k];
     const q = climoFor(site.iem, r.cycle, P.k, r.date);
     const pct = FR.pctOf(v, q), d = describePct(pct, P.sign);
     const qr = regNow ? byRegimeQ(site.iem, P.k, regNow) : null, pr = FR.pctOf(v, qr);
     let viz;
+    let ensTxt = '';
     if (state.src === 'model') {
       const t = state.thermo[state.model][site.id];
       const vals = t.map((x) => x.z12 && x.z12[P.k]);
       const bands = state.dates.map((dt) => climoFor(site.iem, '12', P.k, dt));
       viz = spark(vals, bands, state.day, P);
+    } else if (state.src === 'ens') {
+      const days = state.ensThermo[state.ensSel].sites[site.id];
+      const st = days.map((x) => ensStats(x.vals[P.k]));
+      const bands = state.dates.map((dt) => climoFor(site.iem, '12', P.k, dt));
+      viz = spark(st.map((z) => z && z.mean), bands, state.day, P, st.map((z) => (z ? [z.p10, z.p90] : null)));
+      const z = r.ens[P.k];
+      if (z && q) { const above = z.vals.filter((x) => x > q[10]).length / z.n; ensTxt = `<br><span class="note">${Math.round(above * 100)}% of members above the median</span>`; }
     } else viz = gauge(v, q);
     h += `<div class="nm">${esc(P.name)}<small>${esc(P.desc)}</small></div>
       <div class="val">${isNum(v) ? P.fmt(v) : '–'}${isNum(v) && P.sub ? `<div class="note" style="font-family:Barlow;font-size:12px;font-weight:400">${P.sub(v)}</div>` : ''}</div>
       <div class="bar">${viz}</div>
-      <div class="pc">${isNum(pct) ? `<b style="color:${d.cls ? `var(--${d.cls})` : 'inherit'}">${ordinal(Math.round(pct))}</b> ${d.word}` : '<span class="note">No climatology</span>'}${isNum(pr) ? `<br><span class="note">${ordinal(Math.round(pr))} for regime ${regNow}</span>` : ''}</div>`;
+      <div class="pc">${isNum(pct) ? `<b style="color:${d.cls ? `var(--${d.cls})` : 'inherit'}">${ordinal(Math.round(pct))}</b> ${d.word}` : '<span class="note">No climatology</span>'}${isNum(pr) ? `<br><span class="note">${ordinal(Math.round(pr))} for regime ${regNow}</span>` : ''}${ensTxt}</div>`;
   }
   h += '</div>';
   if (!state.climo) h += `<p class="note" style="margin-top:10px">Percentiles appear once <code>data/climo.json</code> exists. Run the “Soundings” GitHub Action once to build it.</p>`;
@@ -1413,6 +1697,7 @@ function renderRef() {
     <p><b>Regime.</b> Following NWS Tampa Bay, the regime is set by the 12Z 1000–700 mb layer-mean vector wind. Below ${S.light} kt is regime 1; otherwise the direction sector (NE/E 360–120°, SE/S 120–190°, SW/W 190–290°, NW/N 290–360°) and speed (${S.light}–${S.strong} kt or above ${S.strong} kt) pick regimes 2–9. Thresholds are editable in Settings. Older TBW material and the Chavez et al. (2022) study used 4 kt for regime 1.</p>
     <p><b>Observed.</b> Sounding winds are averaged with pressure weighting from 1000 to 700 mb at full vertical resolution. Today's call uses the Tampa Bay 12Z sounding once it is in; before that, and for days 1–7, it uses the model consensus.</p>
     <p><b>Models.</b> Open-Meteo pressure-level winds at 1000, 925, 850 and 700 mb are averaged the same way at each point of an analysis box near Tampa Bay (${S.boxS}–${S.boxN}°N, ${-S.boxW}–${-S.boxE}°W), standing in for the TBW RAP analysis box. The consensus is the most common regime across models, with ties broken by the regime of the model-mean vector.</p>
+    <p><b>Ensembles.</b> Every GEFS (31) and ECMWF ENS (51) member is run through the same analysis-box calculation, giving a regime per member. Regime odds are the share of members in each regime; the combined odds weight the two systems equally. The ensemble-mean rows show the regime of the mean vector. When members disagree on direction, averaging their vectors shrinks the speed and pulls that mean toward regime 1, so in the consensus each ensemble votes with its most likely member regime instead. Ensemble profiles at the sounding sites give mean ingredients, a 10–90% member range, and the share of members above the climatological median. Ensemble pulls are cached in the browser for 3 hours; Refresh clears them.</p>
     <p><b>Ridge axis.</b> Along north–south lines through the peninsula, the axis is placed where the layer-mean east–west wind turns from easterly (south of the ridge) to westerly. The ridge-position regime (SW-1, SW-2, SE-1, SE-2, NE, NW) follows the Lericos et al. (2002) and NASA AMU scheme built on the Miami, Tampa and Jacksonville soundings.</p>
     <p><b>Ingredients.</b> PWAT (surface to 300 mb; the model's own total column water vapor when available), K index, a lowest-100 mb mixed-layer lifted index and CAPE, Thompson index (K minus LI), 500 mb temperature, 700–500 mb lapse rate and mean 850/700/500 mb RH are computed with the same code for soundings, model profiles and the climatology.</p>
     <p><b>Normal.</b> ${meta ? `Percentiles come from ${meta.years[0]}–${meta.years[1]} IEM soundings at each site, using a ±${meta.window_days}-day window around the date. Built ${esc(meta.built)}.` : 'Percentiles come from the IEM sounding archive, built by the repository\'s GitHub Action (not built yet).'} “For regime N” percentiles compare against only June–September 12Z soundings in that same regime. Model values are compared against sounding climatology, so small model biases carry through.</p>
@@ -1421,7 +1706,7 @@ function renderRef() {
 
 // ------------------------------------------------------------------ orchestration
 function renderAll() {
-  renderDays(); renderCall(); renderWheel(); renderMatrix(); renderMap(); renderSiteSeg(); renderIngredients(); renderPoP(); renderSoundings(); renderSeason(); renderRef();
+  renderDays(); renderCall(); renderWheel(); renderMatrix(); renderEnsemble(); renderMap(); renderSiteSeg(); renderIngredients(); renderPoP(); renderSoundings(); renderSeason(); renderRef();
   document.querySelectorAll('#srcSeg button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.s === state.src));
   document.querySelectorAll('#hourSeg button').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.h === state.mapHour));
 }
@@ -1445,6 +1730,8 @@ async function boot() {
     loadObs().then(renderAll),
     ...MODELS.map((m) => loadCore(m).then(() => { renderDays(); renderCall(); renderWheel(); renderMatrix(); renderPoP(); })),
     loadSelected(),
+    // ensembles are heavy, so they run one after another and are cached for 3 hours
+    (async () => { for (const m of ENS) { await loadEnsemble(m); renderAll(); } await loadEnsThermo(ENS.find((m) => m.key === state.ensSel)); renderIngredients(); renderCall(); })(),
   ];
   await Promise.allSettled(jobs);
   renderAll();
@@ -1453,14 +1740,21 @@ async function boot() {
 // ------------------------------------------------------------------ events
 document.addEventListener('click', (e) => {
   const t = e.target.closest('button'); if (!t) return;
-  if (t.matches('.day, .cell')) selectDay(+t.dataset.i);
+  if (t.matches('.day, .cell, .ecell')) selectDay(+t.dataset.i);
+  else if (t.id === 'memToggle') { state.showMembers = !state.showMembers; save('ffr-members', state.showMembers); renderWheel(); }
+  else if (t.dataset.ens) {
+    state.ensSel = t.dataset.ens; renderIngredients();
+    if (!state.ensThermo[state.ensSel]) loadEnsThermo(ENS.find((m) => m.key === state.ensSel)).then(() => { renderIngredients(); renderCall(); });
+  }
   else if (t.dataset.site) { state.site = t.dataset.site; renderSiteSeg(); renderIngredients(); renderCall(); }
   else if (t.dataset.s) { state.src = t.dataset.s; renderAll(); }
   else if (t.dataset.h) { state.mapHour = +t.dataset.h; renderAll(); }
   else if (t.dataset.pop) { state.pop = t.dataset.pop; renderPoP(); }
 });
 $('#modelSel').addEventListener('change', (e) => { state.model = e.target.value; save('ffr-model', state.model); renderAll(); loadSelected(); });
-$('#refreshBtn').addEventListener('click', () => { state.core = {}; state.grid = {}; state.thermo = {}; state.obs = {}; state.status = {}; boot(); });
+$('#refreshBtn').addEventListener('click', () => {
+  try { Object.keys(localStorage).filter((k) => k.startsWith('ffr-ens-')).forEach((k) => localStorage.removeItem(k)); } catch (e) { /* ignore */ }
+  state.core = {}; state.grid = {}; state.thermo = {}; state.obs = {}; state.ens = {}; state.ensThermo = {}; state.status = {}; boot(); });
 $('#themeBtn').addEventListener('click', () => {
   const t = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
   document.documentElement.dataset.theme = t; try { localStorage.setItem('ffr-theme', t); } catch (e) { /* ignore */ }

@@ -11,6 +11,11 @@ with moisture and instability compared against sounding climatology.
   sounding once it is in, otherwise from the model consensus.
 - **Seven-day outlook.** GFS, ECMWF IFS, ECMWF AIFS, ICON, GEM and HRRR regimes in a
   Tampa Bay analysis box, plus consensus and agreement.
+- **Ensemble regime probabilities.** Every GEFS (31) and ECMWF ENS (51) member is
+  classified individually, giving regime odds per day for each system and combined
+  (equal weight per system). The detail view adds flow-direction odds, ensemble-mean
+  flow, ridge-axis spread and ridge-position regime odds. Members also plot on the
+  regime wheel, and the ingredients panel can show ensemble means with member ranges.
 - **Layer flow and ridge axis.** 1000–700 mb mean wind across the state (12Z, 18Z,
   00Z) with the subtropical ridge axis traced where easterlies turn westerly.
 - **Coverage ingredients vs normal.** PWAT, Thompson, K, lifted index, MLCAPE,
@@ -47,6 +52,16 @@ dwpc, drct, speed_kts`) from a folder whose file names include the station ID:
 
     python scripts/build_climatology.py climo --start 1994 --end 2025 --csv-dir my_soundings/
 
+## Cape Canaveral (XMR) climatology
+
+XMR uses your own 1996–2025 archive rather than IEM. `data/climo_KXMR.json` was
+built from the per-launch parameter table with:
+
+    python scripts/build_climatology.py import-table --table xmr_allyear_soundings.csv --station KXMR --merge
+
+Whenever the Action rebuilds the climatology, any `data/climo_<STATION>.json` file is
+used in place of downloading that station. You don't need to commit the raw CSV.
+
 ## Method notes
 
 - Regime thresholds default to the current TBW Quick Reference (regime 1 below 5 kt,
@@ -58,6 +73,12 @@ dwpc, drct, speed_kts`) from a folder whose file names include the station ID:
 - Model profiles are compared against sounding climatology, so model biases carry
   through to the percentiles.
 - The coverage signal is an experimental heuristic, not a calibrated probability.
+- Ensemble-mean vectors shrink toward regime 1 when members disagree on direction,
+  so each ensemble votes in the consensus with its most likely member regime.
+- Ensemble requests are the heaviest on Open-Meteo's free limits, so processed results
+  are cached in the browser for 3 hours. Refresh clears the cache.
+- If a model is missing, hover its red chip in the status line to see Open-Meteo's
+  error message.
 
 ## Sources
 
