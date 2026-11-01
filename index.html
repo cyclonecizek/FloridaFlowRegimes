@@ -1,0 +1,1491 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Florida Flow Regime</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌀</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('ffr-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
+<style>
+:root {
+  --bg: #0c1820;
+  --panel: #112430;
+  --panel-2: #0f1f29;
+  --line: #20404d;
+  --line-soft: #1a3340;
+  --ink: #e4edee;
+  --ink-2: #b7c8cc;
+  --muted: #7f979e;
+  --land: #1b2c27;
+  --land-line: #3a5a4c;
+  --water: #0d1d26;
+  --ridge: #f2b33d;
+  --breeze: #5cc9d8;
+  --storm: #e65a82;
+  --good: #57d39b;
+  --bad: #e8735a;
+  --focus: #f2b33d;
+  --r1: #b3a6d9; --r2: #7fb2ff; --r3: #3d7beb; --r4: #f4a259; --r5: #e0662f;
+  --r6: #5cd3ae; --r7: #1fa37e; --r8: #e3cf6a; --r9: #b99b2e;
+  --shadow: 0 1px 0 rgba(255,255,255,0.03) inset;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --bg: #e9efee;
+  --panel: #ffffff;
+  --panel-2: #f4f7f6;
+  --line: #c9d6d6;
+  --line-soft: #dde6e5;
+  --ink: #0f222a;
+  --ink-2: #34494f;
+  --muted: #5e7378;
+  --land: #e3e9dc;
+  --land-line: #9fb39c;
+  --water: #d5e6ea;
+  --ridge: #c9830b;
+  --breeze: #137f8e;
+  --storm: #c02f5b;
+  --good: #1d8a5a;
+  --bad: #c4492c;
+  --focus: #c9830b;
+  --r1: #8f7fc4; --r2: #5b93ec; --r3: #2a5fc9; --r4: #ec8a3a; --r5: #c9531f;
+  --r6: #2fb38c; --r7: #13805f; --r8: #c7ad2e; --r9: #8f7516;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 64px); }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Barlow", "Segoe UI", system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+a { color: var(--breeze); }
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+.cond { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; }
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  padding-top: env(safe-area-inset-top, 0px);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line-soft);
+}
+.topbar-inner {
+  max-width: 1440px; margin: 0 auto; padding: 10px 20px;
+  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+}
+.brand { display: flex; align-items: baseline; gap: 10px; margin-right: auto; }
+.brand h1 { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 26px; letter-spacing: 0.01em; margin: 0; line-height: 1; }
+.brand span { color: var(--muted); font-size: 13px; }
+.ctrl { display: flex; align-items: center; gap: 8px; }
+.ctrl label { color: var(--muted); font-size: 13px; }
+select, .btn {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 10px; cursor: pointer;
+}
+.btn:hover, select:hover { border-color: var(--muted); }
+.btn.icon { padding: 6px 9px; line-height: 1; }
+
+/* day strip */
+.days { max-width: 1440px; margin: 0 auto; padding: 0 20px 10px; display: flex; gap: 6px; overflow-x: auto; }
+.day {
+  flex: 1 0 98px; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: center;
+  padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line-soft); background: var(--panel-2);
+  cursor: pointer; text-align: left;
+}
+.day .num { grid-row: span 2; font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 26px; line-height: 1; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 6px; }
+.day .d1 { font-weight: 600; font-size: 14px; line-height: 1.1; }
+.day .d2 { color: var(--muted); font-size: 12px; line-height: 1.1; }
+.day[aria-pressed="true"] { border-color: var(--ink-2); background: var(--panel); }
+
+/* ---------- layout ---------- */
+main { max-width: 1440px; margin: 0 auto; padding: 18px 20px 60px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+.panel, .two > * { min-width: 0; }
+.panel { background: var(--panel); border: 1px solid var(--line-soft); border-radius: 12px; box-shadow: var(--shadow); }
+.panel > header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 18px 0; flex-wrap: wrap; }
+.panel h2 { font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 21px; margin: 0; letter-spacing: 0.01em; }
+.panel .note { color: var(--muted); font-size: 13px; }
+.panel .body { padding: 12px 18px 18px; }
+
+.hero { display: grid; grid-template-columns: minmax(320px, 520px) 1fr; gap: 0; overflow: hidden; }
+.wheel-wrap { padding: 14px 10px 10px 14px; border-right: 1px solid var(--line-soft); background: var(--panel-2); }
+.wheel-wrap svg { width: 100%; height: auto; display: block; }
+.wheel-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 4px 8px 6px; color: var(--muted); font-size: 12.5px; }
+.wheel-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+
+.call { padding: 22px 28px 24px; display: grid; grid-template-columns: auto 1fr; column-gap: 28px; align-content: start; }
+.call .big {
+  font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: clamp(120px, 14vw, 190px);
+  line-height: 0.8; letter-spacing: -0.04em; margin: 4px 0 0; grid-row: span 3;
+}
+.call .kicker { color: var(--muted); font-size: 14px; }
+.call .title { font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 34px; line-height: 1.05; margin: 2px 0 6px; }
+.call .src { font-size: 14px; color: var(--ink-2); }
+.facts { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0; margin: 22px 0 0; border-top: 1px solid var(--line-soft); }
+.fact { padding: 10px 14px 10px 0; border-bottom: 1px solid var(--line-soft); }
+.fact dt { color: var(--muted); font-size: 12.5px; }
+.fact dd { margin: 0; font-size: 16px; font-weight: 500; }
+.expect { grid-column: 1 / -1; margin-top: 16px; max-width: 72ch; }
+.expect p { margin: 0 0 8px; color: var(--ink-2); }
+.signal { grid-column: 1 / -1; margin-top: 6px; padding: 10px 14px; border-left: 3px solid var(--breeze); background: var(--panel-2); border-radius: 0 8px 8px 0; max-width: 72ch; }
+.signal b { font-weight: 600; }
+
+/* matrix */
+.matrix { width: 100%; border-collapse: separate; border-spacing: 4px; }
+.matrix th { color: var(--muted); font-weight: 500; font-size: 13px; text-align: left; padding: 0 6px; white-space: nowrap; }
+.matrix thead th { text-align: center; }
+.matrix td { padding: 0; }
+.cell {
+  width: 100%; min-width: 62px; height: 46px; border-radius: 6px; border: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px; position: relative;
+}
+.cell .n { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 22px; }
+.cell .w { font-size: 11.5px; opacity: 0.85; line-height: 1.05; text-align: left; }
+.cell.sel { outline: 2px solid var(--ink); outline-offset: 1px; }
+.cell.na { background: transparent; border: 1px dashed var(--line); color: var(--muted); cursor: default; }
+.row-consensus th { color: var(--ink); font-weight: 600; }
+.agree { font-size: 11px; color: var(--muted); text-align: center; padding-top: 2px; }
+.matrix-scroll { overflow-x: auto; }
+
+/* map + ingredients */
+.two { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 18px; }
+.map-svg { width: 100%; height: auto; display: block; border-radius: 8px; background: var(--water); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.seg button { background: transparent; border: 0; padding: 5px 11px; cursor: pointer; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.maplegend { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--muted); font-size: 12.5px; margin-top: 8px; }
+.maplegend svg { vertical-align: middle; margin-right: 4px; }
+
+.sites { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.ing { display: grid; grid-template-columns: minmax(130px, 1.1fr) 86px minmax(150px, 2fr) 116px; align-items: center; gap: 4px 14px; }
+.ing .hd { color: var(--muted); font-size: 12px; padding-bottom: 2px; border-bottom: 1px solid var(--line-soft); }
+.ing .nm { font-weight: 500; }
+.ing .nm small { display: block; color: var(--muted); font-weight: 400; font-size: 12px; }
+.ing .val { font-family: "Barlow Condensed", sans-serif; font-size: 22px; font-weight: 600; text-align: right; }
+.ing .pc { font-size: 13px; color: var(--ink-2); line-height: 1.2; }
+.ing .pc b { font-weight: 600; }
+.ing > div { padding: 7px 0; border-bottom: 1px solid var(--line-soft); }
+.ing svg { display: block; width: 100%; height: 34px; }
+
+/* pop */
+.pop-grid { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; align-items: start; }
+.pop-img { width: 100%; max-width: 760px; border-radius: 8px; border: 1px solid var(--line-soft); background: #fff; }
+.pop-side p { margin: 0 0 10px; color: var(--ink-2); }
+
+/* soundings */
+.snd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.snd { border: 1px solid var(--line-soft); border-radius: 10px; background: var(--panel-2); padding: 12px 12px 8px; }
+.snd h3 { margin: 0; font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 19px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.snd .t { color: var(--muted); font-size: 12.5px; }
+.snd svg { width: 100%; height: auto; display: block; margin-top: 6px; }
+.snd dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 8px; margin: 6px 0 2px; }
+.snd dt { color: var(--muted); font-size: 11.5px; }
+.snd dd { margin: 0; font-weight: 500; font-size: 14px; }
+.chip { display: inline-grid; place-items: center; min-width: 28px; height: 24px; padding: 0 6px; border-radius: 5px; font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 17px; }
+
+/* season */
+.season-strip { display: flex; gap: 3px; flex-wrap: wrap; }
+.season-strip .chip { min-width: 22px; height: 30px; font-size: 14px; border-radius: 4px; }
+.season-svg { width: 100%; height: auto; display: block; margin-top: 12px; }
+
+/* reference */
+.ref { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0; border-top: 1px solid var(--line-soft); }
+.ref article { padding: 14px 16px 14px 0; border-bottom: 1px solid var(--line-soft); display: grid; grid-template-columns: 48px 1fr; gap: 10px; }
+.ref .chip { width: 40px; height: 40px; font-size: 26px; border-radius: 8px; }
+.ref h3 { margin: 0; font-size: 15px; font-weight: 600; }
+.ref p { margin: 3px 0 0; font-size: 13.5px; color: var(--ink-2); }
+.ref .def { color: var(--muted); font-size: 12.5px; }
+.method { columns: 2 340px; column-gap: 32px; color: var(--ink-2); font-size: 14px; }
+.method p { margin: 0 0 10px; break-inside: avoid; }
+
+/* status, tooltip, dialog */
+.status { max-width: 1440px; margin: 0 auto; padding: 0 20px 8px; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+.status .ok::before, .status .err::before, .status .wait::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+.status .ok::before { background: var(--good); }
+.status .err::before { background: var(--bad); }
+.status .wait::before { background: var(--muted); }
+.empty { color: var(--muted); padding: 18px 0; }
+#tip {
+  position: fixed; z-index: 50; pointer-events: none; max-width: 280px;
+  background: var(--ink); color: var(--bg); font-size: 12.5px; line-height: 1.35;
+  padding: 7px 9px; border-radius: 6px; opacity: 0; transition: opacity 0.08s;
+}
+dialog { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; max-width: 520px; width: calc(100% - 32px); padding: 20px 22px; }
+dialog::backdrop { background: rgba(0,0,0,0.5); }
+dialog h2 { margin: 0 0 10px; font-family: "Barlow Condensed", sans-serif; font-weight: 600; }
+.form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+.form label { display: grid; gap: 3px; font-size: 13px; color: var(--muted); }
+.form input { background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; color: var(--ink); }
+.form .full { grid-column: 1 / -1; }
+.dlg-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+@media (max-width: 1080px) {
+  .hero { grid-template-columns: 1fr; }
+  .wheel-wrap { border-right: 0; border-bottom: 1px solid var(--line-soft); }
+  .two, .pop-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  main { padding: 12px 10px 40px; }
+  .topbar-inner { padding: 8px 12px; gap: 10px; }
+  .brand span { display: none; }
+  .days { padding: 0 12px 8px; }
+  .call { grid-template-columns: 1fr; padding: 16px; }
+  .call .big { grid-row: auto; font-size: 120px; }
+  .ing { grid-template-columns: 1fr 70px; }
+  .ing .bar, .ing .hd.h3, .ing .hd.h4 { display: none; }
+  .ing .pc { grid-column: 1 / -1; padding-top: 0 !important; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* regime fills (text color chosen for contrast in each theme) */
+.rg1 { background: var(--r1); color: #10202a; } .rg2 { background: var(--r2); color: #0c1a26; }
+.rg3 { background: var(--r3); color: #ffffff; } .rg4 { background: var(--r4); color: #1d1206; }
+.rg5 { background: var(--r5); color: #1a0c04; } .rg6 { background: var(--r6); color: #062018; }
+.rg7 { background: var(--r7); color: #03140e; } .rg8 { background: var(--r8); color: #1d1804; }
+.rg9 { background: var(--r9); color: #140f00; }
+:root[data-theme="light"] .rg3, :root[data-theme="light"] .rg5,
+:root[data-theme="light"] .rg7, :root[data-theme="light"] .rg9 { color: #ffffff; }
+.good { color: var(--good); } .bad { color: var(--bad); }
+
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><h1>Florida Flow Regime</h1><span>Summer sea breeze thunderstorm regimes, 1000–700 mb layer flow</span></div>
+    <div class="ctrl"><label for="modelSel">Model</label><select id="modelSel"></select></div>
+    <div class="ctrl">
+      <button class="btn" id="refreshBtn" title="Reload all data">Refresh</button>
+      <button class="btn icon" id="themeBtn" title="Switch light or dark">◐</button>
+      <button class="btn icon" id="settingsBtn" title="Settings">⚙</button>
+    </div>
+  </div>
+  <div class="days" id="days" role="group" aria-label="Forecast day"></div>
+  <div class="status" id="status"></div>
+</header>
+
+<main>
+  <section class="panel hero" aria-label="Regime call">
+    <div class="wheel-wrap">
+      <svg id="wheel" viewBox="0 0 520 520" role="img" aria-label="Regime wheel"></svg>
+      <div class="wheel-legend" id="wheelLegend"></div>
+    </div>
+    <div class="call" id="call"></div>
+  </section>
+
+  <section class="panel">
+    <header><h2>Seven-day regime outlook</h2><span class="note">12Z 1000–700 mb mean vector in the Tampa Bay analysis box. Select a column to change the day.</span></header>
+    <div class="body matrix-scroll"><table class="matrix" id="matrix"></table></div>
+  </section>
+
+  <div class="two">
+    <section class="panel">
+      <header>
+        <h2>Layer flow and ridge axis</h2>
+        <div class="seg" id="hourSeg"><button data-h="12" aria-pressed="true">12Z</button><button data-h="18">18Z</button><button data-h="0">00Z</button></div>
+      </header>
+      <div class="body">
+        <svg id="map" class="map-svg" viewBox="0 0 640 600" role="img" aria-label="Florida layer-mean wind map"></svg>
+        <div class="maplegend" id="mapLegend"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <header>
+        <h2>Coverage ingredients vs normal</h2>
+        <div class="seg" id="srcSeg"><button data-s="model" aria-pressed="true">Model</button><button data-s="obs">Latest sounding</button></div>
+      </header>
+      <div class="body">
+        <div class="sites" id="siteSeg"></div>
+        <div id="ingredients"></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <header><h2>Regime rain climatology, NWS Tampa Bay</h2><div class="seg" id="popSeg"></div></header>
+    <div class="body pop-grid">
+      <img id="popImg" class="pop-img" alt="NWS Tampa Bay regime probability of precipitation climatology">
+      <div class="pop-side" id="popSide"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <header><h2>Florida soundings</h2><span class="note" id="sndNote">Latest available 12Z or 00Z launch per site</span></header>
+    <div class="body"><div class="snd-grid" id="soundings"></div></div>
+  </section>
+
+  <section class="panel">
+    <header><h2>Season so far</h2><span class="note" id="seasonNote"></span></header>
+    <div class="body" id="season"></div>
+  </section>
+
+  <section class="panel">
+    <header><h2>Regime guide</h2><span class="note">Definitions from the NWS Tampa Bay Thunderstorm Climatology Quick Reference</span></header>
+    <div class="body"><div class="ref" id="ref"></div></div>
+  </section>
+
+  <section class="panel">
+    <header><h2>How this works</h2></header>
+    <div class="body method" id="method"></div>
+  </section>
+</main>
+
+<div id="tip" role="tooltip"></div>
+
+<dialog id="settingsDlg">
+  <h2>Settings</h2>
+  <form class="form" id="settingsForm" method="dialog">
+    <label>Light/variable below (kt)<input name="light" type="number" step="0.5" min="1"></label>
+    <label>Strong above (kt)<input name="strong" type="number" step="0.5" min="2"></label>
+    <label>Analysis box south (°N)<input name="boxS" type="number" step="0.25"></label>
+    <label>Analysis box north (°N)<input name="boxN" type="number" step="0.25"></label>
+    <label>Analysis box west (°E)<input name="boxW" type="number" step="0.25"></label>
+    <label>Analysis box east (°E)<input name="boxE" type="number" step="0.25"></label>
+    <label class="full">Climatology file URL<input name="climoUrl" type="text"></label>
+    <label class="full">Season log file URL<input name="recentUrl" type="text"></label>
+    <div class="dlg-actions full">
+      <button class="btn" value="reset" id="resetSettings">Reset to defaults</button>
+      <button class="btn" value="cancel">Cancel</button>
+      <button class="btn primary" value="save" id="saveSettings">Save and reload</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script>
+/* ===================================================================
+   Florida Flow Regime core engine
+   Thermodynamics, 1000-700 hPa layer-mean wind, NWS TBW regime
+   classification, ridge-axis detection and climatology percentiles.
+   Mirrored 1:1 in scripts/build_climatology.py so live values and
+   climatology are computed the same way.
+   =================================================================== */
+const FR = (() => {
+  const RD = 287.04, CP = 1005.7, KAPPA = RD / CP, LV = 2.501e6, EPS = 0.622, G = 9.80665;
+  const isNum = (x) => typeof x === 'number' && isFinite(x);
+
+  // ---------- moisture ----------
+  const esat = (tc) => 6.112 * Math.exp((17.67 * tc) / (tc + 243.5)); // hPa (Bolton 1980)
+  const tdFromE = (e) => { const l = Math.log(e / 6.112); return (243.5 * l) / (17.67 - l); };
+  const mixr = (p, tdc) => { const e = esat(tdc); return (EPS * e) / (p - e); }; // kg/kg
+  const tdFromW = (p, w) => tdFromE((w * p) / (EPS + w));
+  const tdFromRH = (tc, rh) => (!isNum(tc) || !isNum(rh)) ? null : tdFromE((esat(tc) * Math.max(rh, 0.5)) / 100);
+  const rhOf = (tc, tdc) => (100 * esat(tdc)) / esat(tc);
+  const theta = (p, tk) => tk * Math.pow(1000 / p, KAPPA);
+  const tvirt = (tk, w) => (tk * (1 + w / EPS)) / (1 + w);
+
+  // ---------- wind ----------
+  const toUV = (dir, spd) => { const r = (dir * Math.PI) / 180; return { u: -spd * Math.sin(r), v: -spd * Math.cos(r) }; };
+  const fromUV = (u, v) => ({ dir: ((Math.atan2(-u, -v) * 180) / Math.PI + 360) % 360, spd: Math.hypot(u, v) });
+
+  // ---------- profile utilities ----------
+  // profile: array of {p, t, td, dir, spd}; t/td in C, spd in kt
+  function normalize(levels) {
+    const seen = new Map();
+    for (const q of levels) {
+      if (!isNum(q.p) || q.p < 50 || q.p > 1100) continue;
+      const key = Math.round(q.p * 10);
+      const cur = seen.get(key) || { p: q.p };
+      for (const k of ['t', 'td', 'dir', 'spd']) if (isNum(q[k]) && !isNum(cur[k])) cur[k] = q[k];
+      seen.set(key, cur);
+    }
+    const out = [...seen.values()].sort((a, b) => b.p - a.p);
+    for (const q of out) {
+      if (isNum(q.t) && isNum(q.td) && q.td > q.t) q.td = q.t;
+      if (isNum(q.dir) && isNum(q.spd)) { const w = toUV(q.dir, q.spd); q.u = w.u; q.v = w.v; }
+    }
+    return out;
+  }
+
+  // linear interpolation in ln(p); no extrapolation
+  function interp(prof, p, key) {
+    let lo = null, hi = null;
+    for (const q of prof) {
+      if (!isNum(q[key])) continue;
+      if (q.p >= p) lo = q; else { hi = q; break; }
+    }
+    if (lo && Math.abs(lo.p - p) < 1e-6) return lo[key];
+    if (!lo || !hi) return null;
+    const f = Math.log(lo.p / p) / Math.log(lo.p / hi.p);
+    return lo[key] + f * (hi[key] - lo[key]);
+  }
+
+  // pressure-weighted (trapezoid) layer-mean vector wind, default 1000-700 hPa
+  function layerMeanWind(prof, pBot = 1000, pTop = 700) {
+    if (!prof.length) return null;
+    const psfc = prof[0].p;
+    const bot = Math.min(pBot, psfc);
+    const ub = interp(prof, bot, 'u'), vb = interp(prof, bot, 'v');
+    const ut = interp(prof, pTop, 'u'), vt = interp(prof, pTop, 'v');
+    if (![ub, vb, ut, vt].every(isNum)) return null;
+    const pts = [{ p: bot, u: ub, v: vb }];
+    for (const q of prof) if (isNum(q.u) && q.p < bot && q.p > pTop) pts.push({ p: q.p, u: q.u, v: q.v });
+    pts.push({ p: pTop, u: ut, v: vt });
+    let su = 0, sv = 0, maxGap = 0;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const dp = pts[i].p - pts[i + 1].p;
+      maxGap = Math.max(maxGap, dp);
+      su += ((pts[i].u + pts[i + 1].u) / 2) * dp;
+      sv += ((pts[i].v + pts[i + 1].v) / 2) * dp;
+    }
+    if (maxGap > 160) return null;
+    const u = su / (bot - pTop), v = sv / (bot - pTop);
+    return { u, v, ...fromUV(u, v) };
+  }
+
+  // ---------- parcel ----------
+  function mlParcel(prof, depth = 100) {
+    if (!prof.length) return null;
+    const psfc = prof[0].p, pTop = psfc - depth;
+    let sTh = 0, sW = 0, n = 0;
+    for (let p = psfc; p >= pTop - 1e-6; p -= 5) {
+      const t = interp(prof, p, 't'), td = interp(prof, p, 'td');
+      if (!isNum(t) || !isNum(td)) continue;
+      sTh += theta(p, t + 273.15); sW += mixr(p, td); n++;
+    }
+    if (n < 3) return null;
+    const th = sTh / n, w = sW / n;
+    const tk = th * Math.pow(psfc / 1000, KAPPA);
+    const tdk = Math.min(tdFromW(psfc, w) + 273.15, tk);
+    return { p: psfc, tk, tdk, w, theta: th };
+  }
+
+  function lcl(tk, tdk, p) {
+    const tl = 1 / (1 / (tdk - 56) + Math.log(tk / tdk) / 800) + 56;
+    return { t: tl, p: p * Math.pow(tl / tk, 1 / KAPPA) };
+  }
+
+  function moistDTdp(p, tk) {
+    const es = esat(tk - 273.15), rs = (EPS * es) / (p - es);
+    return ((RD * tk + LV * rs) / p) / (CP + (LV * LV * rs * EPS) / (RD * tk * tk));
+  }
+
+  function moistStep(tk, p0, p1) {
+    const n = Math.max(1, Math.ceil(Math.abs(p1 - p0) / 5)), h = (p1 - p0) / n;
+    let p = p0, t = tk;
+    for (let i = 0; i < n; i++) {
+      const k1 = moistDTdp(p, t), k2 = moistDTdp(p + h / 2, t + (h / 2) * k1);
+      const k3 = moistDTdp(p + h / 2, t + (h / 2) * k2), k4 = moistDTdp(p + h, t + h * k3);
+      t += (h / 6) * (k1 + 2 * k2 + 2 * k3 + k4); p += h;
+    }
+    return t;
+  }
+
+  // parcel temperature (K) at a set of descending pressures
+  function parcelPath(pc, pressures) {
+    const L = lcl(pc.tk, pc.tdk, pc.p);
+    let tMoist = L.t, pMoist = L.p;
+    return pressures.map((p) => {
+      if (p >= L.p) return { p, tk: pc.theta * Math.pow(p / 1000, KAPPA), w: pc.w, sat: false };
+      tMoist = moistStep(tMoist, pMoist, p); pMoist = p;
+      const es = esat(tMoist - 273.15);
+      return { p, tk: tMoist, w: (EPS * es) / (p - es), sat: true };
+    });
+  }
+
+  function capeOf(prof, pc) {
+    const top = prof.filter((q) => isNum(q.t)).slice(-1)[0];
+    if (!top) return null;
+    const pTop = Math.max(top.p, 100), ps = [];
+    for (let p = pc.p; p >= pTop; p -= 10) ps.push(p);
+    if (ps.length < 5) return null;
+    const path = parcelPath(pc, ps);
+    const B = path.map((q) => {
+      const te = interp(prof, q.p, 't'), tde = interp(prof, q.p, 'td');
+      if (!isNum(te)) return null;
+      const we = isNum(tde) ? mixr(q.p, tde) : 0;
+      return tvirt(q.tk, q.w) - tvirt(te + 273.15, we);
+    });
+    const L = lcl(pc.tk, pc.tdk, pc.p);
+    let lfc = -1, el = -1;
+    for (let i = 0; i < ps.length; i++) if (isNum(B[i]) && B[i] > 0 && ps[i] <= L.p + 1e-6) { if (lfc < 0) lfc = i; el = i; }
+    if (lfc < 0) return 0;
+    let cape = 0;
+    for (let i = lfc; i < el; i++) {
+      if (!isNum(B[i]) || !isNum(B[i + 1])) continue;
+      const b = (B[i] + B[i + 1]) / 2;
+      if (b > 0) cape += RD * b * Math.log(ps[i] / ps[i + 1]);
+    }
+    return cape;
+  }
+
+  // ---------- full metric set ----------
+  function metrics(levels, opts = {}) {
+    const prof = normalize(levels);
+    const out = { prof, n: prof.length };
+    if (prof.length < 4) return out;
+    const mw = layerMeanWind(prof, 1000, 700);
+    if (mw) { out.mw = mw; out.mwspd = mw.spd; out.regime = classify(mw.dir, mw.spd, opts); }
+    const T = (p) => interp(prof, p, 't'), TD = (p) => interp(prof, p, 'td');
+    const t850 = T(850), td850 = TD(850), t700 = T(700), td700 = TD(700), t500 = T(500), td500 = TD(500);
+    if (isNum(t500)) out.t500 = t500;
+    if ([t850, td850, t700, td700, t500].every(isNum)) out.ki = (t850 - t500) + td850 - (t700 - td700);
+    if (isNum(t700) && isNum(t500)) {
+      const dz = (RD / G) * ((t700 + t500) / 2 + 273.15) * Math.log(700 / 500);
+      out.lr75 = ((t700 - t500) / dz) * 1000;
+    }
+    const rhs = [[t850, td850], [t700, td700], [t500, td500]].filter(([a, b]) => isNum(a) && isNum(b)).map(([a, b]) => rhOf(a, b));
+    if (rhs.length >= 2) out.rhmid = rhs.reduce((s, x) => s + x, 0) / rhs.length;
+    // precipitable water, surface to 300 hPa
+    const moist = prof.filter((q) => isNum(q.td) && q.p >= 300);
+    if (moist.length >= 4 && moist[moist.length - 1].p <= 400) {
+      let s = 0;
+      for (let i = 0; i < moist.length - 1; i++) {
+        s += ((mixr(moist[i].p, moist[i].td) + mixr(moist[i + 1].p, moist[i + 1].td)) / 2) * (moist[i].p - moist[i + 1].p) * 100;
+      }
+      out.pwat = s / G; // mm
+    }
+    if (isNum(opts.pwatOverride)) out.pwat = opts.pwatOverride;
+    const pc = mlParcel(prof, 100);
+    if (pc) {
+      out.parcel = pc; out.lcl = lcl(pc.tk, pc.tdk, pc.p);
+      if (isNum(t500)) {
+        const tp500 = parcelPath(pc, [500])[0].tk;
+        out.li = t500 + 273.15 - tp500;
+        if (isNum(out.ki)) out.ti = out.ki - out.li;
+      }
+      out.mlcape = capeOf(prof, pc);
+    }
+    return out;
+  }
+
+  // ---------- NWS Tampa Bay regimes ----------
+  const SECTORS = [
+    { key: 'NE/E', from: 0, to: 120, mod: 2, str: 3 },
+    { key: 'SE/S', from: 120, to: 190, mod: 6, str: 7 },
+    { key: 'SW/W', from: 190, to: 290, mod: 4, str: 5 },
+    { key: 'NW/N', from: 290, to: 360, mod: 8, str: 9 },
+  ];
+  function sectorOf(dir) { const d = ((dir % 360) + 360) % 360; return SECTORS.find((s) => d >= s.from && d < s.to); }
+  function classify(dir, spd, opts = {}) {
+    const light = isNum(opts.light) ? opts.light : 5, strong = isNum(opts.strong) ? opts.strong : 10;
+    if (!isNum(dir) || !isNum(spd)) return null;
+    if (spd < light) return 1;
+    const s = sectorOf(dir);
+    return spd > strong ? s.str : s.mod;
+  }
+
+  // ridge axis: southernmost easterly->westerly transition of layer-mean u going north
+  function ridgeLat(lats, us) {
+    const pts = lats.map((lat, i) => ({ lat, u: us[i] })).filter((q) => isNum(q.u)).sort((a, b) => a.lat - b.lat);
+    if (pts.length < 3) return null;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1];
+      if (a.u < 0 && b.u >= 0) return { lat: a.lat + ((0 - a.u) / (b.u - a.u)) * (b.lat - a.lat), where: 'in' };
+    }
+    if (pts.every((q) => q.u < 0)) return { lat: pts[pts.length - 1].lat, where: 'north' };
+    if (pts.every((q) => q.u >= 0)) return { lat: pts[0].lat, where: 'south' };
+    return null;
+  }
+
+  // AMU / Lericos et al. (2002) style ridge position from MFL, TBW, JAX layer means
+  function amuRegime(mfl, tbw, jax) {
+    if (![mfl, tbw, jax].every((x) => x && isNum(x.dir))) return null;
+    const all = (f) => [mfl, tbw, jax].every(f);
+    if (all((x) => x.dir >= 270 && x.dir < 360)) return 'NW';
+    if (all((x) => x.dir >= 0 && x.dir < 90)) return 'NE';
+    const e = (x) => x.u < 0;
+    if (!e(mfl) && !e(tbw) && !e(jax)) return 'SW-1';
+    if (e(mfl) && !e(tbw) && !e(jax)) return 'SW-2';
+    if (e(mfl) && e(tbw) && !e(jax)) return 'SE-1';
+    if (e(mfl) && e(tbw) && e(jax)) return 'SE-2';
+    return 'Other';
+  }
+  function amuFromRidge(lat) {
+    if (!isNum(lat)) return null;
+    if (lat < 25.75) return 'SW-1';
+    if (lat < 27.7) return 'SW-2';
+    if (lat < 30.5) return 'SE-1';
+    return 'SE-2';
+  }
+
+  // ---------- climatology ----------
+  // climo.stations[ST][cycle][var] = array (one per stored day) of 21 percentiles (0,5,..,100)
+  function doyOf(dateStr) { const d = new Date(dateStr + 'T00:00:00Z'); return Math.floor((d - Date.UTC(d.getUTCFullYear(), 0, 1)) / 864e5) + 1; }
+  function climoQ(climo, st, cycle, v, doy) {
+    const c = climo && climo.stations && climo.stations[st] && climo.stations[st][cycle];
+    if (!c || !c[v]) return null;
+    const step = climo.doyStep || 3, days = climo.doys;
+    let i = days.findIndex((d) => d > doy);
+    if (i === -1) i = days.length; // wrap
+    const i0 = (i - 1 + days.length) % days.length, i1 = i % days.length;
+    const d0 = days[i0]; let span = days[i1] - d0; if (span <= 0) span += 366;
+    let off = doy - d0; if (off < 0) off += 366;
+    const f = span ? Math.min(1, off / span) : 0;
+    const a = c[v][i0], b = c[v][i1];
+    if (!a || !b) return a || b || null;
+    return a.map((x, k) => (isNum(x) && isNum(b[k]) ? x + f * (b[k] - x) : x));
+  }
+  function pctOf(v, q) {
+    if (!isNum(v) || !q) return null;
+    if (v <= q[0]) return 0;
+    if (v >= q[q.length - 1]) return 100;
+    const step = 100 / (q.length - 1);
+    for (let i = 0; i < q.length - 1; i++) {
+      if (v <= q[i + 1]) { const d = q[i + 1] - q[i]; return step * (i + (d > 0 ? (v - q[i]) / d : 0.5)); }
+    }
+    return 100;
+  }
+  function meanVector(list) {
+    const xs = list.filter((x) => x && isNum(x.u));
+    if (!xs.length) return null;
+    const u = xs.reduce((s, x) => s + x.u, 0) / xs.length, v = xs.reduce((s, x) => s + x.v, 0) / xs.length;
+    return { u, v, ...fromUV(u, v), n: xs.length };
+  }
+
+  return {
+    isNum, esat, mixr, tdFromRH, rhOf, toUV, fromUV, normalize, interp, layerMeanWind,
+    mlParcel, lcl, parcelPath, capeOf, metrics, classify, sectorOf, SECTORS, ridgeLat,
+    amuRegime, amuFromRidge, doyOf, climoQ, pctOf, meanVector,
+  };
+})();
+if (typeof module !== 'undefined') module.exports = FR;
+
+</script>
+<script>
+(() => {
+'use strict';
+const $ = (s) => document.querySelector(s);
+const isNum = FR.isNum;
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// ------------------------------------------------------------------ config
+const DEFAULTS = { light: 5, strong: 10, boxS: 27.0, boxN: 28.5, boxW: -83.0, boxE: -81.5,
+  climoUrl: 'data/climo.json', recentUrl: 'data/recent.json' };
+const load = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
+const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* private mode */ } };
+let S = { ...DEFAULTS, ...(load('ffr-settings') || {}) };
+
+const OM = 'https://api.open-meteo.com/v1/forecast';
+const IEMJ = 'https://mesonet.agron.iastate.edu/json/raob.py';
+const WIND_LV = [1000, 925, 850, 700];
+const THERMO_LV = [1000, 975, 950, 925, 900, 850, 800, 700, 600, 500, 400, 300, 250, 200];
+
+const SITES = [
+  { id: 'TBW', iem: 'KTBW', name: 'Tampa Bay', lat: 27.705, lon: -82.401 },
+  { id: 'XMR', iem: 'KXMR', name: 'Cape Canaveral', lat: 28.481, lon: -80.555 },
+  { id: 'MFL', iem: 'KMFL', name: 'Miami', lat: 25.755, lon: -80.384 },
+  { id: 'JAX', iem: 'KJAX', name: 'Jacksonville', lat: 30.500, lon: -81.700 },
+  { id: 'KEY', iem: 'KKEY', name: 'Key West', lat: 24.551, lon: -81.788 },
+  { id: 'TLH', iem: 'KTLH', name: 'Tallahassee', lat: 30.446, lon: -84.299 },
+];
+const MODELS = [
+  { key: 'gfs', name: 'GFS', ids: ['gfs_seamless'], c: '#e4edee' },
+  { key: 'ecmwf', name: 'ECMWF IFS', ids: ['ecmwf_ifs025', 'ecmwf_ifs'], c: '#f2b33d' },
+  { key: 'aifs', name: 'ECMWF AIFS', ids: ['ecmwf_aifs025_single', 'ecmwf_aifs025'], c: '#e65a82' },
+  { key: 'icon', name: 'ICON', ids: ['icon_seamless'], c: '#5cc9d8' },
+  { key: 'gem', name: 'GEM', ids: ['gem_seamless'], c: '#b3a6d9' },
+  { key: 'hrrr', name: 'HRRR', ids: ['gfs_hrrr', 'ncep_hrrr_conus'], c: '#57d39b' },
+];
+
+const REG = {
+  1: { name: 'Light and variable', sector: 'Light', days: 98,
+    def: 'Mean flow under the light threshold, any direction.',
+    expect: 'Both sea breezes form early and push well inland, colliding over the interior of the peninsula by mid to late afternoon. Storms are slow movers with heavy rain and frequent lightning near the collision zone, and outflow boundaries keep triggering new cells.',
+    favored: 'Interior peninsula, mid-afternoon into early evening' },
+  2: { name: 'NE/E flow, moderate', sector: 'NE/E', days: 249,
+    def: 'From 360° to 120°, light to 10 kt.',
+    expect: 'The Atlantic sea breeze moves inland quickly and storms that start on the east side drift west through the early afternoon. The Gulf sea breeze stays pinned near the west coast, where the strongest late-afternoon and evening storms tend to fire, especially from Tampa Bay south toward Fort Myers and Naples.',
+    favored: 'Interior early afternoon, west coast late afternoon and evening' },
+  3: { name: 'NE/E flow, strong', sector: 'NE/E', days: 118,
+    def: 'From 360° to 120°, above 10 kt.',
+    expect: 'Strong onshore flow keeps the Atlantic sea breeze weak and brings showers in off the ocean along the east coast in the morning. Convection concentrates along the Gulf sea breeze, pinned at or just inland from the west coast late in the day, with southwest Florida most favored.',
+    favored: 'West coast, especially southwest Florida, late day' },
+  4: { name: 'SW/W flow, moderate', sector: 'SW/W', days: 428,
+    def: 'From 190° to 290°, light to 10 kt.',
+    expect: 'Morning showers and storms develop near the Gulf coast as the land breeze meets the onshore flow. By afternoon the action shifts to the eastern half of the peninsula, where storms drifting east run into the Atlantic sea breeze. Orlando to the I-95 corridor and the Space Coast are favored.',
+    favored: 'Gulf coast in the morning, east-central Florida in the afternoon' },
+  5: { name: 'SW/W flow, strong', sector: 'SW/W', days: 268,
+    def: 'From 190° to 290°, above 10 kt.',
+    expect: 'The busiest morning pattern for the Gulf coast, with storms near the coast early. The Atlantic sea breeze is pinned at the coast and the strongest afternoon storms fire near the east coast, while the west coast often clears out by afternoon.',
+    favored: 'Gulf coast early, Atlantic coast in the afternoon' },
+  6: { name: 'SE/S flow, moderate', sector: 'SE/S', days: 458,
+    def: 'From 120° to 190°, light to 10 kt.',
+    expect: 'Early showers near the southeast coast, then the Atlantic sea breeze carries convection inland. Afternoon storms favor the southern and western peninsula where the flow meets the Gulf sea breeze, Tampa Bay southward into the evening. This regime had the largest mean SBCAPE in the TBW first-CG lightning study.',
+    favored: 'Southwest and west-central Florida, afternoon and evening' },
+  7: { name: 'SE/S flow, strong', sector: 'SE/S', days: 224,
+    def: 'From 120° to 190°, above 10 kt.',
+    expect: 'Deep Atlantic and Caribbean moisture with weak mid-level lapse rates and warm advection. Rain chances run high on the west coast, but with more cloud debris and less instability. Storms favor west-central and southwest Florida late in the day.',
+    favored: 'West-central and southwest Florida, late day' },
+  8: { name: 'NW/N flow, moderate', sector: 'NW/N', days: 96,
+    def: 'From 290° to 360°, light to 10 kt.',
+    expect: 'Usually a drier pattern. The Gulf sea breeze is weak, and storms cluster over the southeast peninsula in the afternoon where the flow meets the Atlantic sea breeze.',
+    favored: 'Southeast peninsula, afternoon' },
+  9: { name: 'NW/N flow, strong', sector: 'NW/N', days: null,
+    def: 'From 290° to 360°, above 10 kt (TBW sub-regime of 8).',
+    expect: 'Rare in summer and usually tied to a trough or front. Typically the driest regime with the least lightning; any storms favor the southeast coast.',
+    favored: 'Southeast coast, if anything' },
+};
+
+const PARAMS = [
+  { k: 'pwat', name: 'Precipitable water', desc: 'Surface to 300 mb', fmt: (v) => (v / 25.4).toFixed(2) + ' in', sub: (v) => Math.round(v) + ' mm', sign: 1 },
+  { k: 'ti', name: 'Thompson index', desc: 'K index minus lifted index', fmt: (v) => v.toFixed(0), sign: 1 },
+  { k: 'ki', name: 'K index', desc: 'Low-level moisture and lapse rate', fmt: (v) => v.toFixed(0), sign: 1 },
+  { k: 'li', name: 'Lifted index', desc: 'Lowest 100 mb mixed parcel', fmt: (v) => v.toFixed(1) + '°', sign: -1 },
+  { k: 'mlcape', name: 'MLCAPE', desc: 'Lowest 100 mb mixed parcel', fmt: (v) => Math.round(v) + '', sub: () => 'J/kg', sign: 1 },
+  { k: 't500', name: '500 mb temperature', desc: 'Colder aloft is more unstable', fmt: (v) => v.toFixed(1) + '°C', sign: -1 },
+  { k: 'lr75', name: '700–500 mb lapse rate', desc: '°C per km', fmt: (v) => v.toFixed(1), sign: 1 },
+  { k: 'rhmid', name: 'Mid-level RH', desc: 'Mean of 850, 700, 500 mb', fmt: (v) => Math.round(v) + '%', sign: 1 },
+];
+
+const POP = [
+  { k: '24-1', label: '24 hr' }, { k: '12-1', label: 'Daytime' }, { k: '6-2', label: '12–18Z' },
+  { k: '6-3', label: '18–00Z' }, { k: '6-4', label: '00–06Z' },
+];
+
+// ------------------------------------------------------------------ state
+const state = {
+  model: load('ffr-model') || 'gfs', day: 0, site: 'TBW', mapHour: 12, src: 'model', pop: '12-1',
+  dates: [], core: {}, grid: {}, thermo: {}, obs: {}, climo: null, recent: null, geo: null, status: {},
+};
+if (!MODELS.find((m) => m.key === state.model)) state.model = 'gfs';
+
+// ------------------------------------------------------------------ helpers
+const nyDate = (ms) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(ms));
+const addDays = (ds, n) => new Date(Date.parse(ds + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
+const dayLabel = (ds) => {
+  const d = new Date(ds + 'T12:00:00Z');
+  return { wd: d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }), md: `${d.getUTCMonth() + 1}/${d.getUTCDate()}` };
+};
+const range = (a, b, s) => { const o = []; for (let x = a; x <= b + 1e-9; x += s) o.push(Math.round(x * 1000) / 1000); return o; };
+const regClass = (r) => (r ? `rg${r}` : '');
+const kt = (x) => (isNum(x) ? Math.round(x) : '–');
+const deg = (x) => (isNum(x) ? String(Math.round(x)).padStart(3, '0') + '°' : '–');
+const median = (xs) => { const a = xs.filter(isNum).sort((x, y) => x - y); if (!a.length) return null; const m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
+const ordinal = (n) => { const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
+function setStatus(key, cls, text) { state.status[key] = { cls, text }; renderStatus(); }
+
+function idxOf(times, date, hour) {
+  const d = hour === 0 ? addDays(date, 1) : date;
+  return times.indexOf(`${d}T${String(hour).padStart(2, '0')}:00`);
+}
+
+async function omFetch(model, pts, vars) {
+  const lat = pts.map((p) => p.lat.toFixed(3)).join(','), lon = pts.map((p) => p.lon.toFixed(3)).join(',');
+  let err = null;
+  for (const id of model.ids) {
+    const url = `${OM}?latitude=${lat}&longitude=${lon}&hourly=${vars.join(',')}&models=${id}&wind_speed_unit=kn&timezone=GMT&past_days=1&forecast_days=9`;
+    try {
+      const r = await fetch(url); const j = await r.json();
+      if (!r.ok || j.error) throw new Error(j.reason || `HTTP ${r.status}`);
+      return Array.isArray(j) ? j : [j];
+    } catch (e) { err = e; }
+  }
+  throw err || new Error('request failed');
+}
+
+function jsonp(url) {
+  return new Promise((res, rej) => {
+    const cb = '__iem' + Math.random().toString(36).slice(2), s = document.createElement('script');
+    const done = () => { clearTimeout(t); delete window[cb]; s.remove(); };
+    const t = setTimeout(() => { done(); rej(new Error('timeout')); }, 20000);
+    window[cb] = (d) => { done(); res(d); };
+    s.onerror = () => { done(); rej(new Error('jsonp failed')); };
+    s.src = url + '&callback=' + cb; document.head.appendChild(s);
+  });
+}
+async function iemGet(url) {
+  try { const r = await fetch(url); if (!r.ok) throw new Error(); return await r.json(); }
+  catch (e) { return jsonp(url); }
+}
+
+const windVars = () => WIND_LV.flatMap((p) => [`wind_speed_${p}hPa`, `wind_direction_${p}hPa`]);
+function lmAt(h, i) {
+  if (i < 0) return null;
+  const prof = FR.normalize(WIND_LV.map((p) => ({ p, dir: h[`wind_direction_${p}hPa`]?.[i], spd: h[`wind_speed_${p}hPa`]?.[i] })));
+  return FR.layerMeanWind(prof, 1000, 700);
+}
+
+// ------------------------------------------------------------------ loaders
+function corePoints() {
+  const pts = [];
+  const latStep = Math.max(0.25, (S.boxN - S.boxS) / 4), lonStep = Math.max(0.25, (S.boxE - S.boxW) / 4);
+  for (const la of range(S.boxS, S.boxN, latStep)) for (const lo of range(S.boxW, S.boxE, lonStep)) pts.push({ lat: la, lon: lo, tag: 'box' });
+  for (const lo of [-82.5, -81.5]) for (const la of range(24, 31.5, 0.5)) pts.push({ lat: la, lon: lo, tag: 'tr' + lo });
+  for (const s of SITES) pts.push({ lat: s.lat, lon: s.lon, tag: 'site', site: s.id });
+  return pts;
+}
+
+async function loadCore(model) {
+  setStatus('om-' + model.key, 'wait', `${model.name}`);
+  try {
+    const pts = corePoints();
+    const res = await omFetch(model, pts, windVars());
+    const times = res[0].hourly.time;
+    const days = state.dates.map((date) => {
+      const i = idxOf(times, date, 12);
+      const out = { date, sites: {} };
+      const box = [], tr = {};
+      pts.forEach((p, k) => {
+        const lm = lmAt(res[k].hourly, i);
+        if (p.tag === 'box') box.push(lm);
+        else if (p.tag === 'site') out.sites[p.site] = lm;
+        else (tr[p.tag] = tr[p.tag] || []).push({ lat: p.lat, u: lm ? lm.u : null });
+      });
+      const mv = FR.meanVector(box);
+      if (mv && mv.n >= Math.max(3, box.length * 0.6)) { out.box = mv; out.regime = FR.classify(mv.dir, mv.spd, S); }
+      const rl = Object.values(tr).map((a) => FR.ridgeLat(a.map((q) => q.lat), a.map((q) => q.u))).filter(Boolean);
+      if (rl.length) {
+        const ins = rl.filter((r) => r.where === 'in');
+        out.ridge = ins.length ? { lat: ins.reduce((s, r) => s + r.lat, 0) / ins.length, where: 'in' } : rl[0];
+      }
+      const { MFL, TBW, JAX } = out.sites;
+      out.amu = FR.amuRegime(MFL, TBW, JAX);
+      return out;
+    });
+    state.core[model.key] = { days };
+    const nOk = days.filter((d) => d.regime).length;
+    setStatus('om-' + model.key, nOk ? 'ok' : 'err', `${model.name}${nOk ? '' : ' (no data)'}`);
+  } catch (e) {
+    state.core[model.key] = { error: e.message };
+    setStatus('om-' + model.key, 'err', `${model.name} unavailable`);
+  }
+}
+
+async function loadGrid(model) {
+  if (state.grid[model.key]) return;
+  const lats = range(24, 31.5, 0.75), lons = range(-87.75, -79.5, 0.75);
+  const pts = []; for (const la of lats) for (const lo of lons) pts.push({ lat: la, lon: lo });
+  try {
+    const res = await omFetch(model, pts, windVars());
+    state.grid[model.key] = { pts, res, lats, lons, times: res[0].hourly.time };
+  } catch (e) { state.grid[model.key] = { error: e.message }; }
+}
+
+async function loadThermo(model) {
+  if (state.thermo[model.key]) return;
+  const vars = [...THERMO_LV.flatMap((p) => [`temperature_${p}hPa`, `relative_humidity_${p}hPa`]), ...windVars(),
+    'temperature_2m', 'dew_point_2m', 'surface_pressure', 'total_column_integrated_water_vapour'];
+  try {
+    const res = await omFetch(model, SITES, vars);
+    const out = {};
+    SITES.forEach((s, k) => {
+      const h = res[k].hourly, times = h.time;
+      const at = (i) => {
+        if (i < 0) return null;
+        const ps = h.surface_pressure?.[i];
+        const lv = [];
+        if (isNum(ps) && isNum(h.temperature_2m?.[i])) lv.push({ p: ps, t: h.temperature_2m[i], td: h.dew_point_2m?.[i] });
+        for (const p of THERMO_LV) {
+          if (isNum(ps) && p > ps - 2) continue;
+          const t = h[`temperature_${p}hPa`]?.[i], rh = h[`relative_humidity_${p}hPa`]?.[i];
+          if (!isNum(t)) continue;
+          lv.push({ p, t, td: FR.tdFromRH(t, rh), dir: h[`wind_direction_${p}hPa`]?.[i], spd: h[`wind_speed_${p}hPa`]?.[i] });
+        }
+        if (lv.length < 6) return null;
+        const m = FR.metrics(lv, { ...S, pwatOverride: h.total_column_integrated_water_vapour?.[i] });
+        return m;
+      };
+      out[s.id] = state.dates.map((date) => ({ date, z12: at(idxOf(times, date, 12)), z00: at(idxOf(times, date, 0)) }));
+    });
+    state.thermo[model.key] = out;
+  } catch (e) { state.thermo[model.key] = { error: e.message }; }
+}
+
+async function fetchSounding(site, ts) {
+  const j = await iemGet(`${IEMJ}?station=${site.iem}&ts=${ts}`);
+  const pr = j && j.profiles && j.profiles[0] && j.profiles[0].profile;
+  if (!pr || pr.length < 10) return null;
+  const levels = pr.map((q) => ({ p: q.pres, t: q.tmpc, td: q.dwpc, dir: q.drct, spd: q.sknt }));
+  return { valid: ts, m: FR.metrics(levels, S) };
+}
+
+async function loadObs() {
+  setStatus('iem', 'wait', 'Soundings');
+  const now = Date.now(), base = Math.floor(now / 432e5) * 432e5;
+  const today12 = `${state.dates[0]}T12:00:00Z`;
+  let got = 0;
+  await Promise.all(SITES.map(async (s) => {
+    const rec = {};
+    for (let k = 0; k < 4 && !rec.latest; k++) {
+      const ts = new Date(base - k * 432e5).toISOString().slice(0, 19) + 'Z';
+      try { const r = await fetchSounding(s, ts); if (r) rec.latest = r; } catch (e) { /* try older */ }
+    }
+    if (rec.latest && rec.latest.valid === today12) rec.today12 = rec.latest;
+    else if (Date.parse(today12) < now && ['TBW', 'MFL', 'JAX'].includes(s.id)) {
+      try { rec.today12 = await fetchSounding(s, today12); } catch (e) { /* not yet */ }
+    }
+    if (rec.latest) got++;
+    state.obs[s.id] = rec;
+  }));
+  setStatus('iem', got ? 'ok' : 'err', `Soundings ${got}/${SITES.length}`);
+}
+
+async function loadJSON(url, key, label) {
+  try {
+    const r = await fetch(url, { cache: 'no-cache' });
+    if (!r.ok) throw new Error(r.status);
+    state[key] = await r.json();
+    setStatus(key, 'ok', label);
+  } catch (e) { state[key] = null; setStatus(key, 'err', `${label} not found`); }
+}
+
+async function loadGeo() {
+  try {
+    const [us, world] = await Promise.all([
+      fetch('https://cdn.jsdelivr.net/npm/us-atlas@3.0.1/states-10m.json').then((r) => r.json()),
+      fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json').then((r) => r.json()),
+    ]);
+    state.geo = {
+      states: topojson.feature(us, us.objects.states),
+      mesh: topojson.mesh(us, us.objects.states, (a, b) => a !== b),
+      countries: topojson.feature(world, world.objects.countries),
+    };
+  } catch (e) { state.geo = null; }
+}
+
+// ------------------------------------------------------------------ derived
+const curModel = () => MODELS.find((m) => m.key === state.model);
+function consensus(di) {
+  const votes = {}, vecs = []; let n = 0;
+  for (const m of MODELS) {
+    const d = state.core[m.key]?.days?.[di];
+    if (d && d.regime) { votes[d.regime] = (votes[d.regime] || 0) + 1; vecs.push(d.box); n++; }
+  }
+  if (!n) return null;
+  const max = Math.max(...Object.values(votes));
+  const tops = Object.keys(votes).filter((k) => votes[k] === max).map(Number);
+  const mv = FR.meanVector(vecs);
+  let reg = tops.length === 1 ? tops[0] : FR.classify(mv.dir, mv.spd, S);
+  if (!tops.includes(reg)) reg = tops[0];
+  return { regime: reg, agree: votes[reg], n, mv, votes };
+}
+function obsToday() { const o = state.obs.TBW && state.obs.TBW.today12; return o && o.m && o.m.regime ? o : null; }
+function callFor(di) {
+  const c = consensus(di);
+  if (di === 0 && obsToday()) {
+    const o = obsToday();
+    return { regime: o.m.regime, src: 'obs', vec: o.m.mw, cons: c };
+  }
+  return c ? { regime: c.regime, src: 'models', vec: c.mv, cons: c } : null;
+}
+function climoFor(siteIem, cycle, v, date) {
+  if (!state.climo) return null;
+  return FR.climoQ(state.climo, siteIem, cycle, v, FR.doyOf(date));
+}
+function byRegimeQ(siteIem, v, r) {
+  return state.climo?.stations?.[siteIem]?.byRegime?.[v]?.[String(r)] || null;
+}
+function describePct(p, sign) {
+  if (!isNum(p)) return { word: 'no climatology', cls: '' };
+  const words = p < 10 ? 'well below normal' : p < 25 ? 'below normal' : p <= 75 ? 'near normal' : p <= 90 ? 'above normal' : 'well above normal';
+  const fav = sign * (p - 50);
+  return { word: words, cls: fav > 25 ? 'good' : fav < -25 ? 'bad' : '' };
+}
+function ridgeWords(r) {
+  if (!r) return '–';
+  if (r.where === 'north') return 'North of 31.5°N';
+  if (r.where === 'south') return 'South of 24°N';
+  const lat = r.lat;
+  const near = lat < 25.75 ? 'south of Miami' : lat < 27.7 ? 'between Miami and Tampa' : lat < 30.5 ? 'between Tampa and Jacksonville' : 'north of Jacksonville';
+  return `${lat.toFixed(1)}°N, ${near}`;
+}
+
+// ------------------------------------------------------------------ renderers
+function renderStatus() {
+  $('#status').innerHTML = Object.values(state.status).map((s) => `<span class="${s.cls}">${esc(s.text)}</span>`).join('');
+}
+
+function renderDays() {
+  $('#days').innerHTML = state.dates.map((d, i) => {
+    const c = callFor(i), L = dayLabel(d);
+    return `<button class="day" data-i="${i}" aria-pressed="${i === state.day}">
+      <span class="num ${regClass(c && c.regime)}">${c ? c.regime : '–'}</span>
+      <span class="d1">${i === 0 ? 'Today' : L.wd}</span><span class="d2">${L.md}</span></button>`;
+  }).join('');
+}
+
+function renderCall() {
+  const di = state.day, c = callFor(di), m = curModel(), md = state.core[m.key]?.days?.[di];
+  const el = $('#call');
+  if (!c) { el.innerHTML = `<div class="empty" style="grid-column:1/-1">Waiting for model or sounding data. If this persists, use Refresh or check the status line above.</div>`; return; }
+  const R = REG[c.regime], L = dayLabel(state.dates[di]);
+  const srcTxt = c.src === 'obs'
+    ? `From the ${state.obs.TBW.today12.valid.slice(11, 13)}Z Tampa Bay sounding`
+    : `Consensus of ${c.cons.n} models, ${c.cons.agree} agree`;
+  const obs = state.obs.TBW?.today12?.m;
+  const facts = [];
+  if (c.vec) facts.push(['Layer-mean flow', `${deg(c.vec.dir)} at ${kt(c.vec.spd)} kt`]);
+  if (md && md.box) facts.push([`${m.name} analysis box`, `${deg(md.box.dir)} at ${kt(md.box.spd)} kt, regime ${md.regime}`]);
+  if (di === 0 && obs && obs.mw && c.src !== 'obs') facts.push(['TBW 12Z sounding', `${deg(obs.mw.dir)} at ${kt(obs.mw.spd)} kt, regime ${obs.regime}`]);
+  if (c.src === 'obs' && c.cons) facts.push(['Model consensus', `Regime ${c.cons.regime}, ${c.cons.agree} of ${c.cons.n} models`]);
+  if (md && md.ridge) facts.push([`Ridge axis (${m.name})`, ridgeWords(md.ridge)]);
+  const amu = di === 0 && obsAmu() ? obsAmu() + ' (soundings)' : (md && md.amu ? md.amu + ` (${m.name})` : null);
+  if (amu) facts.push(['Ridge-position regime', amu]);
+  facts.push(['Storms favored', R.favored]);
+  el.innerHTML = `
+    <div class="big" style="color:var(--r${c.regime})">${c.regime}</div>
+    <div class="kicker">${di === 0 ? 'Today' : L.wd} ${L.md}, 12Z flow</div>
+    <div class="title">${esc(R.name)}</div>
+    <div class="src">${esc(srcTxt)}</div>
+    <dl class="facts">${facts.map(([a, b]) => `<div class="fact"><dt>${esc(a)}</dt><dd>${esc(b)}</dd></div>`).join('')}</dl>
+    <div class="expect"><p>${esc(R.expect)}</p></div>
+    ${signalHTML(c.regime)}`;
+}
+function obsAmu() {
+  const g = (id) => state.obs[id]?.today12?.m?.mw;
+  return FR.amuRegime(g('MFL'), g('TBW'), g('JAX'));
+}
+
+function ingredientRows(src) {
+  const site = SITES.find((s) => s.id === state.site);
+  if (src === 'obs') {
+    const o = state.obs[site.id]?.latest;
+    if (!o || !o.m) return null;
+    const cyc = o.valid.slice(11, 13), date = o.valid.slice(0, 10);
+    return { m: o.m, cycle: cyc, date, label: `${site.name} ${cyc}Z ${date.slice(5)}` };
+  }
+  const t = state.thermo[state.model];
+  if (!t || t.error || !t[site.id]) return null;
+  const d = t[site.id][state.day];
+  return d && d.z12 ? { m: d.z12, cycle: '12', date: state.dates[state.day], label: `${curModel().name} 12Z at ${site.name}` } : null;
+}
+
+function signalHTML(regime) {
+  const site = SITES.find((s) => s.id === state.site);
+  const r = ingredientRows(state.src);
+  if (!r || !state.climo) return '';
+  const ps = ['pwat', 'ti', 'rhmid'].map((k) => {
+    const P = PARAMS.find((p) => p.k === k);
+    const q = byRegimeQ(site.iem, k, regime) || climoFor(site.iem, r.cycle, k, r.date);
+    const p = FR.pctOf(r.m[k], q);
+    return isNum(p) ? P.sign * (p - 50) : null;
+  }).filter(isNum);
+  if (ps.length < 2) return '';
+  const score = ps.reduce((a, b) => a + b, 0) / ps.length;
+  const tilt = score > 15 ? 'the high side' : score < -15 ? 'the low side' : 'about typical';
+  const lead = score > 15 ? 'Moisture and instability run above normal' : score < -15 ? 'Moisture and instability run below normal' : 'Moisture and instability are close to normal';
+  return `<div class="signal"><b>Coverage signal (experimental).</b> ${lead} for regime ${regime} days at ${esc(site.name)}, so expect coverage on ${tilt} of this regime's climatology. Based on PWAT, Thompson index and mid-level RH percentiles from ${esc(r.label)}.</div>`;
+}
+
+// ---------- regime wheel
+function renderWheel() {
+  const W = 520, cx = 260, cy = 262, R = 214, MAX = 20;
+  // piecewise radius: give the light and moderate bands room, since most summer days live there
+  const r = (s) => {
+    const a = 0.27 * R, b = 0.58 * R;
+    if (s <= S.light) return (Math.max(0, s) / S.light) * a;
+    if (s <= S.strong) return a + ((s - S.light) / (S.strong - S.light)) * (b - a);
+    return b + ((Math.min(s, MAX) - S.strong) / (MAX - S.strong)) * (R - b);
+  };
+  const pt = (a, rr) => { const t = (a * Math.PI) / 180; return [cx + rr * Math.sin(t), cy - rr * Math.cos(t)]; };
+  const wedge = (a0, a1, r0, r1) => {
+    const [x0, y0] = pt(a0, r1), [x1, y1] = pt(a1, r1), [x2, y2] = pt(a1, r0), [x3, y3] = pt(a0, r0);
+    const lg = a1 - a0 > 180 ? 1 : 0;
+    return `M${x0},${y0}A${r1},${r1} 0 ${lg} 1 ${x1},${y1}L${x2},${y2}A${r0},${r0} 0 ${lg} 0 ${x3},${y3}Z`;
+  };
+  const c = callFor(state.day), cur = c && c.regime;
+  let s = `<defs><clipPath id="wclip"><circle cx="${cx}" cy="${cy}" r="${R}"/></clipPath></defs>`;
+  const rl = r(S.light), rs = r(S.strong);
+  for (const sec of FR.SECTORS) {
+    for (const [reg, r0, r1] of [[sec.mod, rl, rs], [sec.str, rs, R]]) {
+      const on = reg === cur;
+      s += `<path d="${wedge(sec.from, sec.to, r0, r1)}" fill="var(--r${reg})" fill-opacity="${on ? 0.62 : 0.16}" stroke="var(--panel-2)" stroke-width="2" data-tip="Regime ${reg}: ${esc(REG[reg].name)}"/>`;
+      const [lx, ly] = pt((sec.from + sec.to) / 2, (r0 + r1) / 2);
+      s += `<text x="${lx}" y="${ly + 9}" text-anchor="middle" class="cond" font-size="${on ? 30 : 24}" font-weight="700" fill="var(--ink)" fill-opacity="${on ? 1 : 0.55}" pointer-events="none">${reg}</text>`;
+    }
+  }
+  s += `<circle cx="${cx}" cy="${cy}" r="${rl}" fill="var(--r1)" fill-opacity="${cur === 1 ? 0.62 : 0.18}" stroke="var(--panel-2)" stroke-width="2" data-tip="Regime 1: light and variable"/>`;
+  s += `<text x="${cx}" y="${cy + 8}" text-anchor="middle" class="cond" font-size="${cur === 1 ? 28 : 22}" font-weight="700" fill="var(--ink)" fill-opacity="${cur === 1 ? 1 : 0.55}" pointer-events="none">1</text>`;
+  for (const k of [15]) s += `<circle cx="${cx}" cy="${cy}" r="${r(k)}" fill="none" stroke="var(--ink)" stroke-opacity="0.12" stroke-dasharray="2 4"/>`;
+  for (const [k, lab] of [[S.light, `${S.light} kt`], [S.strong, `${S.strong} kt`], [15, '15'], [MAX, '20+ kt']]) {
+    const [x, y] = pt(205, r(k));
+    s += `<text x="${x - 4}" y="${y + 4}" font-size="11" fill="var(--muted)" text-anchor="end">${lab}</text>`;
+  }
+  for (const a of [0, 120, 190, 290]) { const [x0, y0] = pt(a, R), [x1, y1] = pt(a, R + 10); s += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="var(--muted)"/>`; const [tx, ty] = pt(a, R + 22); s += `<text x="${tx}" y="${ty + 4}" font-size="11" fill="var(--muted)" text-anchor="middle">${a}°</text>`; }
+  for (const [a, l] of [[45, 'NE'], [155, 'SE'], [240, 'SW'], [325, 'NW']]) { const [x, y] = pt(a, R + 26); s += `<text x="${x}" y="${y + 5}" font-size="14" font-weight="600" fill="var(--ink-2)" text-anchor="middle">${l}</text>`; }
+  // selected model track
+  const md = state.core[state.model]?.days || [];
+  const tr = md.map((d, i) => (d.box ? { i, ...d.box, xy: pt(d.box.dir, r(d.box.spd)) } : null)).filter(Boolean);
+  if (tr.length > 1) s += `<path d="M${tr.map((q) => q.xy.join(',')).join('L')}" fill="none" stroke="var(--ink)" stroke-opacity="0.55" stroke-width="1.6" clip-path="url(#wclip)"/>`;
+  // other models, selected day
+  for (const m of MODELS) {
+    if (m.key === state.model) continue;
+    const d = state.core[m.key]?.days?.[state.day];
+    if (!d || !d.box) continue;
+    const [x, y] = pt(d.box.dir, r(d.box.spd));
+    s += `<g data-tip="${esc(m.name)}: ${deg(d.box.dir)} ${kt(d.box.spd)} kt, regime ${d.regime}"><circle cx="${x}" cy="${y}" r="7" fill="var(--panel)" stroke="${m.c}" stroke-width="2"/><text x="${x}" y="${y + 3.5}" font-size="9" font-weight="600" text-anchor="middle" fill="var(--ink)">${m.name[0]}</text></g>`;
+  }
+  for (const q of tr) {
+    const sel = q.i === state.day;
+    s += `<g data-tip="${esc(curModel().name)} ${q.i === 0 ? 'today' : 'day ' + q.i}: ${deg(q.dir)} ${kt(q.spd)} kt" style="cursor:pointer" data-day="${q.i}">
+      <circle cx="${q.xy[0]}" cy="${q.xy[1]}" r="${sel ? 13 : 9}" fill="var(--ink)" stroke="var(--panel-2)" stroke-width="2"/>
+      <text x="${q.xy[0]}" y="${q.xy[1] + (sel ? 5 : 4)}" text-anchor="middle" font-size="${sel ? 13 : 10.5}" font-weight="700" fill="var(--bg)" pointer-events="none">${q.i}</text></g>`;
+  }
+  const o = state.day === 0 ? state.obs.TBW?.today12?.m?.mw : null;
+  if (o) {
+    const [x, y] = pt(o.dir, r(o.spd));
+    s += `<g data-tip="TBW 12Z sounding: ${deg(o.dir)} ${kt(o.spd)} kt"><rect x="${x - 8}" y="${y - 8}" width="16" height="16" transform="rotate(45 ${x} ${y})" fill="var(--ridge)" stroke="var(--panel-2)" stroke-width="2"/></g>`;
+  }
+  $('#wheel').innerHTML = s;
+  $('#wheel').querySelectorAll('[data-day]').forEach((g) => g.addEventListener('click', () => selectDay(+g.dataset.day)));
+  $('#wheelLegend').innerHTML = `<span><i style="background:var(--ink)"></i>${esc(curModel().name)} days 0–7</span>`
+    + MODELS.filter((m) => m.key !== state.model && state.core[m.key]?.days).map((m) => `<span><i style="border:2px solid ${m.c};background:transparent"></i>${esc(m.name)}</span>`).join('')
+    + `<span><i style="background:var(--ridge);border-radius:2px;transform:rotate(45deg)"></i>TBW sounding</span>`
+    + `<span>Points sit in the direction the flow comes from.</span>`;
+}
+
+// ---------- matrix
+function renderMatrix() {
+  const head = `<thead><tr><th></th>${state.dates.map((d, i) => { const L = dayLabel(d); return `<th>${i === 0 ? 'Today' : L.wd} ${L.md}</th>`; }).join('')}</tr></thead>`;
+  const cell = (reg, vec, i, tip) => reg
+    ? `<td><button class="cell ${regClass(reg)} ${i === state.day ? 'sel' : ''}" data-i="${i}" data-tip="${esc(tip)}"><span class="n">${reg}</span><span class="w">${deg(vec?.dir)}<br>${kt(vec?.spd)} kt</span></button></td>`
+    : `<td><div class="cell na">–</div></td>`;
+  let rows = '';
+  const o = obsToday();
+  rows += `<tr><th>TBW sounding</th>${state.dates.map((d, i) => (i === 0 && o ? cell(o.m.regime, o.m.mw, i, 'Observed 12Z Tampa Bay sounding') : `<td><div class="cell na">${i === 0 ? 'after 12Z' : ''}</div></td>`)).join('')}</tr>`;
+  for (const m of MODELS) {
+    const c = state.core[m.key];
+    rows += `<tr><th>${esc(m.name)}</th>${state.dates.map((d, i) => { const x = c?.days?.[i]; return cell(x?.regime, x?.box, i, `${m.name}: ridge ${ridgeWords(x?.ridge)}`); }).join('')}</tr>`;
+  }
+  rows += `<tr class="row-consensus"><th>Consensus</th>${state.dates.map((d, i) => { const c = consensus(i); return c ? cell(c.regime, c.mv, i, `${c.agree} of ${c.n} models`) : '<td><div class="cell na">–</div></td>'; }).join('')}</tr>`;
+  rows += `<tr><th></th>${state.dates.map((d, i) => { const c = consensus(i); return `<td class="agree">${c ? `${c.agree}/${c.n} agree` : ''}</td>`; }).join('')}</tr>`;
+  $('#matrix').innerHTML = head + `<tbody>${rows}</tbody>`;
+}
+
+// ---------- map
+function renderMap() {
+  const svg = $('#map'), W = 640, H = 600;
+  const g = state.grid[state.model];
+  if (!state.geo) { svg.innerHTML = `<text x="20" y="40" fill="var(--muted)" font-size="14">Basemap could not load from jsDelivr.</text>`; }
+  const proj = d3.geoMercator().fitExtent([[6, 6], [W - 6, H - 6]], { type: 'MultiPoint', coordinates: [[-88.2, 23.4], [-79.0, 31.9]] }).clipExtent([[0, 0], [W, H]]);
+  const path = d3.geoPath(proj);
+  let s = '';
+  if (state.geo) {
+    s += `<path d="${path(d3.geoGraticule().step([1, 1])())}" fill="none" stroke="var(--ink)" stroke-opacity="0.06"/>`;
+    s += `<path d="${path(state.geo.countries)}" fill="var(--land)" stroke="var(--land-line)" stroke-width="0.8"/>`;
+    s += `<path d="${path(state.geo.states)}" fill="var(--land)" stroke="var(--land-line)" stroke-width="0.8"/>`;
+    s += `<path d="${path(state.geo.mesh)}" fill="none" stroke="var(--land-line)" stroke-width="0.6" stroke-dasharray="3 3"/>`;
+  }
+  const [bx0, by0] = proj([S.boxW, S.boxN]), [bx1, by1] = proj([S.boxE, S.boxS]);
+  s += `<rect x="${bx0}" y="${by0}" width="${bx1 - bx0}" height="${by1 - by0}" fill="var(--ink)" fill-opacity="0.05" stroke="var(--ink)" stroke-opacity="0.7" stroke-dasharray="5 4" data-tip="Regime analysis box (approximates the NWS TBW box near Tampa Bay)"/>`;
+  if (g && !g.error) {
+    const i = idxOf(g.times, state.dates[state.day], state.mapHour);
+    const lm = g.pts.map((p, k) => lmAt(g.res[k].hourly, i));
+    // ridge polyline: per longitude column
+    const ridge = [];
+    g.lons.forEach((lo) => {
+      const col = g.pts.map((p, k) => ({ p, k })).filter((q) => q.p.lon === lo);
+      const rr = FR.ridgeLat(col.map((q) => q.p.lat), col.map((q) => (lm[q.k] ? lm[q.k].u : null)));
+      if (rr && rr.where === 'in') ridge.push(proj([lo, rr.lat]));
+    });
+    if (ridge.length > 1) {
+      s += `<path d="${d3.line().curve(d3.curveCatmullRom)(ridge)}" fill="none" stroke="var(--ridge)" stroke-width="3.5" stroke-dasharray="10 6" stroke-linecap="round" opacity="0.95"/>`;
+      const last = ridge[ridge.length - 1];
+      s += `<text x="${Math.min(last[0], W - 8)}" y="${last[1] - 10}" text-anchor="end" font-size="13" font-weight="600" fill="var(--ridge)">Ridge axis</text>`;
+    }
+    g.pts.forEach((p, k) => {
+      const w = lm[k]; if (!w) return;
+      const [x, y] = proj([p.lon, p.lat]);
+      const reg = FR.classify(w.dir, w.spd, S);
+      const len = 7 + Math.min(w.spd, 22) * 1.35, a = ((w.dir + 180) * Math.PI) / 180;
+      const dx = Math.sin(a) * len, dy = -Math.cos(a) * len;
+      const x0 = x - dx / 2, y0 = y - dy / 2, x1 = x + dx / 2, y1 = y + dy / 2;
+      const hx = Math.sin(a), hy = -Math.cos(a), px = -hy, py = hx, hs = 5.5;
+      const col = reg === 1 ? 'var(--muted)' : `var(--r${reg})`;
+      s += `<g data-tip="${p.lat.toFixed(2)}°N ${(-p.lon).toFixed(2)}°W: ${deg(w.dir)} ${kt(w.spd)} kt (regime ${reg})">
+        <line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M${x1 + hx * 2},${y1 + hy * 2}L${x1 - hx * hs + px * hs * 0.6},${y1 - hy * hs + py * hs * 0.6}L${x1 - hx * hs - px * hs * 0.6},${y1 - hy * hs - py * hs * 0.6}Z" fill="${col}"/>
+        <circle cx="${x}" cy="${y}" r="9" fill="transparent"/></g>`;
+    });
+  } else if (g && g.error) {
+    s += `<text x="20" y="${H - 20}" fill="var(--muted)" font-size="14">${esc(curModel().name)} grid did not load: ${esc(g.error)}</text>`;
+  } else {
+    s += `<text x="20" y="${H - 20}" fill="var(--muted)" font-size="14">Loading ${esc(curModel().name)} grid…</text>`;
+  }
+  const md = state.core[state.model]?.days?.[state.day];
+  for (const st of SITES) {
+    const [x, y] = proj([st.lon, st.lat]);
+    const w = md?.sites?.[st.id], reg = w ? FR.classify(w.dir, w.spd, S) : null;
+    s += `<g data-tip="${esc(st.name)} (${st.id}) ${esc(curModel().name)} 12Z: ${w ? `${deg(w.dir)} ${kt(w.spd)} kt, regime ${reg}` : 'no data'}">
+      <circle cx="${x}" cy="${y}" r="6.5" fill="${reg ? `var(--r${reg})` : 'var(--panel)'}" stroke="var(--ink)" stroke-width="1.6"/>
+      <text x="${x + 10}" y="${y + 4}" font-size="12.5" font-weight="600" fill="var(--ink)" paint-order="stroke" stroke="var(--water)" stroke-width="3">${st.id}</text></g>`;
+  }
+  svg.innerHTML = s;
+  $('#mapLegend').innerHTML = `<span><svg width="26" height="8"><line x1="1" y1="4" x2="25" y2="4" stroke="var(--ridge)" stroke-width="3" stroke-dasharray="7 4"/></svg>Ridge axis (easterlies to the south)</span>
+    <span><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" fill="none" stroke="var(--ink)" stroke-dasharray="4 3"/></svg>Analysis box</span>
+    <span>Arrows: ${esc(curModel().name)} 1000–700 mb mean wind, colored by the regime it would imply</span>`;
+}
+
+// ---------- ingredients
+function renderSiteSeg() {
+  $('#siteSeg').innerHTML = `<div class="seg">${SITES.map((s) => `<button data-site="${s.id}" aria-pressed="${s.id === state.site}">${s.id}</button>`).join('')}</div>`;
+}
+function spark(vals, bands, selIdx, P) {
+  const W = 300, H = 34, n = vals.length;
+  const all = [...vals.filter(isNum), ...bands.flatMap((b) => (b ? [b[2], b[18]] : [])).filter(isNum)];
+  if (!all.length) return '<svg viewBox="0 0 300 34"></svg>';
+  let lo = Math.min(...all), hi = Math.max(...all); if (hi - lo < 1e-6) { hi += 1; lo -= 1; }
+  const pad = (hi - lo) * 0.08; lo -= pad; hi += pad;
+  const x = (i) => 6 + (i / Math.max(1, n - 1)) * (W - 12), y = (v) => H - 3 - ((v - lo) / (hi - lo)) * (H - 6);
+  let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">`;
+  const band = (a, b, op) => {
+    const ok = bands.map((q, i) => (q && isNum(q[a]) && isNum(q[b]) ? i : -1)).filter((i) => i >= 0);
+    if (ok.length < 2) return '';
+    return `<path d="M${ok.map((i) => `${x(i)},${y(bands[i][b])}`).join('L')}L${ok.slice().reverse().map((i) => `${x(i)},${y(bands[i][a])}`).join('L')}Z" fill="var(--breeze)" fill-opacity="${op}"/>`;
+  };
+  s += band(2, 18, 0.12) + band(5, 15, 0.2);
+  const med = bands.map((q, i) => (q && isNum(q[10]) ? [x(i), y(q[10])] : null)).filter(Boolean);
+  if (med.length > 1) s += `<path d="M${med.map((p) => p.join(',')).join('L')}" fill="none" stroke="var(--breeze)" stroke-opacity="0.6" stroke-dasharray="3 3"/>`;
+  const pts = vals.map((v, i) => (isNum(v) ? [x(i), y(v)] : null));
+  const seg = pts.filter(Boolean);
+  if (seg.length > 1) s += `<path d="M${seg.map((p) => p.join(',')).join('L')}" fill="none" stroke="var(--ink)" stroke-width="1.6"/>`;
+  pts.forEach((p, i) => { if (p) s += `<circle cx="${p[0]}" cy="${p[1]}" r="${i === selIdx ? 4 : 2}" fill="${i === selIdx ? 'var(--ridge)' : 'var(--ink)'}"/>`; });
+  return s + '</svg>';
+}
+function gauge(v, q) {
+  const W = 300, H = 34;
+  if (!q || !isNum(v)) return `<svg viewBox="0 0 ${W} ${H}"></svg>`;
+  const lo = q[0], hi = q[20], x = (val) => 6 + ((Math.max(lo, Math.min(hi, val)) - lo) / (hi - lo || 1)) * (W - 12);
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <rect x="6" y="14" width="${W - 12}" height="6" rx="3" fill="var(--line)"/>
+    <rect x="${x(q[2])}" y="12" width="${x(q[18]) - x(q[2])}" height="10" rx="3" fill="var(--breeze)" fill-opacity="0.18"/>
+    <rect x="${x(q[5])}" y="12" width="${x(q[15]) - x(q[5])}" height="10" rx="2" fill="var(--breeze)" fill-opacity="0.32"/>
+    <line x1="${x(q[10])}" x2="${x(q[10])}" y1="9" y2="25" stroke="var(--breeze)" stroke-width="1.5"/>
+    <circle cx="${x(v)}" cy="17" r="6" fill="var(--ridge)" stroke="var(--panel)" stroke-width="2"/></svg>`;
+}
+function renderIngredients() {
+  const el = $('#ingredients'), site = SITES.find((s) => s.id === state.site);
+  const r = ingredientRows(state.src);
+  if (!r) {
+    el.innerHTML = `<div class="empty">${state.src === 'obs' ? `No recent sounding found for ${esc(site.name)}.` : `${esc(curModel().name)} profiles for ${esc(site.name)} are not loaded yet or not available for this day.`}</div>`;
+    return;
+  }
+  const regNow = r.m.regime || (callFor(state.day) || {}).regime;
+  let h = `<div class="ing"><div class="hd">${esc(r.label)}</div><div class="hd" style="text-align:right">Value</div>
+    <div class="hd h3">${state.src === 'model' ? '8-day trend vs 10–90th and 25–75th percentile bands' : 'Where it falls in the climatology'}</div><div class="hd h4">Percentile</div>`;
+  for (const P of PARAMS) {
+    const v = r.m[P.k];
+    const q = climoFor(site.iem, r.cycle, P.k, r.date);
+    const pct = FR.pctOf(v, q), d = describePct(pct, P.sign);
+    const qr = regNow ? byRegimeQ(site.iem, P.k, regNow) : null, pr = FR.pctOf(v, qr);
+    let viz;
+    if (state.src === 'model') {
+      const t = state.thermo[state.model][site.id];
+      const vals = t.map((x) => x.z12 && x.z12[P.k]);
+      const bands = state.dates.map((dt) => climoFor(site.iem, '12', P.k, dt));
+      viz = spark(vals, bands, state.day, P);
+    } else viz = gauge(v, q);
+    h += `<div class="nm">${esc(P.name)}<small>${esc(P.desc)}</small></div>
+      <div class="val">${isNum(v) ? P.fmt(v) : '–'}${isNum(v) && P.sub ? `<div class="note" style="font-family:Barlow;font-size:12px;font-weight:400">${P.sub(v)}</div>` : ''}</div>
+      <div class="bar">${viz}</div>
+      <div class="pc">${isNum(pct) ? `<b style="color:${d.cls ? `var(--${d.cls})` : 'inherit'}">${ordinal(Math.round(pct))}</b> ${d.word}` : '<span class="note">No climatology</span>'}${isNum(pr) ? `<br><span class="note">${ordinal(Math.round(pr))} for regime ${regNow}</span>` : ''}</div>`;
+  }
+  h += '</div>';
+  if (!state.climo) h += `<p class="note" style="margin-top:10px">Percentiles appear once <code>data/climo.json</code> exists. Run the “Soundings” GitHub Action once to build it.</p>`;
+  el.innerHTML = h;
+}
+
+// ---------- PoP climo
+function renderPoP() {
+  const c = callFor(state.day); const reg = c ? c.regime : 1;
+  const img = reg === 9 ? 8 : reg;
+  $('#popSeg').innerHTML = POP.map((p) => `<button data-pop="${p.k}" aria-pressed="${p.k === state.pop}">${p.label}</button>`).join('');
+  const im = $('#popImg');
+  im.onerror = () => { im.style.display = 'none'; $('#popSide').insertAdjacentHTML('afterbegin', '<p class="note">The NWS image did not load. Open the Quick Reference link below.</p>'); };
+  im.style.display = '';
+  im.src = `https://www.weather.gov/images/tbw/SBClimo/TBW_Regime${img}_${state.pop}.gif`;
+  const R = REG[reg];
+  $('#popSide').innerHTML = `<p><span class="chip ${regClass(reg)}">${reg}</span> <b>${esc(R.name)}</b></p>
+    <p>${esc(R.def)}${R.days ? ` ${R.days} days in the 2002–2019 TBW climatology.` : ''}</p>
+    ${reg === 9 ? '<p class="note">TBW does not publish separate graphics for the strong NW/N sub-regime, so regime 8 is shown.</p>' : ''}
+    <p class="note">Probability of measurable rain for the NWS Tampa Bay forecast area, by regime and time of day.</p>
+    <p><a href="https://www.weather.gov/tbw/TBWTstmClimoQuickReference" target="_blank" rel="noopener">TBW Quick Reference</a><br>
+    <a href="https://www.weather.gov/tbw/ThunderstormClimatology" target="_blank" rel="noopener">Statewide point graphs (TBW, MFL, MLB, JAX, TAE)</a><br>
+    <a href="https://www.weather.gov/tbw/TSbrowser" target="_blank" rel="noopener">First-CG convective environment browser</a></p>`;
+}
+
+// ---------- soundings
+function skewT(m) {
+  const W = 330, H = 300, P0 = 1050, P1 = 150;
+  const hh = (p) => (H * Math.log(P0 / p)) / Math.log(P0 / P1);
+  const y = (p) => H - hh(p);
+  const x = (t, p) => 6 + (t + 22) * 4.6 + hh(p) * 0.92;
+  const prof = m.prof;
+  let s = `<svg viewBox="0 0 ${W} ${H}"><defs><clipPath id="skc"><rect x="0" y="0" width="${W - 34}" height="${H}"/></clipPath></defs>`;
+  s += `<rect x="0" y="${y(700)}" width="${W - 34}" height="${y(1000) - y(700)}" fill="var(--breeze)" fill-opacity="0.08"/>`;
+  for (const p of [1000, 850, 700, 500, 300, 200]) s += `<line x1="0" x2="${W - 34}" y1="${y(p)}" y2="${y(p)}" stroke="var(--ink)" stroke-opacity="0.1"/><text x="2" y="${y(p) - 3}" font-size="9.5" fill="var(--muted)">${p}</text>`;
+  s += '<g clip-path="url(#skc)">';
+  for (let t = -80; t <= 40; t += 10) s += `<line x1="${x(t, P0)}" y1="${y(P0)}" x2="${x(t, P1)}" y2="${y(P1)}" stroke="var(--ink)" stroke-opacity="${t === 0 ? 0.22 : 0.07}"/>`;
+  const line = (key, col, w, dash) => {
+    const pts = prof.filter((q) => isNum(q[key]) && q.p >= P1).map((q) => `${x(q[key], q.p)},${y(q.p)}`);
+    return pts.length > 1 ? `<path d="M${pts.join('L')}" fill="none" stroke="${col}" stroke-width="${w}" ${dash ? `stroke-dasharray="${dash}"` : ''}/>` : '';
+  };
+  if (m.parcel) {
+    const ps = []; for (let p = m.parcel.p; p >= 200; p -= 10) ps.push(p);
+    const path = FR.parcelPath(m.parcel, ps).map((q) => `${x(q.tk - 273.15, q.p)},${y(q.p)}`);
+    s += `<path d="M${path.join('L')}" fill="none" stroke="var(--ink)" stroke-opacity="0.7" stroke-width="1.3" stroke-dasharray="4 3"/>`;
+  }
+  s += line('td', 'var(--good)', 2) + line('t', 'var(--storm)', 2.2) + '</g>';
+  for (const p of [1000, 925, 850, 700, 500, 400, 300, 250, 200]) {
+    const u = FR.interp(prof, p, 'u'), v = FR.interp(prof, p, 'v');
+    if (isNum(u) && isNum(v)) { const w = FR.fromUV(u, v); s += barb(W - 16, y(p), w.dir, w.spd); }
+  }
+  return s + '</svg>';
+}
+function barb(x, y, dir, spd) {
+  const L = 22, a = (dir * Math.PI) / 180, ux = Math.sin(a), uy = -Math.cos(a);
+  const ex = x + ux * L, ey = y + uy * L;
+  const fx = Math.sin(a + (Math.PI * 7) / 18), fy = -Math.cos(a + (Math.PI * 7) / 18);
+  let s = `<g stroke="var(--ink-2)" stroke-width="1.3" fill="var(--ink-2)"><line x1="${x}" y1="${y}" x2="${ex}" y2="${ey}"/>`;
+  if (spd < 2.5) return `<circle cx="${x}" cy="${y}" r="3" fill="none" stroke="var(--ink-2)"/>`;
+  let r = Math.round(spd / 5) * 5, pos = 0;
+  while (r >= 50) { const bx = ex - ux * pos, by = ey - uy * pos, cx = bx - ux * 5, cy = by - uy * 5; s += `<path d="M${bx},${by}L${bx + fx * 10},${by + fy * 10}L${cx},${cy}Z" stroke="none"/>`; pos += 7; r -= 50; }
+  while (r >= 10) { const bx = ex - ux * pos, by = ey - uy * pos; s += `<line x1="${bx}" y1="${by}" x2="${bx + fx * 10}" y2="${by + fy * 10}"/>`; pos += 4; r -= 10; }
+  if (r >= 5) { if (pos === 0) pos = 4; const bx = ex - ux * pos, by = ey - uy * pos; s += `<line x1="${bx}" y1="${by}" x2="${bx + fx * 5.5}" y2="${by + fy * 5.5}"/>`; }
+  return s + '</g>';
+}
+function renderSoundings() {
+  $('#soundings').innerHTML = SITES.map((st) => {
+    const o = state.obs[st.id]?.latest;
+    if (!o) return `<div class="snd"><h3>${esc(st.name)} <span class="t">${st.id}</span></h3><div class="empty">No sounding in the last 48 hours from IEM.</div></div>`;
+    const m = o.m, cyc = o.valid.slice(11, 13), date = o.valid.slice(0, 10);
+    const pc = (k) => { const p = FR.pctOf(m[k], climoFor(st.iem, cyc, k, date)); return isNum(p) ? ` <span class="note">${ordinal(Math.round(p))}</span>` : ''; };
+    const P = (k) => PARAMS.find((x) => x.k === k);
+    return `<div class="snd"><h3><span>${esc(st.name)} <span class="t">${st.id} ${cyc}Z ${date.slice(5)}</span></span>${m.regime ? `<span class="chip ${regClass(m.regime)}" data-tip="${esc(REG[m.regime].name)}">${m.regime}</span>` : ''}</h3>
+      ${skewT(m)}
+      <dl>
+        <div><dt>PWAT</dt><dd>${isNum(m.pwat) ? P('pwat').fmt(m.pwat) : '–'}${pc('pwat')}</dd></div>
+        <div><dt>Thompson</dt><dd>${isNum(m.ti) ? P('ti').fmt(m.ti) : '–'}${pc('ti')}</dd></div>
+        <div><dt>K index</dt><dd>${isNum(m.ki) ? P('ki').fmt(m.ki) : '–'}${pc('ki')}</dd></div>
+        <div><dt>Lifted index</dt><dd>${isNum(m.li) ? P('li').fmt(m.li) : '–'}${pc('li')}</dd></div>
+        <div><dt>MLCAPE</dt><dd>${isNum(m.mlcape) ? Math.round(m.mlcape) : '–'}${pc('mlcape')}</dd></div>
+        <div><dt>1000–700 mean</dt><dd>${m.mw ? `${deg(m.mw.dir)} ${kt(m.mw.spd)} kt` : '–'}</dd></div>
+      </dl></div>`;
+  }).join('');
+}
+
+// ---------- season
+function renderSeason() {
+  const el = $('#season'), rec = state.recent;
+  const rows = rec?.stations?.KTBW?.filter((r) => r.cycle === '12') || [];
+  if (!rows.length) {
+    el.innerHTML = `<div class="empty">The season log fills in after the “Soundings” GitHub Action runs. It records each morning's Tampa Bay regime and moisture so you can see how this summer has evolved.</div>`;
+    $('#seasonNote').textContent = '';
+    return;
+  }
+  $('#seasonNote').textContent = `Tampa Bay 12Z soundings, last ${rows.length} days. Updated ${rec.built.replace('T', ' ')} UTC`;
+  const counts = {}; rows.forEach((r) => { if (r.regime) counts[r.regime] = (counts[r.regime] || 0) + 1; });
+  const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+  let h = `<div class="season-strip">${rows.map((r) => `<span class="chip ${regClass(r.regime)}" data-tip="${r.date}: ${r.regime ? `regime ${r.regime}, ` : ''}${isNum(r.mwdir) ? `${deg(r.mwdir)} ${kt(r.mwspd)} kt` : 'no wind'}${isNum(r.pwat) ? `, PWAT ${(r.pwat / 25.4).toFixed(2)} in` : ''}">${r.regime || '·'}</span>`).join('')}</div>`;
+  if (top) h += `<p class="note" style="margin:8px 0 0">Most common: regime ${top[0]} (${esc(REG[top[0]].name.toLowerCase())}), ${top[1]} of ${rows.length} days.</p>`;
+  // PWAT vs climo chart
+  const W = 1000, H = 170, n = rows.length, x = (i) => 40 + (i / Math.max(1, n - 1)) * (W - 50);
+  const vals = rows.map((r) => (isNum(r.pwat) ? r.pwat / 25.4 : null));
+  const bands = rows.map((r) => { const q = climoFor('KTBW', '12', 'pwat', r.date); return q ? q.map((v) => v / 25.4) : null; });
+  const all = [...vals.filter(isNum), ...bands.flatMap((b) => (b ? [b[2], b[18]] : []))];
+  if (all.length) {
+    const lo = Math.min(...all) - 0.1, hi = Math.max(...all) + 0.1, y = (v) => H - 20 - ((v - lo) / (hi - lo)) * (H - 34);
+    let s = `<svg class="season-svg" viewBox="0 0 ${W} ${H}">`;
+    for (let t = Math.ceil(lo * 4) / 4; t <= hi; t += 0.25) s += `<line x1="40" x2="${W - 10}" y1="${y(t)}" y2="${y(t)}" stroke="var(--ink)" stroke-opacity="0.07"/><text x="34" y="${y(t) + 4}" font-size="11" text-anchor="end" fill="var(--muted)">${t.toFixed(2)}</text>`;
+    const ok = bands.map((b, i) => (b ? i : -1)).filter((i) => i >= 0);
+    if (ok.length > 1) {
+      s += `<path d="M${ok.map((i) => `${x(i)},${y(bands[i][18])}`).join('L')}L${ok.slice().reverse().map((i) => `${x(i)},${y(bands[i][2])}`).join('L')}Z" fill="var(--breeze)" fill-opacity="0.12"/>`;
+      s += `<path d="M${ok.map((i) => `${x(i)},${y(bands[i][15])}`).join('L')}L${ok.slice().reverse().map((i) => `${x(i)},${y(bands[i][5])}`).join('L')}Z" fill="var(--breeze)" fill-opacity="0.18"/>`;
+    }
+    const pts = vals.map((v, i) => (isNum(v) ? `${x(i)},${y(v)}` : null)).filter(Boolean);
+    if (pts.length > 1) s += `<path d="M${pts.join('L')}" fill="none" stroke="var(--ink)" stroke-width="2"/>`;
+    s += `<text x="40" y="12" font-size="12" fill="var(--muted)">Tampa Bay 12Z precipitable water (in) against the 10–90th and 25–75th percentile bands</text></svg>`;
+    h += s;
+  }
+  el.innerHTML = h;
+}
+
+// ---------- reference + method
+function renderRef() {
+  $('#ref').innerHTML = Object.entries(REG).map(([k, R]) => `<article><span class="chip ${regClass(+k)}">${k}</span><div><h3>${esc(R.name)}</h3><div class="def">${esc(R.def)}${R.days ? ` ${R.days} climatology days.` : ''}</div><p>${esc(R.favored)}.</p></div></article>`).join('');
+  const meta = state.climo?.meta;
+  $('#method').innerHTML = `
+    <p><b>Regime.</b> Following NWS Tampa Bay, the regime is set by the 12Z 1000–700 mb layer-mean vector wind. Below ${S.light} kt is regime 1; otherwise the direction sector (NE/E 360–120°, SE/S 120–190°, SW/W 190–290°, NW/N 290–360°) and speed (${S.light}–${S.strong} kt or above ${S.strong} kt) pick regimes 2–9. Thresholds are editable in Settings. Older TBW material and the Chavez et al. (2022) study used 4 kt for regime 1.</p>
+    <p><b>Observed.</b> Sounding winds are averaged with pressure weighting from 1000 to 700 mb at full vertical resolution. Today's call uses the Tampa Bay 12Z sounding once it is in; before that, and for days 1–7, it uses the model consensus.</p>
+    <p><b>Models.</b> Open-Meteo pressure-level winds at 1000, 925, 850 and 700 mb are averaged the same way at each point of an analysis box near Tampa Bay (${S.boxS}–${S.boxN}°N, ${-S.boxW}–${-S.boxE}°W), standing in for the TBW RAP analysis box. The consensus is the most common regime across models, with ties broken by the regime of the model-mean vector.</p>
+    <p><b>Ridge axis.</b> Along north–south lines through the peninsula, the axis is placed where the layer-mean east–west wind turns from easterly (south of the ridge) to westerly. The ridge-position regime (SW-1, SW-2, SE-1, SE-2, NE, NW) follows the Lericos et al. (2002) and NASA AMU scheme built on the Miami, Tampa and Jacksonville soundings.</p>
+    <p><b>Ingredients.</b> PWAT (surface to 300 mb; the model's own total column water vapor when available), K index, a lowest-100 mb mixed-layer lifted index and CAPE, Thompson index (K minus LI), 500 mb temperature, 700–500 mb lapse rate and mean 850/700/500 mb RH are computed with the same code for soundings, model profiles and the climatology.</p>
+    <p><b>Normal.</b> ${meta ? `Percentiles come from ${meta.years[0]}–${meta.years[1]} IEM soundings at each site, using a ±${meta.window_days}-day window around the date. Built ${esc(meta.built)}.` : 'Percentiles come from the IEM sounding archive, built by the repository\'s GitHub Action (not built yet).'} “For regime N” percentiles compare against only June–September 12Z soundings in that same regime. Model values are compared against sounding climatology, so small model biases carry through.</p>
+    <p><b>Sources.</b> NWS Tampa Bay Thunderstorm Climatology and Quick Reference; Chavez, Milrad, Halperin, Mroczka and Tyle (2022), Weather and Forecasting 37, 1867–1883; Lericos, Fuelberg, Watson and Holle (2002), Weather and Forecasting 17, 83–98. Data from Open-Meteo (NOAA, ECMWF, DWD, ECCC models) and the Iowa Environmental Mesonet.</p>`;
+}
+
+// ------------------------------------------------------------------ orchestration
+function renderAll() {
+  renderDays(); renderCall(); renderWheel(); renderMatrix(); renderMap(); renderSiteSeg(); renderIngredients(); renderPoP(); renderSoundings(); renderSeason(); renderRef();
+  document.querySelectorAll('#srcSeg button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.s === state.src));
+  document.querySelectorAll('#hourSeg button').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.h === state.mapHour));
+}
+function selectDay(i) { state.day = i; renderAll(); }
+
+async function loadSelected() {
+  const m = curModel();
+  await Promise.all([loadGrid(m), loadThermo(m)]);
+  renderAll();
+}
+
+async function boot() {
+  const today = nyDate(Date.now());
+  state.dates = Array.from({ length: 8 }, (_, i) => addDays(today, i));
+  $('#modelSel').innerHTML = MODELS.map((m) => `<option value="${m.key}" ${m.key === state.model ? 'selected' : ''}>${m.name}</option>`).join('');
+  renderAll();
+  const jobs = [
+    loadGeo().then(renderMap),
+    loadJSON(S.climoUrl, 'climo', 'Climatology').then(renderAll),
+    loadJSON(S.recentUrl, 'recent', 'Season log').then(renderSeason),
+    loadObs().then(renderAll),
+    ...MODELS.map((m) => loadCore(m).then(() => { renderDays(); renderCall(); renderWheel(); renderMatrix(); renderPoP(); })),
+    loadSelected(),
+  ];
+  await Promise.allSettled(jobs);
+  renderAll();
+}
+
+// ------------------------------------------------------------------ events
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.matches('.day, .cell')) selectDay(+t.dataset.i);
+  else if (t.dataset.site) { state.site = t.dataset.site; renderSiteSeg(); renderIngredients(); renderCall(); }
+  else if (t.dataset.s) { state.src = t.dataset.s; renderAll(); }
+  else if (t.dataset.h) { state.mapHour = +t.dataset.h; renderAll(); }
+  else if (t.dataset.pop) { state.pop = t.dataset.pop; renderPoP(); }
+});
+$('#modelSel').addEventListener('change', (e) => { state.model = e.target.value; save('ffr-model', state.model); renderAll(); loadSelected(); });
+$('#refreshBtn').addEventListener('click', () => { state.core = {}; state.grid = {}; state.thermo = {}; state.obs = {}; state.status = {}; boot(); });
+$('#themeBtn').addEventListener('click', () => {
+  const t = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = t; try { localStorage.setItem('ffr-theme', t); } catch (e) { /* ignore */ }
+});
+const dlg = $('#settingsDlg'), form = $('#settingsForm');
+$('#settingsBtn').addEventListener('click', () => { for (const k of Object.keys(DEFAULTS)) form.elements[k].value = S[k]; dlg.showModal(); });
+dlg.addEventListener('close', () => {
+  if (dlg.returnValue === 'save') {
+    const n = {}; for (const k of Object.keys(DEFAULTS)) { const v = form.elements[k].value; n[k] = typeof DEFAULTS[k] === 'number' ? parseFloat(v) : v; }
+    if (!(n.light > 0 && n.strong > n.light && n.boxN > n.boxS && n.boxE > n.boxW)) { alert('Check the values: strong must exceed light, and the box north/east edges must exceed south/west.'); return; }
+    S = { ...DEFAULTS, ...n }; save('ffr-settings', S); location.reload();
+  } else if (dlg.returnValue === 'reset') { save('ffr-settings', {}); location.reload(); }
+});
+const tip = $('#tip');
+document.addEventListener('mousemove', (e) => {
+  const t = e.target.closest && e.target.closest('[data-tip]');
+  if (!t) { tip.style.opacity = 0; return; }
+  tip.textContent = t.getAttribute('data-tip'); tip.style.opacity = 1;
+  const x = Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 8), y = Math.min(e.clientY + 16, window.innerHeight - tip.offsetHeight - 8);
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+});
+
+boot();
+})();
+
+</script>
+</body>
+</html>
