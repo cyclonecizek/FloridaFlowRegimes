@@ -1,0 +1,58 @@
+name: Soundings - climatology and season log
+
+on:
+  workflow_dispatch:
+    inputs:
+      rebuild_climo:
+        description: "Rebuild the full sounding climatology"
+        type: boolean
+        default: true
+      start_year:
+        description: "Climatology start year"
+        default: "1996"
+      end_year:
+        description: "Climatology end year"
+        default: "2025"
+  push:
+    paths:
+      - "scripts/**"
+  schedule:
+    - cron: "25 13 * * *"   # after the 12Z soundings
+    - cron: "25 1 * * *"    # after the 00Z soundings
+
+permissions:
+  contents: write
+
+concurrency:
+  group: soundings
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Season log (last 60 days of soundings)
+        run: python scripts/build_climatology.py recent --days 60
+
+      - name: Climatology (first run, push to scripts, or manual rebuild)
+        if: ${{ github.event_name == 'push' || inputs.rebuild_climo || hashFiles('data/climo.json') == '' }}
+        run: |
+          python scripts/build_climatology.py climo \
+            --start "${{ inputs.start_year || '1996' }}" \
+            --end "${{ inputs.end_year || '2025' }}"
+
+      - name: Commit data
+        run: |
+          git config user.name "flow-regime-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/*.json
+          git diff --cached --quiet || git commit -m "Update sounding data $(date -u +'%Y-%m-%d %HZ')"
+          git pull --rebase --autostash
+          git push
