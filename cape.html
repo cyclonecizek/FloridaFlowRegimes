@@ -1,0 +1,2247 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cape Canaveral Flow Regime</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌀</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<script>try{const t=localStorage.getItem('ffr-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
+<style>
+:root {
+  --bg: #0c1820;
+  --panel: #112430;
+  --panel-2: #0f1f29;
+  --line: #20404d;
+  --line-soft: #1a3340;
+  --ink: #e4edee;
+  --ink-2: #b7c8cc;
+  --muted: #7f979e;
+  --land: #1b2c27;
+  --land-line: #3a5a4c;
+  --water: #0d1d26;
+  --ridge: #f2b33d;
+  --breeze: #5cc9d8;
+  --storm: #e65a82;
+  --good: #57d39b;
+  --bad: #e8735a;
+  --focus: #f2b33d;
+  --r1: #b3a6d9; --r2: #7fb2ff; --r3: #3d7beb; --r4: #f4a259; --r5: #e0662f;
+  --r6: #5cd3ae; --r7: #1fa37e; --r8: #e3cf6a; --r9: #b99b2e;
+  --shadow: 0 1px 0 rgba(255,255,255,0.03) inset;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --bg: #e9efee;
+  --panel: #ffffff;
+  --panel-2: #f4f7f6;
+  --line: #c9d6d6;
+  --line-soft: #dde6e5;
+  --ink: #0f222a;
+  --ink-2: #34494f;
+  --muted: #5e7378;
+  --land: #e3e9dc;
+  --land-line: #9fb39c;
+  --water: #d5e6ea;
+  --ridge: #c9830b;
+  --breeze: #137f8e;
+  --storm: #c02f5b;
+  --good: #1d8a5a;
+  --bad: #c4492c;
+  --focus: #c9830b;
+  --r1: #8f7fc4; --r2: #5b93ec; --r3: #2a5fc9; --r4: #ec8a3a; --r5: #c9531f;
+  --r6: #2fb38c; --r7: #13805f; --r8: #c7ad2e; --r9: #8f7516;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+html { scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 64px); }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Barlow", "Segoe UI", system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+a { color: var(--breeze); }
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+.cond { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; }
+
+/* ---------- top bar ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  padding-top: env(safe-area-inset-top, 0px);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line-soft);
+}
+.topbar-inner {
+  max-width: 1440px; margin: 0 auto; padding: 10px 20px;
+  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+}
+.brand { display: flex; align-items: baseline; gap: 10px; margin-right: auto; }
+.brand h1 { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 26px; letter-spacing: 0.01em; margin: 0; line-height: 1; }
+.brand span { color: var(--muted); font-size: 13px; }
+.ctrl { display: flex; align-items: center; gap: 8px; }
+.ctrl label { color: var(--muted); font-size: 13px; }
+select, .btn {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+  padding: 6px 10px; cursor: pointer;
+}
+.btn:hover, select:hover { border-color: var(--muted); }
+.btn.icon { padding: 6px 9px; line-height: 1; }
+
+/* day strip */
+.days { max-width: 1440px; margin: 0 auto; padding: 0 20px 10px; display: flex; gap: 6px; overflow-x: auto; }
+.day {
+  flex: 1 0 98px; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: center;
+  padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line-soft); background: var(--panel-2);
+  cursor: pointer; text-align: left;
+}
+.day .num { grid-row: span 2; font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 26px; line-height: 1; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 6px; }
+.day .d1 { font-weight: 600; font-size: 14px; line-height: 1.1; }
+.day .d2 { color: var(--muted); font-size: 12px; line-height: 1.1; }
+.day[aria-pressed="true"] { border-color: var(--ink-2); background: var(--panel); }
+
+/* ---------- layout ---------- */
+main { max-width: 1440px; margin: 0 auto; padding: 18px 20px 60px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+.panel, .two > * { min-width: 0; }
+.panel { background: var(--panel); border: 1px solid var(--line-soft); border-radius: 12px; box-shadow: var(--shadow); }
+.panel > header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 18px 0; flex-wrap: wrap; }
+.panel h2 { font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 21px; margin: 0; letter-spacing: 0.01em; }
+.panel .note { color: var(--muted); font-size: 13px; }
+.panel .body { padding: 12px 18px 18px; }
+
+.hero { display: grid; grid-template-columns: minmax(320px, 520px) 1fr; gap: 0; overflow: hidden; }
+.wheel-wrap { padding: 14px 10px 10px 14px; border-right: 1px solid var(--line-soft); background: var(--panel-2); }
+.wheel-wrap svg { width: 100%; height: auto; display: block; }
+.wheel-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 4px 8px 6px; color: var(--muted); font-size: 12.5px; }
+.wheel-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+
+.call { padding: 22px 28px 24px; display: grid; grid-template-columns: auto 1fr; column-gap: 28px; align-content: start; }
+.call .big {
+  font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: clamp(120px, 14vw, 190px);
+  line-height: 0.8; letter-spacing: -0.04em; margin: 4px 0 0; grid-row: span 3;
+}
+.call .kicker { color: var(--muted); font-size: 14px; }
+.call .title { font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 34px; line-height: 1.05; margin: 2px 0 6px; }
+.call .src { font-size: 14px; color: var(--ink-2); }
+.facts { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0; margin: 22px 0 0; border-top: 1px solid var(--line-soft); }
+.fact { padding: 10px 14px 10px 0; border-bottom: 1px solid var(--line-soft); }
+.fact dt { color: var(--muted); font-size: 12.5px; }
+.fact dd { margin: 0; font-size: 16px; font-weight: 500; }
+.expect { grid-column: 1 / -1; margin-top: 16px; max-width: 72ch; }
+.expect p { margin: 0 0 8px; color: var(--ink-2); }
+.signal { grid-column: 1 / -1; margin-top: 6px; padding: 10px 14px; border-left: 3px solid var(--breeze); background: var(--panel-2); border-radius: 0 8px 8px 0; max-width: 72ch; }
+.signal b { font-weight: 600; }
+
+/* matrix */
+.matrix { width: 100%; border-collapse: separate; border-spacing: 4px; }
+.matrix th { color: var(--muted); font-weight: 500; font-size: 13px; text-align: left; padding: 0 6px; white-space: nowrap; }
+.matrix thead th { text-align: center; }
+.matrix td { padding: 0; }
+.cell {
+  width: 100%; min-width: 62px; height: 46px; border-radius: 6px; border: 0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px; position: relative;
+}
+.cell .n { font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 22px; }
+.cell .w { font-size: 11.5px; opacity: 0.85; line-height: 1.05; text-align: left; }
+.cell.sel { outline: 2px solid var(--ink); outline-offset: 1px; }
+.cell.na { background: transparent; border: 1px dashed var(--line); color: var(--muted); cursor: default; }
+.row-consensus th { color: var(--ink); font-weight: 600; }
+.agree { font-size: 11px; color: var(--muted); text-align: center; padding-top: 2px; }
+.matrix-scroll { overflow-x: auto; }
+
+/* map + ingredients */
+.two { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 18px; }
+.map-svg { width: 100%; height: auto; display: block; border-radius: 8px; background: var(--water); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.seg button { background: transparent; border: 0; padding: 5px 11px; cursor: pointer; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.maplegend { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--muted); font-size: 12.5px; margin-top: 8px; }
+.maplegend svg { vertical-align: middle; margin-right: 4px; }
+
+.sites { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.ing { display: grid; grid-template-columns: minmax(130px, 1.1fr) 86px minmax(150px, 2fr) 116px; align-items: center; gap: 4px 14px; }
+.ing .hd { color: var(--muted); font-size: 12px; padding-bottom: 2px; border-bottom: 1px solid var(--line-soft); }
+.ing .nm { font-weight: 500; }
+.ing .nm small { display: block; color: var(--muted); font-weight: 400; font-size: 12px; }
+.ing .val { font-family: "Barlow Condensed", sans-serif; font-size: 22px; font-weight: 600; text-align: right; }
+.ing .pc { font-size: 13px; color: var(--ink-2); line-height: 1.2; }
+.ing .pc b { font-weight: 600; }
+.ing > div { padding: 7px 0; border-bottom: 1px solid var(--line-soft); }
+.ing svg { display: block; width: 100%; height: 34px; }
+
+/* pop */
+.pop-grid { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; align-items: start; }
+.pop-img { width: 100%; max-width: 760px; border-radius: 8px; border: 1px solid var(--line-soft); background: #fff; }
+.pop-side p { margin: 0 0 10px; color: var(--ink-2); }
+
+/* soundings */
+.snd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.snd { border: 1px solid var(--line-soft); border-radius: 10px; background: var(--panel-2); padding: 12px 12px 8px; }
+.snd h3 { margin: 0; font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 19px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.snd .t { color: var(--muted); font-size: 12.5px; }
+.snd svg { width: 100%; height: auto; display: block; margin-top: 6px; }
+.snd dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 8px; margin: 6px 0 2px; }
+.snd dt { color: var(--muted); font-size: 11.5px; }
+.snd dd { margin: 0; font-weight: 500; font-size: 14px; }
+.chip { display: inline-grid; place-items: center; min-width: 28px; height: 24px; padding: 0 6px; border-radius: 5px; font-family: "Barlow Condensed", sans-serif; font-weight: 700; font-size: 17px; }
+
+/* season */
+.season-strip { display: flex; gap: 3px; flex-wrap: wrap; }
+.season-strip .chip { min-width: 22px; height: 30px; font-size: 14px; border-radius: 4px; }
+.season-svg { width: 100%; height: auto; display: block; margin-top: 12px; }
+
+/* reference */
+.ref { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0; border-top: 1px solid var(--line-soft); }
+.ref article { padding: 14px 16px 14px 0; border-bottom: 1px solid var(--line-soft); display: grid; grid-template-columns: 48px 1fr; gap: 10px; }
+.ref .chip { width: 40px; height: 40px; font-size: 26px; border-radius: 8px; }
+.ref h3 { margin: 0; font-size: 15px; font-weight: 600; }
+.ref p { margin: 3px 0 0; font-size: 13.5px; color: var(--ink-2); }
+.ref .def { color: var(--muted); font-size: 12.5px; }
+.method { columns: 2 340px; column-gap: 32px; color: var(--ink-2); font-size: 14px; }
+.method p { margin: 0 0 10px; break-inside: avoid; }
+
+/* status, tooltip, dialog */
+.status { max-width: 1440px; margin: 0 auto; padding: 0 20px 8px; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); }
+.status .ok::before, .status .err::before, .status .wait::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+.status .ok::before { background: var(--good); }
+.status .err::before { background: var(--bad); }
+.status .wait::before { background: var(--muted); }
+.empty { color: var(--muted); padding: 18px 0; }
+#tip {
+  position: fixed; z-index: 50; pointer-events: none; max-width: 280px;
+  background: var(--ink); color: var(--bg); font-size: 12.5px; line-height: 1.35;
+  padding: 7px 9px; border-radius: 6px; opacity: 0; transition: opacity 0.08s;
+}
+dialog { background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; max-width: 520px; width: calc(100% - 32px); padding: 20px 22px; }
+dialog::backdrop { background: rgba(0,0,0,0.5); }
+dialog h2 { margin: 0 0 10px; font-family: "Barlow Condensed", sans-serif; font-weight: 600; }
+.form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+.form label { display: grid; gap: 3px; font-size: 13px; color: var(--muted); }
+.form input { background: var(--panel-2); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; color: var(--ink); }
+.form .full { grid-column: 1 / -1; }
+.dlg-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+@media (max-width: 1080px) {
+  .hero { grid-template-columns: 1fr; }
+  .wheel-wrap { border-right: 0; border-bottom: 1px solid var(--line-soft); }
+  .two, .pop-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  main { padding: 12px 10px 40px; }
+  .topbar-inner { padding: 8px 12px; gap: 10px; }
+  .brand span { display: none; }
+  .days { padding: 0 12px 8px; }
+  .call { grid-template-columns: 1fr; padding: 16px; }
+  .call .big { grid-row: auto; font-size: 120px; }
+  .ing { grid-template-columns: 1fr 70px; }
+  .ing .bar, .ing .hd.h3, .ing .hd.h4 { display: none; }
+  .ing .pc { grid-column: 1 / -1; padding-top: 0 !important; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* regime fills (text color chosen for contrast in each theme) */
+.rg1 { background: var(--r1); color: #10202a; } .rg2 { background: var(--r2); color: #0c1a26; }
+.rg3 { background: var(--r3); color: #ffffff; } .rg4 { background: var(--r4); color: #1d1206; }
+.rg5 { background: var(--r5); color: #1a0c04; } .rg6 { background: var(--r6); color: #062018; }
+.rg7 { background: var(--r7); color: #03140e; } .rg8 { background: var(--r8); color: #1d1804; }
+.rg9 { background: var(--r9); color: #140f00; }
+:root[data-theme="light"] .rg3, :root[data-theme="light"] .rg5,
+:root[data-theme="light"] .rg7, :root[data-theme="light"] .rg9 { color: #ffffff; }
+.good { color: var(--good); } .bad { color: var(--bad); }
+
+/* ensembles */
+.ecell { width: 100%; min-width: 78px; border: 1px solid var(--line-soft); background: var(--panel-2); border-radius: 6px; padding: 6px 6px 4px; cursor: pointer; display: grid; gap: 3px; text-align: center; font-size: 12.5px; color: var(--ink-2); }
+.ecell b { font-size: 17px; color: var(--ink); margin-right: 2px; }
+.ecell.sel { outline: 2px solid var(--ink); outline-offset: 1px; }
+.ens-detail { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 28px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line-soft); }
+.ens-detail h3 { margin: 0 0 8px; font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 18px; }
+.probs { display: grid; gap: 5px; }
+.prow { display: grid; grid-template-columns: 30px 1fr 42px; align-items: center; gap: 10px; }
+.prow b { text-align: right; font-weight: 600; }
+.ptrack { position: relative; height: 14px; background: var(--panel-2); border-radius: 4px; }
+.pfill { position: absolute; inset: 0 auto 0 0; border-radius: 4px; }
+.ptrack i { position: absolute; top: -3px; bottom: -3px; width: 0; border-left: 2.5px solid; transform: translateX(-1px); }
+.ens-facts { margin-top: 0; grid-template-columns: 1fr; }
+@media (max-width: 860px) { .ens-detail { grid-template-columns: 1fr; } }
+
+/* Cape page */
+.cape .day .num { width: 46px; font-size: 16px; }
+.cape .day { flex-basis: 112px; }
+.call .big.amu { font-size: clamp(76px, 8vw, 118px); letter-spacing: -0.02em; line-height: 0.9; }
+.strip-wrap { grid-column: 1 / -1; margin-top: 16px; }
+.strip { width: 100%; max-width: 640px; height: auto; display: block; }
+.prow.wide { grid-template-columns: 58px 1fr 42px; }
+.ref article.wide { grid-template-columns: 64px 1fr; }
+.ref article.wide .chip { width: 56px; font-size: 18px; }
+.cape .cell .n { font-size: 17px; }
+.cape .season-strip .chip { min-width: 34px; font-size: 11.5px; }
+.pop-grid#popBody:has(.ltg-top) { display: block; }
+.ltg-top { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-bottom: 1px solid var(--line-soft); margin-bottom: 10px; }
+.ltg-big { padding: 4px 16px 12px 0; }
+.ltg-big b { display: block; font-size: 54px; font-weight: 700; line-height: 1; margin-top: 4px; }
+.ltg-big + .ltg-big { padding-left: 16px; border-left: 1px solid var(--line-soft); }
+.ltg-table { border-collapse: collapse; width: 100%; max-width: 900px; font-size: 14px; margin: 8px 0; }
+.ltg-table th, .ltg-table td { padding: 6px 10px; border-bottom: 1px solid var(--line-soft); text-align: right; white-space: nowrap; }
+.ltg-table th:first-child { text-align: left; font-weight: 500; }
+.ltg-table thead th { color: var(--muted); font-weight: 500; }
+.ltg-table .on { background: color-mix(in srgb, var(--ridge) 14%, transparent); font-weight: 600; }
+.ltg-table tr.on th, .ltg-table tr.on td { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+.ltg-table tr.tot th, .ltg-table tr.tot td { color: var(--ink-2); font-weight: 600; }
+.ltg-table .chip { font-size: 13px; height: 20px; min-width: 44px; margin-right: 6px; }
+.ltg-slot { margin-top: 14px; padding: 12px 14px; border: 1px dashed var(--line); border-radius: 8px; }
+.ltg-slot p { margin: 4px 0 0; }
+@media (max-width: 640px) { .ltg-top { grid-template-columns: 1fr; } .ltg-big + .ltg-big { border-left: 0; padding-left: 0; border-top: 1px solid var(--line-soft); padding-top: 8px; } }
+.ltg-h { font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 18px; margin: 20px 0 4px; }
+.ltg-top.small .ltg-big b { font-size: 38px; }
+.ltg-big .note { display: block; }
+.ltg-table.heat { max-width: 640px; }
+.ltg-table.heat td { text-align: center; font-weight: 600; }
+.ltg-table.heat td.cur { outline: 2.5px solid var(--ink); outline-offset: -2px; }
+.ltg-table.src { max-width: 820px; }
+.ltg-table.src td, .ltg-table.src th { text-align: left; }
+
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><h1>Florida Flow Regime</h1><span>Summer sea breeze thunderstorm regimes, 1000–700 mb layer flow</span></div>
+    <div class="ctrl"><label for="modelSel">Model</label><select id="modelSel"></select></div>
+    <div class="ctrl">
+      <a class="btn" id="pageLink" href="cape.html" style="text-decoration:none;color:inherit">Cape view</a>
+      <button class="btn" id="refreshBtn" title="Reload all data">Refresh</button>
+      <button class="btn icon" id="themeBtn" title="Switch light or dark">◐</button>
+      <button class="btn icon" id="settingsBtn" title="Settings">⚙</button>
+    </div>
+  </div>
+  <div class="days" id="days" role="group" aria-label="Forecast day"></div>
+  <div class="status" id="status"></div>
+</header>
+
+<main>
+  <section class="panel hero" aria-label="Regime call">
+    <div class="wheel-wrap">
+      <svg id="wheel" viewBox="0 0 520 520" role="img" aria-label="Regime wheel"></svg>
+      <div class="wheel-legend" id="wheelLegend"></div>
+    </div>
+    <div class="call" id="call"></div>
+  </section>
+
+  <section class="panel">
+    <header><h2>Seven-day regime outlook</h2><span class="note" id="matrixNote">12Z 1000–700 mb mean vector in the Tampa Bay analysis box. Select a column to change the day.</span></header>
+    <div class="body matrix-scroll"><table class="matrix" id="matrix"></table></div>
+  </section>
+
+  <section class="panel">
+    <header><h2>Ensemble regime probabilities</h2><span class="note" id="ensNote">Share of GEFS and EC ENS members in each regime at 12Z. Select a day for the detail.</span></header>
+    <div class="body" id="ensBody"></div>
+  </section>
+
+  <div class="two">
+    <section class="panel">
+      <header>
+        <h2 id="mapTitle">Layer flow and ridge axis</h2>
+        <div class="seg" id="hourSeg"><button data-h="12" aria-pressed="true">12Z</button><button data-h="18">18Z</button><button data-h="0">00Z</button></div>
+      </header>
+      <div class="body">
+        <svg id="map" class="map-svg" viewBox="0 0 640 600" role="img" aria-label="Florida layer-mean wind map"></svg>
+        <div class="maplegend" id="mapLegend"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <header>
+        <h2>Coverage ingredients vs normal</h2>
+        <div class="seg" id="srcSeg"><button data-s="model" aria-pressed="true">Model</button><button data-s="ens">Ensemble</button><button data-s="obs">Latest sounding</button></div>
+      </header>
+      <div class="body">
+        <div class="sites" id="siteSeg"></div>
+        <div id="ingredients"></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel">
+    <header><h2 id="popTitle">Regime rain climatology, NWS Tampa Bay</h2><div class="seg" id="popSeg"></div></header>
+    <div class="body pop-grid" id="popBody">
+      <img id="popImg" class="pop-img" alt="NWS Tampa Bay regime probability of precipitation climatology">
+      <div class="pop-side" id="popSide"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <header><h2>Florida soundings</h2><span class="note" id="sndNote">Latest available 12Z or 00Z launch per site</span></header>
+    <div class="body"><div class="snd-grid" id="soundings"></div></div>
+  </section>
+
+  <section class="panel">
+    <header><h2>Season so far</h2><span class="note" id="seasonNote"></span></header>
+    <div class="body" id="season"></div>
+  </section>
+
+  <section class="panel">
+    <header><h2>Regime guide</h2><span class="note" id="refNote">Definitions from the NWS Tampa Bay Thunderstorm Climatology Quick Reference</span></header>
+    <div class="body"><div class="ref" id="ref"></div></div>
+  </section>
+
+  <section class="panel">
+    <header><h2>How this works</h2></header>
+    <div class="body method" id="method"></div>
+  </section>
+</main>
+
+<div id="tip" role="tooltip"></div>
+
+<dialog id="settingsDlg">
+  <h2>Settings</h2>
+  <form class="form" id="settingsForm" method="dialog">
+    <label>Light/variable below (kt)<input name="light" type="number" step="0.5" min="1"></label>
+    <label>Strong above (kt)<input name="strong" type="number" step="0.5" min="2"></label>
+    <label>Analysis box south (°N)<input name="boxS" type="number" step="0.25"></label>
+    <label>Analysis box north (°N)<input name="boxN" type="number" step="0.25"></label>
+    <label>Analysis box west (°E)<input name="boxW" type="number" step="0.25"></label>
+    <label>Analysis box east (°E)<input name="boxE" type="number" step="0.25"></label>
+    <label class="full">Climatology file URL<input name="climoUrl" type="text"></label>
+    <label class="full">Season log file URL<input name="recentUrl" type="text"></label>
+    <div class="dlg-actions full">
+      <button class="btn" value="reset" id="resetSettings">Reset to defaults</button>
+      <button class="btn" value="cancel">Cancel</button>
+      <button class="btn primary" value="save" id="saveSettings">Save and reload</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script>window.FFR_PAGE = 'cape';</script>
+<script>
+/* ===================================================================
+   Florida Flow Regime core engine
+   Thermodynamics, 1000-700 hPa layer-mean wind, NWS TBW regime
+   classification, ridge-axis detection and climatology percentiles.
+   Mirrored 1:1 in scripts/build_climatology.py so live values and
+   climatology are computed the same way.
+   =================================================================== */
+const FR = (() => {
+  const RD = 287.04, CP = 1005.7, KAPPA = RD / CP, LV = 2.501e6, EPS = 0.622, G = 9.80665;
+  const isNum = (x) => typeof x === 'number' && isFinite(x);
+
+  // ---------- moisture ----------
+  const esat = (tc) => 6.112 * Math.exp((17.67 * tc) / (tc + 243.5)); // hPa (Bolton 1980)
+  const tdFromE = (e) => { const l = Math.log(e / 6.112); return (243.5 * l) / (17.67 - l); };
+  const mixr = (p, tdc) => { const e = esat(tdc); return (EPS * e) / (p - e); }; // kg/kg
+  const tdFromW = (p, w) => tdFromE((w * p) / (EPS + w));
+  const tdFromRH = (tc, rh) => (!isNum(tc) || !isNum(rh)) ? null : tdFromE((esat(tc) * Math.max(rh, 0.5)) / 100);
+  const rhOf = (tc, tdc) => (100 * esat(tdc)) / esat(tc);
+  const theta = (p, tk) => tk * Math.pow(1000 / p, KAPPA);
+  const tvirt = (tk, w) => (tk * (1 + w / EPS)) / (1 + w);
+
+  // ---------- wind ----------
+  const toUV = (dir, spd) => { const r = (dir * Math.PI) / 180; return { u: -spd * Math.sin(r), v: -spd * Math.cos(r) }; };
+  const fromUV = (u, v) => ({ dir: ((Math.atan2(-u, -v) * 180) / Math.PI + 360) % 360, spd: Math.hypot(u, v) });
+
+  // ---------- profile utilities ----------
+  // profile: array of {p, t, td, dir, spd}; t/td in C, spd in kt
+  function normalize(levels) {
+    const seen = new Map();
+    for (const q of levels) {
+      if (!isNum(q.p) || q.p < 50 || q.p > 1100) continue;
+      const key = Math.round(q.p * 10);
+      const cur = seen.get(key) || { p: q.p };
+      for (const k of ['t', 'td', 'dir', 'spd']) if (isNum(q[k]) && !isNum(cur[k])) cur[k] = q[k];
+      seen.set(key, cur);
+    }
+    const out = [...seen.values()].sort((a, b) => b.p - a.p);
+    for (const q of out) {
+      if (isNum(q.t) && isNum(q.td) && q.td > q.t) q.td = q.t;
+      if (isNum(q.dir) && isNum(q.spd)) { const w = toUV(q.dir, q.spd); q.u = w.u; q.v = w.v; }
+    }
+    return out;
+  }
+
+  // linear interpolation in ln(p); no extrapolation
+  function interp(prof, p, key) {
+    let lo = null, hi = null;
+    for (const q of prof) {
+      if (!isNum(q[key])) continue;
+      if (q.p >= p) lo = q; else { hi = q; break; }
+    }
+    if (lo && Math.abs(lo.p - p) < 1e-6) return lo[key];
+    if (!lo || !hi) return null;
+    const f = Math.log(lo.p / p) / Math.log(lo.p / hi.p);
+    return lo[key] + f * (hi[key] - lo[key]);
+  }
+
+  // pressure-weighted (trapezoid) layer-mean vector wind, default 1000-700 hPa
+  function layerMeanWind(prof, pBot = 1000, pTop = 700) {
+    if (!prof.length) return null;
+    const psfc = prof[0].p;
+    const bot = Math.min(pBot, psfc);
+    const ub = interp(prof, bot, 'u'), vb = interp(prof, bot, 'v');
+    const ut = interp(prof, pTop, 'u'), vt = interp(prof, pTop, 'v');
+    if (![ub, vb, ut, vt].every(isNum)) return null;
+    const pts = [{ p: bot, u: ub, v: vb }];
+    for (const q of prof) if (isNum(q.u) && q.p < bot && q.p > pTop) pts.push({ p: q.p, u: q.u, v: q.v });
+    pts.push({ p: pTop, u: ut, v: vt });
+    let su = 0, sv = 0, maxGap = 0;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const dp = pts[i].p - pts[i + 1].p;
+      maxGap = Math.max(maxGap, dp);
+      su += ((pts[i].u + pts[i + 1].u) / 2) * dp;
+      sv += ((pts[i].v + pts[i + 1].v) / 2) * dp;
+    }
+    if (maxGap > 160) return null;
+    const u = su / (bot - pTop), v = sv / (bot - pTop);
+    return { u, v, ...fromUV(u, v) };
+  }
+
+  // ---------- parcel ----------
+  function mlParcel(prof, depth = 100) {
+    if (!prof.length) return null;
+    const psfc = prof[0].p, pTop = psfc - depth;
+    let sTh = 0, sW = 0, n = 0;
+    for (let p = psfc; p >= pTop - 1e-6; p -= 5) {
+      const t = interp(prof, p, 't'), td = interp(prof, p, 'td');
+      if (!isNum(t) || !isNum(td)) continue;
+      sTh += theta(p, t + 273.15); sW += mixr(p, td); n++;
+    }
+    if (n < 3) return null;
+    const th = sTh / n, w = sW / n;
+    const tk = th * Math.pow(psfc / 1000, KAPPA);
+    const tdk = Math.min(tdFromW(psfc, w) + 273.15, tk);
+    return { p: psfc, tk, tdk, w, theta: th };
+  }
+
+  function lcl(tk, tdk, p) {
+    const tl = 1 / (1 / (tdk - 56) + Math.log(tk / tdk) / 800) + 56;
+    return { t: tl, p: p * Math.pow(tl / tk, 1 / KAPPA) };
+  }
+
+  function moistDTdp(p, tk) {
+    const es = esat(tk - 273.15), rs = (EPS * es) / (p - es);
+    return ((RD * tk + LV * rs) / p) / (CP + (LV * LV * rs * EPS) / (RD * tk * tk));
+  }
+
+  function moistStep(tk, p0, p1) {
+    const n = Math.max(1, Math.ceil(Math.abs(p1 - p0) / 5)), h = (p1 - p0) / n;
+    let p = p0, t = tk;
+    for (let i = 0; i < n; i++) {
+      const k1 = moistDTdp(p, t), k2 = moistDTdp(p + h / 2, t + (h / 2) * k1);
+      const k3 = moistDTdp(p + h / 2, t + (h / 2) * k2), k4 = moistDTdp(p + h, t + h * k3);
+      t += (h / 6) * (k1 + 2 * k2 + 2 * k3 + k4); p += h;
+    }
+    return t;
+  }
+
+  // parcel temperature (K) at a set of descending pressures
+  function parcelPath(pc, pressures) {
+    const L = lcl(pc.tk, pc.tdk, pc.p);
+    let tMoist = L.t, pMoist = L.p;
+    return pressures.map((p) => {
+      if (p >= L.p) return { p, tk: pc.theta * Math.pow(p / 1000, KAPPA), w: pc.w, sat: false };
+      tMoist = moistStep(tMoist, pMoist, p); pMoist = p;
+      const es = esat(tMoist - 273.15);
+      return { p, tk: tMoist, w: (EPS * es) / (p - es), sat: true };
+    });
+  }
+
+  function capeOf(prof, pc) {
+    const top = prof.filter((q) => isNum(q.t)).slice(-1)[0];
+    if (!top) return null;
+    const pTop = Math.max(top.p, 100), ps = [];
+    for (let p = pc.p; p >= pTop; p -= 10) ps.push(p);
+    if (ps.length < 5) return null;
+    const path = parcelPath(pc, ps);
+    const B = path.map((q) => {
+      const te = interp(prof, q.p, 't'), tde = interp(prof, q.p, 'td');
+      if (!isNum(te)) return null;
+      const we = isNum(tde) ? mixr(q.p, tde) : 0;
+      return tvirt(q.tk, q.w) - tvirt(te + 273.15, we);
+    });
+    const L = lcl(pc.tk, pc.tdk, pc.p);
+    let lfc = -1, el = -1;
+    for (let i = 0; i < ps.length; i++) if (isNum(B[i]) && B[i] > 0 && ps[i] <= L.p + 1e-6) { if (lfc < 0) lfc = i; el = i; }
+    if (lfc < 0) return 0;
+    let cape = 0;
+    for (let i = lfc; i < el; i++) {
+      if (!isNum(B[i]) || !isNum(B[i + 1])) continue;
+      const b = (B[i] + B[i + 1]) / 2;
+      if (b > 0) cape += RD * b * Math.log(ps[i] / ps[i + 1]);
+    }
+    return cape;
+  }
+
+  // ---------- full metric set ----------
+  function metrics(levels, opts = {}) {
+    const prof = normalize(levels);
+    const out = { prof, n: prof.length };
+    if (prof.length < 4) return out;
+    const mw = layerMeanWind(prof, 1000, 700);
+    if (mw) { out.mw = mw; out.mwspd = mw.spd; out.regime = classify(mw.dir, mw.spd, opts); }
+    const T = (p) => interp(prof, p, 't'), TD = (p) => interp(prof, p, 'td');
+    const t850 = T(850), td850 = TD(850), t700 = T(700), td700 = TD(700), t500 = T(500), td500 = TD(500);
+    if (isNum(t500)) out.t500 = t500;
+    if ([t850, td850, t700, td700, t500].every(isNum)) out.ki = (t850 - t500) + td850 - (t700 - td700);
+    if (isNum(t700) && isNum(t500)) {
+      const dz = (RD / G) * ((t700 + t500) / 2 + 273.15) * Math.log(700 / 500);
+      out.lr75 = ((t700 - t500) / dz) * 1000;
+    }
+    const rhs = [[t850, td850], [t700, td700], [t500, td500]].filter(([a, b]) => isNum(a) && isNum(b)).map(([a, b]) => rhOf(a, b));
+    if (rhs.length >= 2) out.rhmid = rhs.reduce((s, x) => s + x, 0) / rhs.length;
+    // precipitable water, surface to 300 hPa
+    const moist = prof.filter((q) => isNum(q.td) && q.p >= 300);
+    if (moist.length >= 4 && moist[moist.length - 1].p <= 400) {
+      let s = 0;
+      for (let i = 0; i < moist.length - 1; i++) {
+        s += ((mixr(moist[i].p, moist[i].td) + mixr(moist[i + 1].p, moist[i + 1].td)) / 2) * (moist[i].p - moist[i + 1].p) * 100;
+      }
+      out.pwat = s / G; // mm
+    }
+    if (isNum(opts.pwatOverride)) out.pwat = opts.pwatOverride;
+    const pc = mlParcel(prof, 100);
+    if (pc) {
+      out.parcel = pc; out.lcl = lcl(pc.tk, pc.tdk, pc.p);
+      if (isNum(t500)) {
+        const tp500 = parcelPath(pc, [500])[0].tk;
+        out.li = t500 + 273.15 - tp500;
+        if (isNum(out.ki)) out.ti = out.ki - out.li;
+      }
+      out.mlcape = capeOf(prof, pc);
+    }
+    return out;
+  }
+
+  // ---------- NWS Tampa Bay regimes ----------
+  const SECTORS = [
+    { key: 'NE/E', from: 0, to: 120, mod: 2, str: 3 },
+    { key: 'SE/S', from: 120, to: 190, mod: 6, str: 7 },
+    { key: 'SW/W', from: 190, to: 290, mod: 4, str: 5 },
+    { key: 'NW/N', from: 290, to: 360, mod: 8, str: 9 },
+  ];
+  function sectorOf(dir) { const d = ((dir % 360) + 360) % 360; return SECTORS.find((s) => d >= s.from && d < s.to); }
+  function classify(dir, spd, opts = {}) {
+    const light = isNum(opts.light) ? opts.light : 5, strong = isNum(opts.strong) ? opts.strong : 10;
+    if (!isNum(dir) || !isNum(spd)) return null;
+    if (spd < light) return 1;
+    const s = sectorOf(dir);
+    return spd > strong ? s.str : s.mod;
+  }
+
+  // ridge axis: southernmost easterly->westerly transition of layer-mean u going north
+  function ridgeLat(lats, us) {
+    const pts = lats.map((lat, i) => ({ lat, u: us[i] })).filter((q) => isNum(q.u)).sort((a, b) => a.lat - b.lat);
+    if (pts.length < 3) return null;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i], b = pts[i + 1];
+      if (a.u < 0 && b.u >= 0) return { lat: a.lat + ((0 - a.u) / (b.u - a.u)) * (b.lat - a.lat), where: 'in' };
+    }
+    if (pts.every((q) => q.u < 0)) return { lat: pts[pts.length - 1].lat, where: 'north' };
+    if (pts.every((q) => q.u >= 0)) return { lat: pts[0].lat, where: 'south' };
+    return null;
+  }
+
+  // ---------- AMU flow regimes (Lambert 2007, NASA/CR-2007-214732, Table 1) ----------
+  // Synoptic regime from the 1000-700 mb mean direction sectors at MFL, TBW and JAX;
+  // the XMR morning sounding resolves Other/Missing and the SE-1 / SW-2 boundary.
+  const AMU_ORDER = ['SW-1', 'SW-2', 'SE-1', 'SE-2', 'NE', 'NW', 'Other'];
+  function amuSector(dir) {
+    if (!isNum(dir)) return null;
+    const d = ((dir % 360) + 360) % 360;
+    return d < 90 ? 'NE' : d < 180 ? 'SE' : d < 270 ? 'SW' : 'NW';
+  }
+  const AMU_PATTERNS = { 'SW,SW,SW': 'SW-1', 'SE,SW,SW': 'SW-2', 'SE,SE,SW': 'SE-1', 'SE,SE,SE': 'SE-2', 'NW,NW,NW': 'NW', 'NE,NE,NE': 'NE' };
+  function amuSynoptic(mfl, tbw, jax) {
+    if (![mfl, tbw, jax].every((x) => x && isNum(x.dir))) return 'Missing';
+    return AMU_PATTERNS[[mfl, tbw, jax].map((x) => amuSector(x.dir)).join(',')] || 'Other';
+  }
+  function amuLocal(xmr, minSpd = 4) {
+    if (!xmr || !isNum(xmr.dir) || !(xmr.spd > minSpd)) return null;
+    return { SW: 'SW-2', SE: 'SE-1', NW: 'NW', NE: 'NE' }[amuSector(xmr.dir)];
+  }
+  function amuFinal(syn, xmr) {
+    const loc = amuLocal(xmr);
+    if (!loc) return syn;
+    if (syn === 'Other' || syn === 'Missing') return loc;
+    if (syn === 'SW-2' && loc === 'SE-1') return 'SE-1';
+    if (syn === 'SE-1' && loc === 'SW-2') return 'SW-2';
+    return syn;
+  }
+  const amuRegime = (mfl, tbw, jax, xmr) => amuFinal(amuSynoptic(mfl, tbw, jax), xmr);
+
+  // ---------- climatology ----------
+  // climo.stations[ST][cycle][var] = array (one per stored day) of 21 percentiles (0,5,..,100)
+  function doyOf(dateStr) { const d = new Date(dateStr + 'T00:00:00Z'); return Math.floor((d - Date.UTC(d.getUTCFullYear(), 0, 1)) / 864e5) + 1; }
+  function climoQ(climo, st, cycle, v, doy) {
+    const c = climo && climo.stations && climo.stations[st] && climo.stations[st][cycle];
+    if (!c || !c[v]) return null;
+    const step = climo.doyStep || 3, days = climo.doys;
+    let i = days.findIndex((d) => d > doy);
+    if (i === -1) i = days.length; // wrap
+    const i0 = (i - 1 + days.length) % days.length, i1 = i % days.length;
+    const d0 = days[i0]; let span = days[i1] - d0; if (span <= 0) span += 366;
+    let off = doy - d0; if (off < 0) off += 366;
+    const f = span ? Math.min(1, off / span) : 0;
+    const a = c[v][i0], b = c[v][i1];
+    if (!a || !b) return a || b || null;
+    return a.map((x, k) => (isNum(x) && isNum(b[k]) ? x + f * (b[k] - x) : x));
+  }
+  function pctOf(v, q) {
+    if (!isNum(v) || !q) return null;
+    if (v <= q[0]) return 0;
+    if (v >= q[q.length - 1]) return 100;
+    const step = 100 / (q.length - 1);
+    for (let i = 0; i < q.length - 1; i++) {
+      if (v <= q[i + 1]) { const d = q[i + 1] - q[i]; return step * (i + (d > 0 ? (v - q[i]) / d : 0.5)); }
+    }
+    return 100;
+  }
+  function meanVector(list) {
+    const xs = list.filter((x) => x && isNum(x.u));
+    if (!xs.length) return null;
+    const u = xs.reduce((s, x) => s + x.u, 0) / xs.length, v = xs.reduce((s, x) => s + x.v, 0) / xs.length;
+    return { u, v, ...fromUV(u, v), n: xs.length };
+  }
+
+  return {
+    isNum, esat, mixr, tdFromRH, rhOf, toUV, fromUV, normalize, interp, layerMeanWind,
+    mlParcel, lcl, parcelPath, capeOf, metrics, classify, sectorOf, SECTORS, ridgeLat,
+    amuRegime, amuSynoptic, amuLocal, amuFinal, amuSector, AMU_ORDER, doyOf, climoQ, pctOf, meanVector,
+  };
+})();
+if (typeof module !== 'undefined') module.exports = FR;
+
+</script>
+<script>
+(() => {
+'use strict';
+const $ = (s) => document.querySelector(s);
+const isNum = FR.isNum;
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// ------------------------------------------------------------------ config
+const DEFAULTS = { light: 5, strong: 10, boxS: 27.0, boxN: 28.5, boxW: -83.0, boxE: -81.5,
+  climoUrl: 'data/climo.json', recentUrl: 'data/recent.json' };
+const load = (k) => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
+const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* private mode */ } };
+let S = { ...DEFAULTS, ...(load('ffr-settings') || {}) };
+
+const OM = 'https://api.open-meteo.com/v1/forecast';
+const OME = 'https://ensemble-api.open-meteo.com/v1/ensemble';
+const ENS_T_LV = [1000, 925, 850, 700, 600, 500, 400, 300, 250, 200];
+const ENS_TTL = 3 * 3600e3; // cache processed ensemble guidance for 3 hours
+const IEMJ = 'https://mesonet.agron.iastate.edu/json/raob.py';
+const WIND_LV = [1000, 925, 850, 700];
+const THERMO_LV = [1000, 975, 950, 925, 900, 850, 800, 700, 600, 500, 400, 300, 250, 200];
+
+const SITES = [
+  { id: 'TBW', iem: 'KTBW', name: 'Tampa Bay', lat: 27.705, lon: -82.401 },
+  { id: 'XMR', iem: 'KXMR', name: 'Cape Canaveral', lat: 28.481, lon: -80.555 },
+  { id: 'MFL', iem: 'KMFL', name: 'Miami', lat: 25.755, lon: -80.384 },
+  { id: 'JAX', iem: 'KJAX', name: 'Jacksonville', lat: 30.500, lon: -81.700 },
+  { id: 'KEY', iem: 'KKEY', name: 'Key West', lat: 24.551, lon: -81.788 },
+  { id: 'TLH', iem: 'KTLH', name: 'Tallahassee', lat: 30.446, lon: -84.299 },
+];
+const MODELS = [
+  { key: 'gfs', name: 'GFS', ids: ['gfs_seamless'], c: '#e4edee' },
+  { key: 'ecmwf', name: 'ECMWF IFS', ids: ['ecmwf_ifs025', 'ecmwf_ifs'], c: '#f2b33d' },
+  { key: 'aifs', name: 'ECMWF AIFS', ids: ['ecmwf_aifs025_single', 'ecmwf_aifs025'], c: '#e65a82' },
+  { key: 'icon', name: 'ICON', ids: ['icon_seamless'], c: '#5cc9d8' },
+  { key: 'gem', name: 'GEM', ids: ['gem_seamless'], c: '#b3a6d9' },
+  { key: 'hrrr', name: 'HRRR', ids: ['gfs_hrrr', 'ncep_hrrr_conus'], c: '#57d39b' },
+];
+
+const ENS = [
+  { key: 'ecens', name: 'EC ENS', full: 'ECMWF IFS ensemble', ids: ['ecmwf_ifs025_ensemble', 'ecmwf_ifs025'], c: '#f2b33d' },
+  { key: 'gefs', name: 'GEFS', full: 'NCEP GEFS', ids: ['ncep_gefs025', 'gfs025', 'ncep_gefs05', 'gfs05', 'gfs_seamless'], c: '#5cc9d8' },
+];
+const PAGE = window.FFR_PAGE || 'state';
+const CAPE = PAGE === 'cape';
+
+// AMU regimes (Lambert 2007). Warm-season and monthly probabilities of >=1 CG strike in the
+// 10 KSC/CCAFS 5 n mi warning circles, 0700-0000 EDT, 1989-2005 (NASA/CR-2007-214732, Tables 3-4).
+const AMU = {
+  'SW-1': { v: 'r5', name: 'Ridge south of Miami', flow: 'Southwest flow over KSC/CCSFS', def: 'MFL, TBW and JAX all 180–270°', season: 62,
+    expect: 'The subtropical ridge sits south of the peninsula and southwest flow pins the Atlantic sea breeze at or near the coast. Storms that build over the interior push east toward the Cape in the afternoon, making this the most lightning-prone regime for the KSC/CCSFS warning circles.' },
+  'SW-2': { v: 'r4', name: 'Ridge between Miami and Tampa', flow: 'Southwest flow over KSC/CCSFS', def: 'MFL 90–180°, TBW and JAX 180–270°', season: 57,
+    expect: 'Southwest flow over the Cape with the ridge across south Florida. The east coast sea breeze stays close to the coast and the sea breeze collision tends to set up near or over Brevard in the afternoon. Also assigned when the three-station pattern is undefined but XMR flow is SW above 4 kt.' },
+  'SE-1': { v: 'r6', name: 'Ridge between Tampa and Jacksonville', flow: 'Southeast flow over KSC/CCSFS', def: 'MFL and TBW 90–180°, JAX 180–270°', season: 32,
+    expect: 'The ridge axis lies across north-central Florida. Onshore flow carries the Atlantic sea breeze inland, so the strongest storms usually develop west of the Cape over the interior and west coast. Also assigned when the three-station pattern is undefined but XMR flow is SE above 4 kt.' },
+  'SE-2': { v: 'r7', name: 'Ridge north of Jacksonville', flow: 'Southeast flow over KSC/CCSFS', def: 'MFL, TBW and JAX all 90–180°', season: 26,
+    expect: 'Deep easterly to southeasterly flow with the ridge north of Florida. The sea breeze moves well inland early and convection favors the western peninsula, keeping the Cape on the quieter side. Watch for Atlantic showers moving onshore in the morning.' },
+  'NE': { v: 'r2', name: 'Overall northeast flow', flow: 'Northeast flow over Florida', def: 'MFL, TBW and JAX all 0–90°', season: 11,
+    expect: 'Northeast flow, often from a strong ridge over the Southeast U.S. The lowest lightning odds for the KSC/CCSFS warning circles. Coastal showers are possible but convection focuses well inland and on the west coast.' },
+  'NW': { v: 'r8', name: 'Overall northwest flow', flow: 'Northwest flow over Florida', def: 'MFL, TBW and JAX all 270–360°', season: 32,
+    expect: 'Northwest flow, often with the ridge south of Florida extending into the Gulf. Offshore flow keeps the sea breeze near the coast, and storms that develop inland can reach the Cape later in the day.' },
+  'Other': { v: 'r1', name: 'Undefined regime', flow: 'No consistent pattern', def: 'No three-station pattern and XMR flow 4 kt or less', season: 35,
+    expect: 'The three soundings do not fit a defined pattern and the XMR flow is too light to decide it. Expect local sea breeze and outflow interactions to drive the day.' },
+};
+const WS45 = { 'SW-1': 63, 'SW-2': 57, 'SE-1': 27, 'SE-2': 25, NW: 30, NE: 15, Other: 30, Low: 30 }; // 45 WS "Flow Regime: Critical Concept" slide
+const AMU_MONTHLY = { // month -> regime -> % (SW-1/2 combined; SE-1/2 combined Jun-Aug)
+  5: { 'SW-1': 30, 'SW-2': 30, 'SE-1': 19, 'SE-2': 6, NW: 16, NE: 2, Other: 16, all: 18 },
+  6: { 'SW-1': 68, 'SW-2': 68, 'SE-1': 32, 'SE-2': 32, NW: 46, NE: 11, Other: 30, all: 46 },
+  7: { 'SW-1': 68, 'SW-2': 68, 'SE-1': 32, 'SE-2': 32, NW: 53, NE: 14, Other: 43, all: 48 },
+  8: { 'SW-1': 68, 'SW-2': 68, 'SE-1': 32, 'SE-2': 32, NW: 38, NE: 12, Other: 55, all: 49 },
+  9: { 'SW-1': 55, 'SW-2': 55, 'SE-1': 42, 'SE-2': 29, NW: 16, NE: 17, Other: 24, all: 33 },
+};
+const CAPE_PTS = [ // points from the Daily Planning Forecast
+  { id: 'SLF', name: 'KSC Inland (SLF)', lat: 28.615, lon: -80.6945 },
+  { id: '39B', name: 'KSC Launch Pads (LC-39B)', lat: 28.6272, lon: -80.6208 },
+  { id: 'XMR', name: 'Cape Inland (XMR)', lat: 28.481, lon: -80.555 },
+  { id: '37', name: 'Cape Launch Pads (SLC-37)', lat: 28.5317, lon: -80.565 },
+  { id: 'COF', name: 'Patrick SFB (KCOF)', lat: 28.2349, lon: -80.6101 },
+];
+const TBW_ORDER = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+const RS = CAPE ? {
+  order: FR.AMU_ORDER,
+  of: (d) => d && d.amuR,
+  memOf: (m) => m.amuR,
+  cls: (r) => (AMU[r] ? `rg${AMU[r].v.slice(1)}` : ''),
+  color: (r) => (AMU[r] ? `var(--${AMU[r].v})` : 'var(--muted)'),
+  name: (r) => (AMU[r] ? `${r}: ${AMU[r].name}` : String(r)),
+  label: (r) => r,
+} : {
+  order: TBW_ORDER,
+  of: (d) => d && d.regime,
+  memOf: (m) => m.reg,
+  cls: (r) => (r ? `rg${r}` : ''),
+  color: (r) => `var(--r${r})`,
+  name: (r) => (REG[r] ? `Regime ${r}: ${REG[r].name}` : String(r)),
+  label: (r) => String(r),
+};
+const SECTOR_OF_REG = { 1: 'Light', 2: 'NE/E', 3: 'NE/E', 4: 'SW/W', 5: 'SW/W', 6: 'SE/S', 7: 'SE/S', 8: 'NW/N', 9: 'NW/N' };
+
+const REG = {
+  1: { name: 'Light and variable', sector: 'Light', days: 98,
+    def: 'Mean flow under the light threshold, any direction.',
+    expect: 'Both sea breezes form early and push well inland, colliding over the interior of the peninsula by mid to late afternoon. Storms are slow movers with heavy rain and frequent lightning near the collision zone, and outflow boundaries keep triggering new cells.',
+    favored: 'Interior peninsula, mid-afternoon into early evening' },
+  2: { name: 'NE/E flow, moderate', sector: 'NE/E', days: 249,
+    def: 'From 360° to 120°, light to 10 kt.',
+    expect: 'The Atlantic sea breeze moves inland quickly and storms that start on the east side drift west through the early afternoon. The Gulf sea breeze stays pinned near the west coast, where the strongest late-afternoon and evening storms tend to fire, especially from Tampa Bay south toward Fort Myers and Naples.',
+    favored: 'Interior early afternoon, west coast late afternoon and evening' },
+  3: { name: 'NE/E flow, strong', sector: 'NE/E', days: 118,
+    def: 'From 360° to 120°, above 10 kt.',
+    expect: 'Strong onshore flow keeps the Atlantic sea breeze weak and brings showers in off the ocean along the east coast in the morning. Convection concentrates along the Gulf sea breeze, pinned at or just inland from the west coast late in the day, with southwest Florida most favored.',
+    favored: 'West coast, especially southwest Florida, late day' },
+  4: { name: 'SW/W flow, moderate', sector: 'SW/W', days: 428,
+    def: 'From 190° to 290°, light to 10 kt.',
+    expect: 'Morning showers and storms develop near the Gulf coast as the land breeze meets the onshore flow. By afternoon the action shifts to the eastern half of the peninsula, where storms drifting east run into the Atlantic sea breeze. Orlando to the I-95 corridor and the Space Coast are favored.',
+    favored: 'Gulf coast in the morning, east-central Florida in the afternoon' },
+  5: { name: 'SW/W flow, strong', sector: 'SW/W', days: 268,
+    def: 'From 190° to 290°, above 10 kt.',
+    expect: 'The busiest morning pattern for the Gulf coast, with storms near the coast early. The Atlantic sea breeze is pinned at the coast and the strongest afternoon storms fire near the east coast, while the west coast often clears out by afternoon.',
+    favored: 'Gulf coast early, Atlantic coast in the afternoon' },
+  6: { name: 'SE/S flow, moderate', sector: 'SE/S', days: 458,
+    def: 'From 120° to 190°, light to 10 kt.',
+    expect: 'Early showers near the southeast coast, then the Atlantic sea breeze carries convection inland. Afternoon storms favor the southern and western peninsula where the flow meets the Gulf sea breeze, Tampa Bay southward into the evening. This regime had the largest mean SBCAPE in the TBW first-CG lightning study.',
+    favored: 'Southwest and west-central Florida, afternoon and evening' },
+  7: { name: 'SE/S flow, strong', sector: 'SE/S', days: 224,
+    def: 'From 120° to 190°, above 10 kt.',
+    expect: 'Deep Atlantic and Caribbean moisture with weak mid-level lapse rates and warm advection. Rain chances run high on the west coast, but with more cloud debris and less instability. Storms favor west-central and southwest Florida late in the day.',
+    favored: 'West-central and southwest Florida, late day' },
+  8: { name: 'NW/N flow, moderate', sector: 'NW/N', days: 96,
+    def: 'From 290° to 360°, light to 10 kt.',
+    expect: 'Usually a drier pattern. The Gulf sea breeze is weak, and storms cluster over the southeast peninsula in the afternoon where the flow meets the Atlantic sea breeze.',
+    favored: 'Southeast peninsula, afternoon' },
+  9: { name: 'NW/N flow, strong', sector: 'NW/N', days: null,
+    def: 'From 290° to 360°, above 10 kt (TBW sub-regime of 8).',
+    expect: 'Rare in summer and usually tied to a trough or front. Typically the driest regime with the least lightning; any storms favor the southeast coast.',
+    favored: 'Southeast coast, if anything' },
+};
+
+const PARAMS = [
+  { k: 'pwat', name: 'Precipitable water', desc: 'Surface to 300 mb', fmt: (v) => (v / 25.4).toFixed(2) + ' in', sub: (v) => Math.round(v) + ' mm', sign: 1 },
+  { k: 'ti', name: 'Thompson index', desc: 'K index minus lifted index', fmt: (v) => v.toFixed(0), sign: 1 },
+  { k: 'ki', name: 'K index', desc: 'Low-level moisture and lapse rate', fmt: (v) => v.toFixed(0), sign: 1 },
+  { k: 'li', name: 'Lifted index', desc: 'Lowest 100 mb mixed parcel', fmt: (v) => v.toFixed(1) + '°', sign: -1 },
+  { k: 'mlcape', name: 'MLCAPE', desc: 'Lowest 100 mb mixed parcel', fmt: (v) => Math.round(v) + '', sub: () => 'J/kg', sign: 1 },
+  { k: 't500', name: '500 mb temperature', desc: 'Colder aloft is more unstable', fmt: (v) => v.toFixed(1) + '°C', sign: -1 },
+  { k: 'lr75', name: '700–500 mb lapse rate', desc: '°C per km', fmt: (v) => v.toFixed(1), sign: 1 },
+  { k: 'rhmid', name: 'Mid-level RH', desc: 'Mean of 850, 700, 500 mb', fmt: (v) => Math.round(v) + '%', sign: 1 },
+];
+
+const POP = [
+  { k: '24-1', label: '24 hr' }, { k: '12-1', label: 'Daytime' }, { k: '6-2', label: '12–18Z' },
+  { k: '6-3', label: '18–00Z' }, { k: '6-4', label: '00–06Z' },
+];
+
+// ------------------------------------------------------------------ state
+const state = {
+  model: load('ffr-model') || 'gfs', day: 0, site: CAPE ? 'XMR' : 'TBW', mapHour: 12, src: 'model', pop: '12-1',
+  dates: [], core: {}, grid: {}, thermo: {}, obs: {}, climo: null, recent: null, geo: null, status: {},
+  ens: {}, ensThermo: {}, ensSel: 'ecens', showMembers: load('ffr-members') !== false,
+};
+if (!MODELS.find((m) => m.key === state.model)) state.model = 'gfs';
+
+// ------------------------------------------------------------------ helpers
+const nyDate = (ms) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(ms));
+const addDays = (ds, n) => new Date(Date.parse(ds + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10);
+const dayLabel = (ds) => {
+  const d = new Date(ds + 'T12:00:00Z');
+  return { wd: d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }), md: `${d.getUTCMonth() + 1}/${d.getUTCDate()}` };
+};
+const range = (a, b, s) => { const o = []; for (let x = a; x <= b + 1e-9; x += s) o.push(Math.round(x * 1000) / 1000); return o; };
+const regClass = (r) => (r ? RS.cls(r) : '');
+const kt = (x) => (isNum(x) ? Math.round(x) : '–');
+const deg = (x) => (isNum(x) ? String(Math.round(x)).padStart(3, '0') + '°' : '–');
+const median = (xs) => { const a = xs.filter(isNum).sort((x, y) => x - y); if (!a.length) return null; const m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
+const ordinal = (n) => { const s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
+function setStatus(key, cls, text, tip) { state.status[key] = { cls, text, tip }; renderStatus(); }
+
+function idxOf(times, date, hour) {
+  const d = hour === 0 ? addDays(date, 1) : date;
+  return times.indexOf(`${d}T${String(hour).padStart(2, '0')}:00`);
+}
+
+async function omFetch(model, pts, vars) {
+  const lat = pts.map((p) => p.lat.toFixed(3)).join(','), lon = pts.map((p) => p.lon.toFixed(3)).join(',');
+  let err = null;
+  // try each model id; if a model rejects the 9-day window, retry with its default range
+  for (const id of model.ids) {
+    for (const span of ['&past_days=1&forecast_days=9', '&forecast_days=8', '']) {
+      const url = `${OM}?latitude=${lat}&longitude=${lon}&hourly=${vars.join(',')}&models=${id}&wind_speed_unit=kn&timezone=GMT${span}`;
+      try {
+        const r = await fetch(url); const j = await r.json();
+        if (!r.ok || j.error) throw new Error(`${id}: ${j.reason || 'HTTP ' + r.status}`);
+        return Array.isArray(j) ? j : [j];
+      } catch (e) { err = e; if (!/day|range|forecast/i.test(e.message)) break; }
+    }
+  }
+  throw err || new Error('request failed');
+}
+
+// ensemble API: start/end hour limits the payload; 6-hourly output when the server supports it
+async function omEnsFetch(model, pts, vars, valid) {
+  const lat = pts.map((p) => p.lat.toFixed(3)).join(','), lon = pts.map((p) => p.lon.toFixed(3)).join(',');
+  const t0 = `${state.dates[0]}T12:00`, t1 = `${state.dates[state.dates.length - 1]}T12:00`;
+  let err = null;
+  for (const id of model.ids) {
+    for (const extra of ['&temporal_resolution=hourly_6', '']) {
+      const url = `${OME}?latitude=${lat}&longitude=${lon}&hourly=${vars.join(',')}&models=${id}&wind_speed_unit=kn&timezone=GMT&start_hour=${t0}&end_hour=${t1}${extra}`;
+      try {
+        const r = await fetch(url); const j = await r.json();
+        if (!r.ok || j.error) throw new Error(`${id}: ${j.reason || 'HTTP ' + r.status}`);
+        const res = Array.isArray(j) ? j : [j];
+        if (valid && !valid(res)) { err = new Error(`${id}: required pressure levels missing`); break; }
+        return { res, id };
+      } catch (e) { err = e; if (!extra) break; }
+    }
+  }
+  throw err || new Error('request failed');
+}
+const memberSuffixes = (h, base) => Object.keys(h).filter((k) => k === base || k.startsWith(base + '_member')).map((k) => k.slice(base.length)).sort();
+function lmAtM(h, i, suf) {
+  if (i < 0) return null;
+  const prof = FR.normalize(WIND_LV.map((p) => ({ p, dir: h[`wind_direction_${p}hPa${suf}`]?.[i], spd: h[`wind_speed_${p}hPa${suf}`]?.[i] })));
+  return FR.layerMeanWind(prof, 1000, 700);
+}
+
+function jsonp(url) {
+  return new Promise((res, rej) => {
+    const cb = '__iem' + Math.random().toString(36).slice(2), s = document.createElement('script');
+    const done = () => { clearTimeout(t); delete window[cb]; s.remove(); };
+    const t = setTimeout(() => { done(); rej(new Error('timeout')); }, 20000);
+    window[cb] = (d) => { done(); res(d); };
+    s.onerror = () => { done(); rej(new Error('jsonp failed')); };
+    s.src = url + '&callback=' + cb; document.head.appendChild(s);
+  });
+}
+async function iemGet(url) {
+  try { const r = await fetch(url); if (!r.ok) throw new Error(); return await r.json(); }
+  catch (e) { return jsonp(url); }
+}
+
+const windVars = () => WIND_LV.flatMap((p) => [`wind_speed_${p}hPa`, `wind_direction_${p}hPa`]);
+function lmAt(h, i) {
+  if (i < 0) return null;
+  const prof = FR.normalize(WIND_LV.map((p) => ({ p, dir: h[`wind_direction_${p}hPa`]?.[i], spd: h[`wind_speed_${p}hPa`]?.[i] })));
+  return FR.layerMeanWind(prof, 1000, 700);
+}
+
+// ------------------------------------------------------------------ loaders
+function corePoints() {
+  const pts = [];
+  const latStep = Math.max(0.25, (S.boxN - S.boxS) / 4), lonStep = Math.max(0.25, (S.boxE - S.boxW) / 4);
+  for (const la of range(S.boxS, S.boxN, latStep)) for (const lo of range(S.boxW, S.boxE, lonStep)) pts.push({ lat: la, lon: lo, tag: 'box' });
+  for (const lo of [-82.5, -81.5]) for (const la of range(24, 31.5, 0.5)) pts.push({ lat: la, lon: lo, tag: 'tr' + lo });
+  for (const s of SITES) pts.push({ lat: s.lat, lon: s.lon, tag: 'site', site: s.id });
+  return pts;
+}
+
+async function loadCore(model) {
+  setStatus('om-' + model.key, 'wait', `${model.name}`);
+  try {
+    const pts = corePoints();
+    const res = await omFetch(model, pts, windVars());
+    const times = res[0].hourly.time;
+    const days = state.dates.map((date) => {
+      const i = idxOf(times, date, 12);
+      const out = { date, sites: {} };
+      const box = [], tr = {};
+      pts.forEach((p, k) => {
+        const lm = lmAt(res[k].hourly, i);
+        if (p.tag === 'box') box.push(lm);
+        else if (p.tag === 'site') out.sites[p.site] = lm;
+        else (tr[p.tag] = tr[p.tag] || []).push({ lat: p.lat, u: lm ? lm.u : null });
+      });
+      const mv = FR.meanVector(box);
+      if (mv && mv.n >= Math.max(3, box.length * 0.6)) { out.box = mv; out.regime = FR.classify(mv.dir, mv.spd, S); }
+      const rl = Object.values(tr).map((a) => FR.ridgeLat(a.map((q) => q.lat), a.map((q) => q.u))).filter(Boolean);
+      if (rl.length) {
+        const ins = rl.filter((r) => r.where === 'in');
+        out.ridge = ins.length ? { lat: ins.reduce((s, r) => s + r.lat, 0) / ins.length, where: 'in' } : rl[0];
+      }
+      const { MFL, TBW, JAX, XMR } = out.sites;
+      out.amuSyn = FR.amuSynoptic(MFL, TBW, JAX);
+      const fin = FR.amuFinal(out.amuSyn, XMR);
+      out.amuR = fin === 'Missing' ? null : fin; // no data: never shown or counted as a regime
+      out.amu = out.amuR;
+      return out;
+    });
+    state.core[model.key] = { days };
+    const nOk = days.filter((d) => RS.of(d)).length;
+    setStatus('om-' + model.key, nOk ? 'ok' : 'err', `${model.name}${nOk ? '' : ' (no data)'}`, nOk ? `${nOk} of ${days.length} days` : 'Request worked but the 1000–700 mb winds came back empty');
+  } catch (e) {
+    state.core[model.key] = { error: e.message };
+    setStatus('om-' + model.key, 'err', `${model.name} unavailable`, e.message);
+  }
+}
+
+async function loadGrid(model) {
+  if (state.grid[model.key]) return;
+  const lats = CAPE ? range(27.5, 29.5, 0.25) : range(24, 31.5, 0.75), lons = CAPE ? range(-81.75, -79.75, 0.25) : range(-87.75, -79.5, 0.75);
+  const pts = []; for (const la of lats) for (const lo of lons) pts.push({ lat: la, lon: lo });
+  try {
+    const res = await omFetch(model, pts, windVars());
+    state.grid[model.key] = { pts, res, lats, lons, times: res[0].hourly.time };
+  } catch (e) { state.grid[model.key] = { error: e.message }; }
+}
+
+async function loadThermo(model) {
+  if (state.thermo[model.key]) return;
+  const vars = [...THERMO_LV.flatMap((p) => [`temperature_${p}hPa`, `relative_humidity_${p}hPa`]), ...windVars(),
+    'temperature_2m', 'dew_point_2m', 'surface_pressure', 'total_column_integrated_water_vapour'];
+  try {
+    const res = await omFetch(model, SITES, vars);
+    const out = {};
+    SITES.forEach((s, k) => {
+      const h = res[k].hourly, times = h.time;
+      const at = (i) => {
+        if (i < 0) return null;
+        const ps = h.surface_pressure?.[i];
+        const lv = [];
+        if (isNum(ps) && isNum(h.temperature_2m?.[i])) lv.push({ p: ps, t: h.temperature_2m[i], td: h.dew_point_2m?.[i] });
+        for (const p of THERMO_LV) {
+          if (isNum(ps) && p > ps - 2) continue;
+          const t = h[`temperature_${p}hPa`]?.[i], rh = h[`relative_humidity_${p}hPa`]?.[i];
+          if (!isNum(t)) continue;
+          lv.push({ p, t, td: FR.tdFromRH(t, rh), dir: h[`wind_direction_${p}hPa`]?.[i], spd: h[`wind_speed_${p}hPa`]?.[i] });
+        }
+        if (lv.length < 6) return null;
+        const m = FR.metrics(lv, { ...S, pwatOverride: h.total_column_integrated_water_vapour?.[i] });
+        return m;
+      };
+      out[s.id] = state.dates.map((date) => ({ date, z12: at(idxOf(times, date, 12)), z00: at(idxOf(times, date, 0)) }));
+    });
+    state.thermo[model.key] = out;
+  } catch (e) { state.thermo[model.key] = { error: e.message }; }
+}
+
+function ensPoints() {
+  const pts = [];
+  for (const la of range(S.boxS, S.boxN, (S.boxN - S.boxS) / 2)) for (const lo of range(S.boxW, S.boxE, (S.boxE - S.boxW) / 2)) pts.push({ lat: la, lon: lo, tag: 'box' });
+  for (const la of range(24, 31.5, 0.75)) pts.push({ lat: la, lon: -82.0, tag: 'tr' });
+  for (const id of ['TBW', 'MFL', 'JAX', 'XMR']) { const st = SITES.find((x) => x.id === id); pts.push({ lat: st.lat, lon: st.lon, tag: 'site', site: id }); }
+  return pts;
+}
+const ensCacheKey = (k, kind) => `ffr-ens-v2-${PAGE}-${kind}-${k}-${state.dates[0]}-${[S.light, S.strong, S.boxS, S.boxN, S.boxW, S.boxE].join('_')}`;
+function cacheGet(key) { const c = load(key); return c && Date.now() - c.t < ENS_TTL ? c.v : null; }
+function cacheSet(key, v) { try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), v })); } catch (e) { /* storage full: skip cache */ } }
+const r2 = (x) => (isNum(x) ? Math.round(x * 100) / 100 : null);
+
+async function loadEnsemble(model) {
+  const ck = ensCacheKey(model.key, 'wind'), hit = cacheGet(ck);
+  if (hit) { state.ens[model.key] = hit; setStatus('ens-' + model.key, 'ok', `${model.name} ${hit.n} members`, `Cached ${hit.id} run, refreshed every 3 hours`); return; }
+  setStatus('ens-' + model.key, 'wait', model.name);
+  try {
+    const pts = ensPoints();
+    const valid = (res) => {
+      const h = res[0].hourly, sufs = memberSuffixes(h, 'wind_speed_850hPa');
+      const i = h.time.findIndex((t) => t.endsWith('T12:00'));
+      return sufs.length > 3 && sufs.filter((sf) => lmAtM(h, i, sf)).length >= sufs.length * 0.6;
+    };
+    const { res, id } = await omEnsFetch(model, pts, windVars(), valid);
+    const times = res[0].hourly.time, sufs = memberSuffixes(res[0].hourly, 'wind_speed_850hPa');
+    const days = state.dates.map((date) => {
+      const i = idxOf(times, date, 12);
+      const mem = [];
+      for (const sf of sufs) {
+        const box = [], tr = [], site = {};
+        pts.forEach((p, k) => {
+          const lm = lmAtM(res[k].hourly, i, sf);
+          if (p.tag === 'box') box.push(lm); else if (p.tag === 'tr') tr.push({ lat: p.lat, u: lm ? lm.u : null }); else site[p.site] = lm;
+        });
+        const mv = FR.meanVector(box);
+        if (!mv || mv.n < box.length * 0.6) continue;
+        const rl = FR.ridgeLat(tr.map((q) => q.lat), tr.map((q) => q.u));
+        mem.push({ reg: FR.classify(mv.dir, mv.spd, S), u: r2(mv.u), v: r2(mv.v), dir: r2(mv.dir), spd: r2(mv.spd),
+          rl: rl ? r2(rl.lat) : null, rw: rl ? rl.where : null, amuR: ((a) => (a === 'Missing' ? null : a))(FR.amuRegime(site.MFL, site.TBW, site.JAX, site.XMR)),
+          xd: site.XMR ? r2(site.XMR.dir) : null, xs: site.XMR ? r2(site.XMR.spd) : null, sf });
+      }
+      return summarizeEnsDay(date, mem);
+    });
+    const out = { id, n: sufs.length, days };
+    state.ens[model.key] = out; cacheSet(ck, out);
+    setStatus('ens-' + model.key, 'ok', `${model.name} ${sufs.length} members`, `Open-Meteo model ${id}`);
+  } catch (e) {
+    state.ens[model.key] = { error: e.message };
+    setStatus('ens-' + model.key, 'err', `${model.name} unavailable`, e.message);
+  }
+}
+function summarizeEnsDay(date, mem) {
+  const n = mem.length;
+  if (!n) return { date, n: 0 };
+  const probs = Array(9).fill(0); mem.forEach((m) => { if (m.reg) probs[m.reg - 1]++; });
+  for (let k = 0; k < 9; k++) probs[k] /= n;
+  const mean = FR.meanVector(mem);
+  const ins = mem.filter((m) => m.rw === 'in' && isNum(m.rl)).map((m) => m.rl).sort((a, b) => a - b);
+  const q = (f) => (ins.length ? ins[Math.min(ins.length - 1, Math.floor(f * (ins.length - 1) + 0.5))] : null);
+  const amu = {}; mem.forEach((m) => { if (m.amuR) amu[m.amuR] = (amu[m.amuR] || 0) + 1 / n; });
+  const dist = {}; mem.forEach((m) => { const r = RS.memOf(m); if (r) dist[r] = (dist[r] || 0) + 1 / n; });
+  const xm = FR.meanVector(mem.filter((m) => isNum(m.xd)).map((m) => ({ ...FR.toUV(m.xd, m.xs) })));
+  return { date, n, mem, probs, dist, xmean: xm, mean, meanReg: FR.classify(mean.dir, mean.spd, S),
+    ridge: { p10: q(0.1), p50: q(0.5), p90: q(0.9), north: mem.filter((m) => m.rw === 'north').length / n, south: mem.filter((m) => m.rw === 'south').length / n, nIn: ins.length },
+    amu };
+}
+
+async function loadEnsThermo(model) {
+  const ck = ensCacheKey(model.key, 'thermo'), hit = cacheGet(ck);
+  if (hit) { state.ensThermo[model.key] = hit; return; }
+  const vars = [...ENS_T_LV.flatMap((p) => [`temperature_${p}hPa`, `relative_humidity_${p}hPa`]), 'temperature_2m', 'dew_point_2m', 'surface_pressure'];
+  const valid = (res) => memberSuffixes(res[0].hourly, 'temperature_500hPa').length > 3;
+  try {
+    const { res, id } = await omEnsFetch(model, SITES, vars, valid);
+    const out = { id, sites: {} };
+    SITES.forEach((st, k) => {
+      const h = res[k].hourly, sufs = memberSuffixes(h, 'temperature_500hPa');
+      out.sites[st.id] = state.dates.map((date) => {
+        const i = idxOf(h.time, date, 12);
+        const vals = {}, bySuf = {}; PARAMS.forEach((P) => (vals[P.k] = []));
+        if (i >= 0) for (const sf of sufs) {
+          const g = (v) => h[v + sf]?.[i];
+          const ps = g('surface_pressure'), lv = [];
+          if (isNum(ps) && isNum(g('temperature_2m'))) lv.push({ p: ps, t: g('temperature_2m'), td: g('dew_point_2m') });
+          for (const p of ENS_T_LV) {
+            if (isNum(ps) && p > ps - 2) continue;
+            const t = g(`temperature_${p}hPa`); if (!isNum(t)) continue;
+            lv.push({ p, t, td: FR.tdFromRH(t, g(`relative_humidity_${p}hPa`)) });
+          }
+          if (lv.length < 6) continue;
+          const m = FR.metrics(lv, S);
+          PARAMS.forEach((P) => { if (isNum(m[P.k])) vals[P.k].push(r2(m[P.k])); });
+          if (st.id === 'XMR' && isNum(m.ti)) bySuf[sf] = r2(m.ti);
+        }
+        return st.id === 'XMR' ? { date, vals, tiBySuf: bySuf } : { date, vals };
+      });
+    });
+    state.ensThermo[model.key] = out; cacheSet(ck, out);
+  } catch (e) { state.ensThermo[model.key] = { error: e.message }; }
+}
+
+// equal weight per ensemble system, so the 51-member EC ENS does not swamp the 31-member GEFS
+function ensCombined(di) {
+  const ds = ENS.map((m) => state.ens[m.key]?.days?.[di]).filter((d) => d && d.n);
+  if (!ds.length) return null;
+  const probs = Array(9).fill(0); ds.forEach((d) => d.probs.forEach((p, k) => (probs[k] += p / ds.length)));
+  const dist = {}; ds.forEach((d) => Object.entries(d.dist || {}).forEach(([k, v]) => (dist[k] = (dist[k] || 0) + v / ds.length)));
+  const mode = Object.keys(dist).sort((a, b) => dist[b] - dist[a])[0];
+  const top = probs.indexOf(Math.max(...probs)) + 1;
+  const sectors = {}; probs.forEach((p, k) => { const s = SECTOR_OF_REG[k + 1]; sectors[s] = (sectors[s] || 0) + p; });
+  const amu = {}; ds.forEach((d) => Object.entries(d.amu).forEach(([k, v]) => (amu[k] = (amu[k] || 0) + v / ds.length)));
+  return { probs, dist, mode, top, topP: probs[top - 1], sectors, amu, systems: ds.length, members: ds.reduce((s, d) => s + d.n, 0) };
+}
+const distOrder = (dist) => RS.order.map((k) => [k, (dist && dist[k]) || 0]);
+const ensMode = (d) => {
+  if (!d || !d.n || !d.dist) return null;
+  const k = Object.keys(d.dist).sort((a, b) => d.dist[b] - d.dist[a])[0];
+  return CAPE ? k : Number(k);
+};
+function ensStats(xs) {
+  const a = xs.filter(isNum).sort((x, y) => x - y);
+  if (!a.length) return null;
+  const q = (f) => a[Math.min(a.length - 1, Math.floor(f * (a.length - 1) + 0.5))];
+  return { mean: a.reduce((s, x) => s + x, 0) / a.length, p10: q(0.1), p90: q(0.9), n: a.length, vals: a };
+}
+
+async function fetchSounding(site, ts) {
+  const j = await iemGet(`${IEMJ}?station=${site.iem}&ts=${ts}`);
+  const pr = j && j.profiles && j.profiles[0] && j.profiles[0].profile;
+  if (!pr || pr.length < 10) return null;
+  const levels = pr.map((q) => ({ p: q.pres, t: q.tmpc, td: q.dwpc, dir: q.drct, spd: q.sknt }));
+  return { valid: ts, m: FR.metrics(levels, S) };
+}
+
+async function loadObs() {
+  setStatus('iem', 'wait', 'Soundings');
+  const now = Date.now(), base = Math.floor(now / 432e5) * 432e5;
+  const today12 = `${state.dates[0]}T12:00:00Z`;
+  let got = 0;
+  await Promise.all(SITES.map(async (s) => {
+    const rec = {};
+    for (let k = 0; k < 4 && !rec.latest; k++) {
+      const ts = new Date(base - k * 432e5).toISOString().slice(0, 19) + 'Z';
+      try { const r = await fetchSounding(s, ts); if (r) rec.latest = r; } catch (e) { /* try older */ }
+    }
+    if (rec.latest && rec.latest.valid === today12) rec.today12 = rec.latest;
+    else if (Date.parse(today12) < now && ['TBW', 'MFL', 'JAX'].includes(s.id)) {
+      try { rec.today12 = await fetchSounding(s, today12); } catch (e) { /* not yet */ }
+    }
+    if (s.id === 'XMR') { // AMU uses the 10Z XMR launch; fall back to 12Z
+      for (const hh of ['10', '11', '12']) {
+        const ts = `${state.dates[0]}T${hh}:00:00Z`;
+        if (Date.parse(ts) > now) break;
+        if (rec.latest && rec.latest.valid === ts) { rec.morning = rec.latest; break; }
+        try { const r = await fetchSounding(s, ts); if (r) { rec.morning = r; break; } } catch (e) { /* next */ }
+      }
+    }
+    if (rec.latest) got++;
+    state.obs[s.id] = rec;
+  }));
+  setStatus('iem', got ? 'ok' : 'err', `Soundings ${got}/${SITES.length}`);
+}
+
+async function loadJSON(url, key, label) {
+  try {
+    const r = await fetch(url, { cache: 'no-cache' });
+    if (!r.ok) throw new Error(r.status);
+    state[key] = await r.json();
+    setStatus(key, 'ok', label);
+  } catch (e) { state[key] = null; setStatus(key, 'err', `${label} not found`); }
+}
+
+async function loadGeo() {
+  try {
+    const [us, world] = await Promise.all([
+      fetch('https://cdn.jsdelivr.net/npm/us-atlas@3.0.1/states-10m.json').then((r) => r.json()),
+      fetch('https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json').then((r) => r.json()),
+    ]);
+    state.geo = {
+      states: topojson.feature(us, us.objects.states),
+      mesh: topojson.mesh(us, us.objects.states, (a, b) => a !== b),
+      countries: topojson.feature(world, world.objects.countries),
+    };
+  } catch (e) { state.geo = null; }
+}
+
+// ------------------------------------------------------------------ derived
+const curModel = () => MODELS.find((m) => m.key === state.model);
+function consensus(di) {
+  const votes = {}, vecs = []; let n = 0;
+  const stations = { MFL: [], TBW: [], JAX: [], XMR: [] };
+  for (const m of MODELS) {
+    const d = state.core[m.key]?.days?.[di], r = RS.of(d);
+    if (r) { votes[r] = (votes[r] || 0) + 1; vecs.push(CAPE ? d.sites.XMR : d.box); n++; Object.keys(stations).forEach((k) => stations[k].push(d.sites[k])); }
+  }
+  for (const m of ENS) {
+    const d = state.ens[m.key]?.days?.[di];
+    const mr = ensMode(d); // vote with the most likely member regime, not the damped mean vector
+    if (mr) { votes[mr] = (votes[mr] || 0) + 1; vecs.push(CAPE ? d.xmean : d.mean); n++; }
+  }
+  if (!n) return null;
+  const max = Math.max(...Object.values(votes));
+  const tops = Object.keys(votes).filter((k) => votes[k] === max).map((k) => (CAPE ? k : Number(k)));
+  const mv = FR.meanVector(vecs);
+  let reg = tops[0];
+  if (tops.length > 1) { // tie: regime of the mean wind
+    const alt = CAPE ? FR.amuRegime(...['MFL', 'TBW', 'JAX', 'XMR'].map((k) => FR.meanVector(stations[k]))) : FR.classify(mv.dir, mv.spd, S);
+    if (tops.includes(alt)) reg = alt;
+  }
+  return { regime: reg, agree: votes[reg], n, mv, votes };
+}
+function obsToday() {
+  if (CAPE) {
+    const g = (id) => state.obs[id]?.today12?.m?.mw, x = state.obs.XMR?.morning;
+    const syn = FR.amuSynoptic(g('MFL'), g('TBW'), g('JAX'));
+    if (syn === 'Missing' && !(x && x.m.mw)) return null;
+    const reg = FR.amuFinal(syn, x && x.m.mw);
+    if (reg === 'Missing') return null;
+    return { m: { regime: reg, mw: x && x.m.mw, syn }, valid: x ? x.valid : null, cape: true };
+  }
+  const o = state.obs.TBW && state.obs.TBW.today12; return o && o.m && o.m.regime ? o : null;
+}
+function callFor(di) {
+  const c = consensus(di);
+  if (di === 0 && obsToday()) {
+    const o = obsToday();
+    return { regime: o.m.regime, src: 'obs', vec: o.m.mw, cons: c, obs: o };
+  }
+  return c ? { regime: c.regime, src: 'models', vec: c.mv, cons: c } : null;
+}
+function climoFor(siteIem, cycle, v, date) {
+  if (!state.climo) return null;
+  return FR.climoQ(state.climo, siteIem, cycle, v, FR.doyOf(date));
+}
+function byRegimeQ(siteIem, v, r) {
+  return state.climo?.stations?.[siteIem]?.byRegime?.[v]?.[String(r)] || null;
+}
+function describePct(p, sign) {
+  if (!isNum(p)) return { word: 'no climatology', cls: '' };
+  const words = p < 10 ? 'well below normal' : p < 25 ? 'below normal' : p <= 75 ? 'near normal' : p <= 90 ? 'above normal' : 'well above normal';
+  const fav = sign * (p - 50);
+  return { word: words, cls: fav > 25 ? 'good' : fav < -25 ? 'bad' : '' };
+}
+function ridgeWords(r) {
+  if (!r) return '–';
+  if (r.where === 'north') return 'North of 31.5°N';
+  if (r.where === 'south') return 'South of 24°N';
+  const lat = r.lat;
+  const near = lat < 25.75 ? 'south of Miami' : lat < 27.7 ? 'between Miami and Tampa' : lat < 30.5 ? 'between Tampa and Jacksonville' : 'north of Jacksonville';
+  return `${lat.toFixed(1)}°N, ${near}`;
+}
+
+// ------------------------------------------------------------------ renderers
+function renderStatus() {
+  $('#status').innerHTML = Object.values(state.status).map((s) => `<span class="${s.cls}"${s.tip ? ` data-tip="${esc(s.tip)}"` : ''}>${esc(s.text)}</span>`).join('');
+}
+
+function renderDays() {
+  $('#days').innerHTML = state.dates.map((d, i) => {
+    const c = callFor(i), L = dayLabel(d);
+    return `<button class="day" data-i="${i}" aria-pressed="${i === state.day}">
+      <span class="num ${regClass(c && c.regime)}">${c ? RS.label(c.regime) : '–'}</span>
+      <span class="d1">${i === 0 ? 'Today' : L.wd}</span><span class="d2">${L.md}</span></button>`;
+  }).join('');
+}
+
+// ---------- First Strike Timing Tool lookup (XMR 1000-700 mb flow sector x Thompson index)
+const LTG_GROUP = (mo) => (mo === 5 ? 'May' : mo >= 6 && mo <= 8 ? 'JJA' : mo === 9 ? 'Sep' : mo === 10 ? 'Oct' : null);
+function sector8(d) {
+  d = ((d % 360) + 360) % 360;
+  if (d > 335 || d <= 20) return 'N';
+  for (const [k, lo, hi] of [['NE', 20, 66], ['E', 66, 110], ['SE', 110, 155], ['S', 155, 200], ['SW', 200, 245], ['W', 245, 290], ['NW', 290, 335]]) if (d > lo && d <= hi) return k;
+  return 'N';
+}
+const tiBin = (t) => (!isNum(t) ? null : t < 25 ? '<25' : t < 34 ? '25-34' : '>=34');
+function ltgLookup(date, w, ti) {
+  const L = state.ltg; if (!L || !w || !isNum(w.dir)) return null;
+  const mo = +date.slice(5, 7), gk = LTG_GROUP(mo) || 'All', G = L.groups[gk];
+  const sec = sector8(w.dir), cell = G.sector[sec], b = tiBin(ti);
+  const c2 = b ? cell.ti[b] : null;
+  return { p: (c2 || cell).p, n: (c2 || cell).n, sec, bin: b, group: gk, inSeason: !!LTG_GROUP(mo) };
+}
+// chance the first strike has happened by the end of each local hour (07-23), given a lookup
+function ltgTiming(lk) {
+  const L = state.ltg, G = L.groups[lk.group], all = G.timing.all, mine = G.timing[lk.sec];
+  const tot = (a) => a.reduce((x, y) => x + y, 0), ta = tot(all), tm = tot(mine), KT = 10;
+  const sh = all.map((v, i) => (mine[i] + KT * (v / ta)) / (tm + KT)); // shrink sector timing toward the group
+  let c = 0; return sh.map((v) => (c += v * lk.p));
+}
+function ltgSources(di) {
+  const date = state.dates[di], out = [];
+  const ob = state.obs.XMR?.morning;
+  if (di === 0 && ob && ob.m.mw) out.push({ key: 'obs', name: `XMR ${ob.valid.slice(11, 13)}Z sounding`, w: ob.m.mw, ti: ob.m.ti, lk: ltgLookup(date, ob.m.mw, ob.m.ti) });
+  const md = state.core[state.model]?.days?.[di], th = state.thermo[state.model]?.XMR?.[di]?.z12;
+  if (md && md.sites.XMR) out.push({ key: 'model', name: curModel().name, w: md.sites.XMR, ti: th && th.ti, lk: ltgLookup(date, md.sites.XMR, th && th.ti) });
+  for (const m of ENS) {
+    const d = state.ens[m.key]?.days?.[di], et = state.ensThermo[m.key]?.sites?.XMR?.[di];
+    if (!d || !d.n) continue;
+    const lks = d.mem.filter((q) => isNum(q.xd)).map((q) => ltgLookup(date, { dir: q.xd, spd: q.xs }, et && et.tiBySuf ? et.tiBySuf[q.sf] : null)).filter(Boolean);
+    if (!lks.length) continue;
+    const ps = lks.map((x) => x.p).sort((a, b) => a - b), q = (f) => ps[Math.min(ps.length - 1, Math.floor(f * (ps.length - 1) + 0.5))];
+    out.push({ key: m.key, name: m.name, ens: true, n: lks.length, withTi: lks.filter((x) => x.bin).length, p: ps.reduce((a, b) => a + b, 0) / ps.length, p10: q(0.1), p90: q(0.9), lks, w: d.xmean });
+  }
+  return out;
+}
+
+function amuLtg(date, reg) {
+  const mo = +date.slice(5, 7), t = AMU_MONTHLY[mo];
+  if (!reg || !AMU[reg]) return null;
+  return t ? { p: t[reg], all: t.all, month: mo, monthly: true } : { p: AMU[reg].season, all: 39, month: mo, monthly: false };
+}
+function amuEnsLtg(date, dist) {
+  if (!dist) return null;
+  let sum = 0, w = 0;
+  for (const [k, v] of Object.entries(dist)) { const L = amuLtg(date, k); if (L) { sum += v * L.p; w += v; } }
+  return w ? sum / w : null;
+}
+function stationStrip(sites, title) {
+  const W = 560, H = 96, cols = [['JAX', 'Jacksonville'], ['TBW', 'Tampa Bay'], ['MFL', 'Miami'], ['XMR', 'Cape (XMR)']];
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="strip" role="img" aria-label="${esc(title)}">`;
+  cols.forEach(([id, nm], k) => {
+    const x0 = k * (W / 4), cx = x0 + 34, cy = 52, w = sites && sites[id];
+    const sec = w ? FR.amuSector(w.dir) : null;
+    const col = { NE: 'var(--r2)', SE: 'var(--r6)', SW: 'var(--r4)', NW: 'var(--r8)' }[sec] || 'var(--muted)';
+    s += `<text x="${x0 + 4}" y="16" font-size="12.5" fill="var(--muted)">${nm}</text>`;
+    if (w) {
+      const a = ((w.dir + 180) * Math.PI) / 180, L = 15 + Math.min(w.spd, 20) * 0.9;
+      const dx = Math.sin(a) * L, dy = -Math.cos(a) * L;
+      const hx = Math.sin(a), hy = -Math.cos(a), x1 = cx + dx / 2, y1 = cy + dy / 2;
+      s += `<circle cx="${cx}" cy="${cy}" r="27" fill="none" stroke="var(--line)"/><line x1="${cx - dx / 2}" y1="${cy - dy / 2}" x2="${x1}" y2="${y1}" stroke="${col}" stroke-width="3" stroke-linecap="round"/>`
+        + `<path d="M${x1 + hx * 3},${y1 + hy * 3}L${x1 - hx * 6 - hy * 5},${y1 - hy * 6 + hx * 5}L${x1 - hx * 6 + hy * 5},${y1 - hy * 6 - hx * 5}Z" fill="${col}"/>`;
+      s += `<text x="${x0 + 70}" y="48" font-size="19" font-weight="700" class="cond" fill="${col}">${sec}</text><text x="${x0 + 70}" y="68" font-size="12.5" fill="var(--ink-2)">${deg(w.dir)} ${kt(w.spd)} kt</text>`;
+    } else s += `<text x="${x0 + 4}" y="56" font-size="13" fill="var(--muted)">missing</text>`;
+  });
+  return s + '</svg>';
+}
+function renderCallCape() {
+  const di = state.day, c = callFor(di), m = curModel(), md = state.core[m.key]?.days?.[di];
+  const el = $('#call');
+  if (!c) { el.innerHTML = `<div class="empty" style="grid-column:1/-1">Waiting for model or sounding data. If this persists, use Refresh or check the status line above.</div>`; return; }
+  const R = AMU[c.regime] || { name: c.regime, flow: '', expect: '', def: '' }, L = dayLabel(state.dates[di]);
+  let srcTxt, sites;
+  if (c.src === 'obs') {
+    const o = c.obs;
+    srcTxt = `From the 12Z MFL, TBW and JAX soundings${o.valid ? ` and the ${o.valid.slice(11, 13)}Z XMR` : ''}${o.m.syn !== c.regime ? ` (three-station pattern ${o.m.syn}, resolved by XMR)` : ''}`;
+    sites = { MFL: state.obs.MFL?.today12?.m?.mw, TBW: state.obs.TBW?.today12?.m?.mw, JAX: state.obs.JAX?.today12?.m?.mw, XMR: o.m.mw };
+  } else {
+    srcTxt = `Consensus of ${c.cons.n} models and ensembles, ${c.cons.agree} agree`;
+    sites = md && md.sites;
+  }
+  const facts = [];
+  const xv = sites && sites.XMR;
+  if (xv) facts.push([c.src === 'obs' ? 'XMR 1000–700 mb flow' : `XMR flow (${m.name})`, `${deg(xv.dir)} at ${kt(xv.spd)} kt`]);
+  if (md && c.src === 'obs') facts.push([`${m.name} regime`, `${md.amuR}${md.amuSyn !== md.amuR ? ` (pattern ${md.amuSyn})` : ''}`]);
+  if (c.src === 'obs' && c.cons) facts.push(['Model consensus', `${c.cons.regime}, ${c.cons.agree} of ${c.cons.n}`]);
+  const ec = ensCombined(di);
+  if (ec) facts.push([`Ensemble odds (${ec.members} members)`, distOrder(ec.dist).filter((x) => x[1] >= 0.05).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, p]) => `${k} ${Math.round(p * 100)}%`).join(', ')]);
+  if (md && md.ridge) facts.push([`Ridge axis (${m.name})`, ridgeWords(md.ridge)]);
+  const ls = state.ltg ? ltgSources(di) : [], d0 = ls.find((x) => x.key === 'obs') || ls.find((x) => x.key === 'model');
+  const en = ls.filter((x) => x.ens);
+  if (d0) facts.push(['Lightning odds, XMR flow and TI', `${Math.round(d0.lk.p * 100)}% (${d0.name})${en.length ? `, ensembles ${Math.round((en.reduce((a, x) => a + x.p, 0) / en.length) * 100)}%` : ''}`]);
+  if (xv && xv.spd <= 4) facts.push(['45 WS low-speed category', `XMR flow ${kt(xv.spd)} kt; ${WS45.Low}% warm-season lightning odds`]);
+  const lt = amuLtg(state.dates[di], c.regime);
+  if (lt) facts.push([lt.monthly ? `AMU lightning odds, ${new Date(Date.UTC(2000, lt.month - 1, 1)).toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' })}` : 'AMU lightning odds (warm season)', `${lt.p}% vs ${lt.all}% all regimes`]);
+  el.innerHTML = `
+    <div class="big amu" style="color:${RS.color(c.regime)}">${esc(c.regime)}</div>
+    <div class="kicker">${di === 0 ? 'Today' : L.wd} ${L.md}, morning flow</div>
+    <div class="title">${esc(R.name)}</div>
+    <div class="src">${esc(R.flow)}. ${esc(srcTxt)}</div>
+    <div class="strip-wrap">${stationStrip(sites, 'Station 1000–700 mb flow')}</div>
+    <dl class="facts">${facts.map(([a, b]) => `<div class="fact"><dt>${esc(a)}</dt><dd>${esc(b)}</dd></div>`).join('')}</dl>
+    <div class="expect"><p>${esc(R.expect)}</p></div>
+    ${signalHTML(c.regime)}`;
+}
+function renderCall() {
+  if (CAPE) return renderCallCape();
+  const di = state.day, c = callFor(di), m = curModel(), md = state.core[m.key]?.days?.[di];
+  const el = $('#call');
+  if (!c) { el.innerHTML = `<div class="empty" style="grid-column:1/-1">Waiting for model or sounding data. If this persists, use Refresh or check the status line above.</div>`; return; }
+  const R = REG[c.regime], L = dayLabel(state.dates[di]);
+  const srcTxt = c.src === 'obs'
+    ? `From the ${state.obs.TBW.today12.valid.slice(11, 13)}Z Tampa Bay sounding`
+    : `Consensus of ${c.cons.n} models and ensembles, ${c.cons.agree} agree`;
+  const obs = state.obs.TBW?.today12?.m;
+  const facts = [];
+  if (c.vec) facts.push(['Layer-mean flow', `${deg(c.vec.dir)} at ${kt(c.vec.spd)} kt`]);
+  if (md && md.box) facts.push([`${m.name} analysis box`, `${deg(md.box.dir)} at ${kt(md.box.spd)} kt, regime ${md.regime}`]);
+  if (di === 0 && obs && obs.mw && c.src !== 'obs') facts.push(['TBW 12Z sounding', `${deg(obs.mw.dir)} at ${kt(obs.mw.spd)} kt, regime ${obs.regime}`]);
+  if (c.src === 'obs' && c.cons) facts.push(['Model consensus', `Regime ${c.cons.regime}, ${c.cons.agree} of ${c.cons.n} models`]);
+  const ec = ensCombined(di);
+  if (ec) {
+    const top3 = ec.probs.map((p, k) => [k + 1, p]).sort((a, b) => b[1] - a[1]).filter((x) => x[1] >= 0.05).slice(0, 3);
+    // (statewide page: regime odds use the TBW scheme)
+    facts.push([`Ensemble odds (${ec.members} members)`, top3.map(([r, p]) => `R${r} ${Math.round(p * 100)}%`).join(', ')]);
+  }
+  if (md && md.ridge) facts.push([`Ridge axis (${m.name})`, ridgeWords(md.ridge)]);
+  const amu = di === 0 && obsAmu() ? obsAmu() + ' (soundings)' : (md && md.amuR ? md.amuR + ` (${m.name})` : null);
+  if (amu) facts.push(['Ridge-position regime', amu]);
+  facts.push(['Storms favored', R.favored]);
+  el.innerHTML = `
+    <div class="big" style="color:var(--r${c.regime})">${c.regime}</div>
+    <div class="kicker">${di === 0 ? 'Today' : L.wd} ${L.md}, 12Z flow</div>
+    <div class="title">${esc(R.name)}</div>
+    <div class="src">${esc(srcTxt)}</div>
+    <dl class="facts">${facts.map(([a, b]) => `<div class="fact"><dt>${esc(a)}</dt><dd>${esc(b)}</dd></div>`).join('')}</dl>
+    <div class="expect"><p>${esc(R.expect)}</p></div>
+    ${signalHTML(c.regime)}`;
+}
+function obsAmu() {
+  const g = (id) => state.obs[id]?.today12?.m?.mw;
+  const r = FR.amuRegime(g('MFL'), g('TBW'), g('JAX'), state.obs.XMR?.morning?.m?.mw);
+  return r === 'Missing' ? null : r;
+}
+
+function ingredientRows(src) {
+  const site = SITES.find((s) => s.id === state.site);
+  if (src === 'obs') {
+    const o = state.obs[site.id]?.latest;
+    if (!o || !o.m) return null;
+    const cyc = o.valid.slice(11, 13), date = o.valid.slice(0, 10);
+    return { m: o.m, cycle: cyc, date, label: `${site.name} ${cyc}Z ${date.slice(5)}` };
+  }
+  if (src === 'ens') {
+    const e = state.ensThermo[state.ensSel];
+    const d = e && !e.error && e.sites[site.id] && e.sites[site.id][state.day];
+    if (!d) return null;
+    const m = {}, st = {};
+    PARAMS.forEach((P) => { const z = ensStats(d.vals[P.k]); if (z) { st[P.k] = z; m[P.k] = z.mean; } });
+    if (!Object.keys(st).length) return null;
+    const md = state.ens[state.ensSel]?.days?.[state.day];
+    if (md && md.n) m.regime = ensMode(md);
+    const n = Math.max(...Object.values(st).map((z) => z.n));
+    return { m, ens: st, cycle: '12', date: state.dates[state.day], label: `${ENS.find((x) => x.key === state.ensSel).name} mean of ${n} at ${site.name}, 12Z` };
+  }
+  const t = state.thermo[state.model];
+  if (!t || t.error || !t[site.id]) return null;
+  const d = t[site.id][state.day];
+  return d && d.z12 ? { m: d.z12, cycle: '12', date: state.dates[state.day], label: `${curModel().name} 12Z at ${site.name}` } : null;
+}
+
+function signalHTML(regime) {
+  const site = SITES.find((s) => s.id === state.site);
+  const r = ingredientRows(state.src);
+  if (!r || !state.climo) return '';
+  const ps = ['pwat', 'ti', 'rhmid'].map((k) => {
+    const P = PARAMS.find((p) => p.k === k);
+    const q = (!CAPE && byRegimeQ(site.iem, k, regime)) || climoFor(site.iem, r.cycle, k, r.date);
+    const p = FR.pctOf(r.m[k], q);
+    return isNum(p) ? P.sign * (p - 50) : null;
+  }).filter(isNum);
+  if (ps.length < 2) return '';
+  const score = ps.reduce((a, b) => a + b, 0) / ps.length;
+  const tilt = score > 15 ? 'the high side' : score < -15 ? 'the low side' : 'about typical';
+  const lead = score > 15 ? 'Moisture and instability run above normal' : score < -15 ? 'Moisture and instability run below normal' : 'Moisture and instability are close to normal';
+  return `<div class="signal"><b>Coverage signal (experimental).</b> ${lead} for ${CAPE ? 'this date' : `regime ${regime} days`} at ${esc(site.name)}, so expect coverage on ${tilt} of this regime's climatology. Based on PWAT, Thompson index and mid-level RH percentiles from ${esc(r.label)}.</div>`;
+}
+
+// ---------- Cape wheel: XMR 1000-700 mb flow in the AMU local sectors
+function renderWheelCape() {
+  const cx = 260, cy = 262, R = 214, MAX = 20, LT = 4;
+  const r = (s) => (s <= LT ? (Math.max(0, s) / LT) * 0.24 * R : 0.24 * R + ((Math.min(s, MAX) - LT) / (MAX - LT)) * 0.76 * R);
+  const pt = (a, rr) => { const t = (a * Math.PI) / 180; return [cx + rr * Math.sin(t), cy - rr * Math.cos(t)]; };
+  const wedge = (a0, a1, r0, r1) => {
+    const [x0, y0] = pt(a0, r1), [x1, y1] = pt(a1, r1), [x2, y2] = pt(a1, r0), [x3, y3] = pt(a0, r0);
+    return `M${x0},${y0}A${r1},${r1} 0 0 1 ${x1},${y1}L${x2},${y2}A${r0},${r0} 0 0 0 ${x3},${y3}Z`;
+  };
+  const c = callFor(state.day);
+  const xNow = c && c.src === 'obs' ? c.obs.m.mw : state.core[state.model]?.days?.[state.day]?.sites?.XMR;
+  const curSec = xNow && xNow.spd > LT ? FR.amuSector(xNow.dir) : null;
+  const Q = [['NE', 0, 90, 'r2', 'NE'], ['SE', 90, 180, 'r6', 'SE-1'], ['SW', 180, 270, 'r4', 'SW-2'], ['NW', 270, 360, 'r8', 'NW']];
+  let s = '';
+  for (const [k, a0, a1, v, loc] of Q) {
+    const on = k === curSec;
+    s += `<path d="${wedge(a0, a1, r(LT), R)}" fill="var(--${v})" fill-opacity="${on ? 0.5 : 0.15}" stroke="var(--panel-2)" stroke-width="2" data-tip="XMR flow from ${a0}–${a1}° above 4 kt: local regime ${loc}"/>`;
+    const [lx, ly] = pt((a0 + a1) / 2, R * 0.78);
+    s += `<text x="${lx}" y="${ly + 6}" text-anchor="middle" class="cond" font-size="${on ? 26 : 21}" font-weight="700" fill="var(--ink)" fill-opacity="${on ? 1 : 0.55}" pointer-events="none">${k}</text>`;
+    s += `<text x="${lx}" y="${ly + 24}" text-anchor="middle" font-size="11.5" fill="var(--muted)" pointer-events="none">local ${loc}</text>`;
+  }
+  s += `<circle cx="${cx}" cy="${cy}" r="${r(LT)}" fill="var(--r1)" fill-opacity="${xNow && xNow.spd <= LT ? 0.5 : 0.15}" stroke="var(--panel-2)" stroke-width="2" data-tip="4 kt or less: XMR does not resolve the regime"/>`;
+  s += `<text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="11" fill="var(--muted)" pointer-events="none">≤4 kt</text>`;
+  for (const k of [10, 15]) s += `<circle cx="${cx}" cy="${cy}" r="${r(k)}" fill="none" stroke="var(--ink)" stroke-opacity="0.12" stroke-dasharray="2 4"/>`;
+  for (const [k, lab] of [[LT, '4 kt'], [10, '10'], [15, '15'], [MAX, '20+ kt']]) { const [x, y] = pt(200, r(k)); s += `<text x="${x - 4}" y="${y + 4}" font-size="11" fill="var(--muted)" text-anchor="end">${lab}</text>`; }
+  for (const a of [0, 90, 180, 270]) { const [tx, ty] = pt(a, R + 18); s += `<text x="${tx}" y="${ty + 4}" font-size="11" fill="var(--muted)" text-anchor="middle">${a}°</text>`; }
+  if (state.showMembers) for (const m of ENS) {
+    const d = state.ens[m.key]?.days?.[state.day];
+    if (!d || !d.n) continue;
+    for (const q of d.mem) if (isNum(q.xd)) { const [x, y] = pt(q.xd, r(q.xs)); s += `<circle cx="${x}" cy="${y}" r="2.6" fill="${m.c}" fill-opacity="0.55" pointer-events="none"/>`; }
+  }
+  for (const m of ENS) {
+    const d = state.ens[m.key]?.days?.[state.day];
+    if (!d || !d.xmean) continue;
+    const [x, y] = pt(d.xmean.dir, r(d.xmean.spd));
+    s += `<g data-tip="${esc(m.name)} mean XMR flow: ${deg(d.xmean.dir)} ${kt(d.xmean.spd)} kt; most likely regime ${ensMode(d)}"><rect x="${x - 7}" y="${y - 7}" width="14" height="14" rx="2" fill="var(--panel)" stroke="${m.c}" stroke-width="2.5"/></g>`;
+  }
+  for (const m of MODELS) {
+    if (m.key === state.model) continue;
+    const d = state.core[m.key]?.days?.[state.day], w = d?.sites?.XMR;
+    if (!w) continue;
+    const [x, y] = pt(w.dir, r(w.spd));
+    s += `<g data-tip="${esc(m.name)} XMR: ${deg(w.dir)} ${kt(w.spd)} kt, regime ${d.amuR}"><circle cx="${x}" cy="${y}" r="7" fill="var(--panel)" stroke="${m.c}" stroke-width="2"/><text x="${x}" y="${y + 3.5}" font-size="9" font-weight="600" text-anchor="middle" fill="var(--ink)">${m.name[0]}</text></g>`;
+  }
+  const md = state.core[state.model]?.days || [];
+  const tr = md.map((d, i) => (d.sites?.XMR ? { i, ...d.sites.XMR, reg: d.amuR, xy: pt(d.sites.XMR.dir, r(d.sites.XMR.spd)) } : null)).filter(Boolean);
+  if (tr.length > 1) s += `<path d="M${tr.map((q) => q.xy.join(',')).join('L')}" fill="none" stroke="var(--ink)" stroke-opacity="0.55" stroke-width="1.6"/>`;
+  for (const q of tr) {
+    const sel = q.i === state.day;
+    s += `<g data-tip="${esc(curModel().name)} ${q.i === 0 ? 'today' : 'day ' + q.i}: XMR ${deg(q.dir)} ${kt(q.spd)} kt, regime ${q.reg}" style="cursor:pointer" data-day="${q.i}">
+      <circle cx="${q.xy[0]}" cy="${q.xy[1]}" r="${sel ? 13 : 9}" fill="var(--ink)" stroke="var(--panel-2)" stroke-width="2"/>
+      <text x="${q.xy[0]}" y="${q.xy[1] + (sel ? 5 : 4)}" text-anchor="middle" font-size="${sel ? 13 : 10.5}" font-weight="700" fill="var(--bg)" pointer-events="none">${q.i}</text></g>`;
+  }
+  const ob = state.day === 0 ? state.obs.XMR?.morning : null;
+  if (ob && ob.m.mw) { const [x, y] = pt(ob.m.mw.dir, r(ob.m.mw.spd)); s += `<g data-tip="XMR ${ob.valid.slice(11, 13)}Z sounding: ${deg(ob.m.mw.dir)} ${kt(ob.m.mw.spd)} kt"><rect x="${x - 8}" y="${y - 8}" width="16" height="16" transform="rotate(45 ${x} ${y})" fill="var(--ridge)" stroke="var(--panel-2)" stroke-width="2"/></g>`; }
+  $('#wheel').innerHTML = s;
+  $('#wheel').querySelectorAll('[data-day]').forEach((g) => g.addEventListener('click', () => selectDay(+g.dataset.day)));
+  $('#wheelLegend').innerHTML = `<span><i style="background:var(--ink)"></i>${esc(curModel().name)} days 0–7 at XMR</span>`
+    + MODELS.filter((m) => m.key !== state.model && state.core[m.key]?.days).map((m) => `<span><i style="border:2px solid ${m.c};background:transparent"></i>${esc(m.name)}</span>`).join('')
+    + ENS.filter((m) => state.ens[m.key]?.days).map((m) => `<span><i style="background:${m.c};opacity:.7"></i>${esc(m.name)} members and mean (□)</span>`).join('')
+    + `<span><i style="background:var(--ridge);border-radius:2px;transform:rotate(45deg)"></i>XMR sounding</span>`
+    + `<span><button class="btn" id="memToggle" style="padding:2px 8px;font-size:12px">${state.showMembers ? 'Hide' : 'Show'} members</button></span>`
+    + `<span>XMR 1000–700 mb flow, the AMU tie-breaker. Points sit in the direction the flow comes from.</span>`;
+}
+
+// ---------- regime wheel
+function renderWheel() {
+  if (CAPE) return renderWheelCape();
+  const W = 520, cx = 260, cy = 262, R = 214, MAX = 20;
+  // piecewise radius: give the light and moderate bands room, since most summer days live there
+  const r = (s) => {
+    const a = 0.27 * R, b = 0.58 * R;
+    if (s <= S.light) return (Math.max(0, s) / S.light) * a;
+    if (s <= S.strong) return a + ((s - S.light) / (S.strong - S.light)) * (b - a);
+    return b + ((Math.min(s, MAX) - S.strong) / (MAX - S.strong)) * (R - b);
+  };
+  const pt = (a, rr) => { const t = (a * Math.PI) / 180; return [cx + rr * Math.sin(t), cy - rr * Math.cos(t)]; };
+  const wedge = (a0, a1, r0, r1) => {
+    const [x0, y0] = pt(a0, r1), [x1, y1] = pt(a1, r1), [x2, y2] = pt(a1, r0), [x3, y3] = pt(a0, r0);
+    const lg = a1 - a0 > 180 ? 1 : 0;
+    return `M${x0},${y0}A${r1},${r1} 0 ${lg} 1 ${x1},${y1}L${x2},${y2}A${r0},${r0} 0 ${lg} 0 ${x3},${y3}Z`;
+  };
+  const c = callFor(state.day), cur = c && c.regime;
+  let s = `<defs><clipPath id="wclip"><circle cx="${cx}" cy="${cy}" r="${R}"/></clipPath></defs>`;
+  const rl = r(S.light), rs = r(S.strong);
+  for (const sec of FR.SECTORS) {
+    for (const [reg, r0, r1] of [[sec.mod, rl, rs], [sec.str, rs, R]]) {
+      const on = reg === cur;
+      s += `<path d="${wedge(sec.from, sec.to, r0, r1)}" fill="var(--r${reg})" fill-opacity="${on ? 0.62 : 0.16}" stroke="var(--panel-2)" stroke-width="2" data-tip="Regime ${reg}: ${esc(REG[reg].name)}"/>`;
+      const [lx, ly] = pt((sec.from + sec.to) / 2, (r0 + r1) / 2);
+      s += `<text x="${lx}" y="${ly + 9}" text-anchor="middle" class="cond" font-size="${on ? 30 : 24}" font-weight="700" fill="var(--ink)" fill-opacity="${on ? 1 : 0.55}" pointer-events="none">${reg}</text>`;
+    }
+  }
+  s += `<circle cx="${cx}" cy="${cy}" r="${rl}" fill="var(--r1)" fill-opacity="${cur === 1 ? 0.62 : 0.18}" stroke="var(--panel-2)" stroke-width="2" data-tip="Regime 1: light and variable"/>`;
+  s += `<text x="${cx}" y="${cy + 8}" text-anchor="middle" class="cond" font-size="${cur === 1 ? 28 : 22}" font-weight="700" fill="var(--ink)" fill-opacity="${cur === 1 ? 1 : 0.55}" pointer-events="none">1</text>`;
+  for (const k of [15]) s += `<circle cx="${cx}" cy="${cy}" r="${r(k)}" fill="none" stroke="var(--ink)" stroke-opacity="0.12" stroke-dasharray="2 4"/>`;
+  for (const [k, lab] of [[S.light, `${S.light} kt`], [S.strong, `${S.strong} kt`], [15, '15'], [MAX, '20+ kt']]) {
+    const [x, y] = pt(205, r(k));
+    s += `<text x="${x - 4}" y="${y + 4}" font-size="11" fill="var(--muted)" text-anchor="end">${lab}</text>`;
+  }
+  for (const a of [0, 120, 190, 290]) { const [x0, y0] = pt(a, R), [x1, y1] = pt(a, R + 10); s += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="var(--muted)"/>`; const [tx, ty] = pt(a, R + 22); s += `<text x="${tx}" y="${ty + 4}" font-size="11" fill="var(--muted)" text-anchor="middle">${a}°</text>`; }
+  for (const [a, l] of [[45, 'NE'], [155, 'SE'], [240, 'SW'], [325, 'NW']]) { const [x, y] = pt(a, R + 26); s += `<text x="${x}" y="${y + 5}" font-size="14" font-weight="600" fill="var(--ink-2)" text-anchor="middle">${l}</text>`; }
+  // ensemble members for the selected day
+  if (state.showMembers) {
+    for (const m of ENS) {
+      const d = state.ens[m.key]?.days?.[state.day];
+      if (!d || !d.n) continue;
+      for (const q of d.mem) { const [x, y] = pt(q.dir, r(q.spd)); s += `<circle cx="${x}" cy="${y}" r="2.6" fill="${m.c}" fill-opacity="0.55" pointer-events="none"/>`; }
+    }
+  }
+  for (const m of ENS) {
+    const d = state.ens[m.key]?.days?.[state.day];
+    if (!d || !d.n) continue;
+    const [x, y] = pt(d.mean.dir, r(d.mean.spd));
+    s += `<g data-tip="${esc(m.name)} mean of ${d.n}: ${deg(d.mean.dir)} ${kt(d.mean.spd)} kt, regime ${d.meanReg}; most likely regime ${d.probs.indexOf(Math.max(...d.probs)) + 1} (${Math.round(Math.max(...d.probs) * 100)}%)"><rect x="${x - 7}" y="${y - 7}" width="14" height="14" rx="2" fill="var(--panel)" stroke="${m.c}" stroke-width="2.5"/></g>`;
+  }
+  // selected model track
+  const md = state.core[state.model]?.days || [];
+  const tr = md.map((d, i) => (d.box ? { i, ...d.box, xy: pt(d.box.dir, r(d.box.spd)) } : null)).filter(Boolean);
+  if (tr.length > 1) s += `<path d="M${tr.map((q) => q.xy.join(',')).join('L')}" fill="none" stroke="var(--ink)" stroke-opacity="0.55" stroke-width="1.6" clip-path="url(#wclip)"/>`;
+  // other models, selected day
+  for (const m of MODELS) {
+    if (m.key === state.model) continue;
+    const d = state.core[m.key]?.days?.[state.day];
+    if (!d || !d.box) continue;
+    const [x, y] = pt(d.box.dir, r(d.box.spd));
+    s += `<g data-tip="${esc(m.name)}: ${deg(d.box.dir)} ${kt(d.box.spd)} kt, regime ${d.regime}"><circle cx="${x}" cy="${y}" r="7" fill="var(--panel)" stroke="${m.c}" stroke-width="2"/><text x="${x}" y="${y + 3.5}" font-size="9" font-weight="600" text-anchor="middle" fill="var(--ink)">${m.name[0]}</text></g>`;
+  }
+  for (const q of tr) {
+    const sel = q.i === state.day;
+    s += `<g data-tip="${esc(curModel().name)} ${q.i === 0 ? 'today' : 'day ' + q.i}: ${deg(q.dir)} ${kt(q.spd)} kt" style="cursor:pointer" data-day="${q.i}">
+      <circle cx="${q.xy[0]}" cy="${q.xy[1]}" r="${sel ? 13 : 9}" fill="var(--ink)" stroke="var(--panel-2)" stroke-width="2"/>
+      <text x="${q.xy[0]}" y="${q.xy[1] + (sel ? 5 : 4)}" text-anchor="middle" font-size="${sel ? 13 : 10.5}" font-weight="700" fill="var(--bg)" pointer-events="none">${q.i}</text></g>`;
+  }
+  const o = state.day === 0 ? state.obs.TBW?.today12?.m?.mw : null;
+  if (o) {
+    const [x, y] = pt(o.dir, r(o.spd));
+    s += `<g data-tip="TBW 12Z sounding: ${deg(o.dir)} ${kt(o.spd)} kt"><rect x="${x - 8}" y="${y - 8}" width="16" height="16" transform="rotate(45 ${x} ${y})" fill="var(--ridge)" stroke="var(--panel-2)" stroke-width="2"/></g>`;
+  }
+  $('#wheel').innerHTML = s;
+  $('#wheel').querySelectorAll('[data-day]').forEach((g) => g.addEventListener('click', () => selectDay(+g.dataset.day)));
+  $('#wheelLegend').innerHTML = `<span><i style="background:var(--ink)"></i>${esc(curModel().name)} days 0–7</span>`
+    + MODELS.filter((m) => m.key !== state.model && state.core[m.key]?.days).map((m) => `<span><i style="border:2px solid ${m.c};background:transparent"></i>${esc(m.name)}</span>`).join('')
+    + ENS.filter((m) => state.ens[m.key]?.days).map((m) => `<span><i style="background:${m.c};opacity:.7"></i>${esc(m.name)} members and mean (□)</span>`).join('')
+    + `<span><i style="background:var(--ridge);border-radius:2px;transform:rotate(45deg)"></i>TBW sounding</span>`
+    + `<span><button class="btn" id="memToggle" style="padding:2px 8px;font-size:12px">${state.showMembers ? 'Hide' : 'Show'} members</button></span>`
+    + `<span>Points sit in the direction the flow comes from.</span>`;
+}
+
+// ---------- matrix
+function renderMatrix() {
+  const head = `<thead><tr><th></th>${state.dates.map((d, i) => { const L = dayLabel(d); return `<th>${i === 0 ? 'Today' : L.wd} ${L.md}</th>`; }).join('')}</tr></thead>`;
+  const cell = (reg, vec, i, tip) => reg
+    ? `<td><button class="cell ${regClass(reg)} ${i === state.day ? 'sel' : ''}" data-i="${i}" data-tip="${esc(tip)}"><span class="n">${esc(RS.label(reg))}</span><span class="w">${deg(vec?.dir)}<br>${kt(vec?.spd)} kt</span></button></td>`
+    : `<td><div class="cell na">–</div></td>`;
+  let rows = '';
+  const o = obsToday();
+  rows += `<tr><th>${CAPE ? 'Soundings' : 'TBW sounding'}</th>${state.dates.map((d, i) => (i === 0 && o ? cell(o.m.regime, o.m.mw, i, CAPE ? `Observed: MFL/TBW/JAX 12Z pattern ${o.m.syn}${o.valid ? `, XMR ${o.valid.slice(11, 13)}Z` : ''}` : 'Observed 12Z Tampa Bay sounding') : `<td><div class="cell na">${i === 0 ? 'after 12Z' : ''}</div></td>`)).join('')}</tr>`;
+  for (const m of MODELS) {
+    const c = state.core[m.key];
+    rows += `<tr><th>${esc(m.name)}</th>${state.dates.map((d, i) => { const x = c?.days?.[i]; return CAPE
+      ? cell(x?.amuR, x?.sites?.XMR, i, `${m.name}: pattern ${x?.amuSyn}; XMR flow shown; ridge ${ridgeWords(x?.ridge)}`)
+      : cell(x?.regime, x?.box, i, `${m.name}: ridge ${ridgeWords(x?.ridge)}`); }).join('')}</tr>`;
+  }
+  for (const m of ENS) {
+    const e = state.ens[m.key];
+    rows += `<tr><th>${esc(m.name)} ${CAPE ? 'most likely' : 'mean'}</th>${state.dates.map((d, i) => { const x = e?.days?.[i]; if (!x || !x.n) return '<td><div class="cell na">–</div></td>';
+      if (CAPE) { const k = ensMode(x); return cell(k, x.xmean, i, `${m.name}: ${Math.round(x.dist[k] * 100)}% of ${x.n} members in ${k}; mean XMR flow shown`); }
+      return cell(x.meanReg, x.mean, i, `${m.name} mean of ${x.n} members; ${Math.round(x.probs[x.meanReg - 1] * 100)}% of members in regime ${x.meanReg}`); }).join('')}</tr>`;
+  }
+  rows += `<tr class="row-consensus"><th>Consensus</th>${state.dates.map((d, i) => { const c = consensus(i); return c ? cell(c.regime, c.mv, i, `${c.agree} of ${c.n} models`) : '<td><div class="cell na">–</div></td>'; }).join('')}</tr>`;
+  rows += `<tr><th></th>${state.dates.map((d, i) => { const c = consensus(i); return `<td class="agree">${c ? `${c.agree}/${c.n} agree` : ''}</td>`; }).join('')}</tr>`;
+  $('#matrix').innerHTML = head + `<tbody>${rows}</tbody>`;
+}
+
+// ---------- ensemble probabilities
+function stackBar(pairs, h = 16) { // pairs: [[regime, prob], ...]
+  let x = 0, s = `<svg viewBox="0 0 100 ${h}" preserveAspectRatio="none" style="width:100%;height:${h}px;display:block;border-radius:4px;overflow:hidden">`;
+  pairs.forEach(([k, p]) => { if (p > 0) { s += `<rect x="${x}" y="0" width="${p * 100}" height="${h}" fill="${RS.color(k)}"/>`; x += p * 100; } });
+  return s + '</svg>';
+}
+function renderEnsemble() {
+  const el = $('#ensBody');
+  const any = ENS.some((m) => state.ens[m.key]?.days);
+  if (!any) {
+    const errs = ENS.map((m) => state.ens[m.key]?.error ? `${m.name}: ${state.ens[m.key].error}` : null).filter(Boolean);
+    el.innerHTML = `<div class="empty">${errs.length ? `Ensemble data did not load. ${esc(errs.join('. '))}` : 'Loading GEFS and EC ENS members…'}</div>`;
+    return;
+  }
+  const rowsDef = [{ key: 'comb', name: 'Combined', get: (i) => { const c = ensCombined(i); return c ? { pairs: distOrder(c.dist), n: c.members } : null; } },
+    ...ENS.map((m) => ({ key: m.key, name: `${m.name}`, get: (i) => { const d = state.ens[m.key]?.days?.[i]; return d && d.n ? { pairs: distOrder(d.dist), n: d.n } : null; } }))];
+  let h = `<div class="matrix-scroll"><table class="matrix ensm"><thead><tr><th></th>${state.dates.map((d, i) => { const L = dayLabel(d); return `<th>${i === 0 ? 'Today' : L.wd} ${L.md}</th>`; }).join('')}</tr></thead><tbody>`;
+  for (const R of rowsDef) {
+    h += `<tr><th>${esc(R.name)}</th>${state.dates.map((d, i) => {
+      const x = R.get(i);
+      if (!x) return '<td><div class="cell na">–</div></td>';
+      const srt = x.pairs.filter((q) => q[1] > 0).sort((a, b) => b[1] - a[1]);
+      const [top, tpp] = srt[0] || ['–', 0], tp = Math.round(tpp * 100);
+      const ltg = CAPE ? amuEnsLtg(d, Object.fromEntries(x.pairs)) : null;
+      const tip = srt.map(([r, p]) => `${CAPE ? r : 'R' + r} ${Math.round(p * 100)}%`).join(', ') + (isNum(ltg) ? `. Regime-weighted AMU lightning odds ${Math.round(ltg)}%` : '');
+      return `<td><button class="ecell ${i === state.day ? 'sel' : ''}" data-i="${i}" data-tip="${esc(R.name)} (${x.n} members): ${esc(tip)}">${stackBar(x.pairs)}<span><b class="cond">${esc(RS.label(top))}</b> ${tp}%</span></button></td>`;
+    }).join('')}</tr>`;
+  }
+  h += '</tbody></table></div>';
+  // detail for the selected day
+  const di = state.day, c = ensCombined(di);
+  if (c) {
+    const per = ENS.map((m) => ({ m, d: state.ens[m.key]?.days?.[di] })).filter((x) => x.d && x.d.n);
+    h += `<div class="ens-detail"><div><h3>Regime odds, ${di === 0 ? 'today' : dayLabel(state.dates[di]).wd + ' ' + dayLabel(state.dates[di]).md}</h3><div class="probs">`;
+    for (const k of RS.order) {
+      const pc = c.dist[k] || 0;
+      h += `<div class="prow${CAPE ? ' wide' : ''}" data-tip="${esc(RS.name(k))}"><span class="chip ${regClass(k)}">${esc(RS.label(k))}</span>
+        <div class="ptrack"><div class="pfill" style="width:${pc * 100}%;background:${RS.color(k)}"></div>
+        ${per.map(({ m, d }) => `<i style="left:${(d.dist[k] || 0) * 100}%;border-color:${m.c}" title="${esc(m.name)} ${Math.round((d.dist[k] || 0) * 100)}%"></i>`).join('')}</div>
+        <b>${Math.round(pc * 100)}%</b></div>`;
+    }
+    h += `</div><p class="note">Bars are the combined odds, weighting each ensemble equally. Ticks mark ${per.map(({ m }) => `<span style="color:${m.c}">${esc(m.name)}</span>`).join(' and ')}.</p></div><div><h3>Flow pattern</h3><dl class="facts ens-facts">`;
+    if (CAPE) {
+      const sw = (c.dist['SW-1'] || 0) + (c.dist['SW-2'] || 0), se = (c.dist['SE-1'] || 0) + (c.dist['SE-2'] || 0);
+      h += `<div class="fact"><dt>Flow over the Cape</dt><dd>SW ${Math.round(sw * 100)}%, SE ${Math.round(se * 100)}%, NE ${Math.round((c.dist.NE || 0) * 100)}%, NW ${Math.round((c.dist.NW || 0) * 100)}%, undefined ${Math.round((c.dist.Other || 0) * 100)}%</dd></div>`;
+      const lt = amuEnsLtg(state.dates[di], c.dist), mo = AMU_MONTHLY[+state.dates[di].slice(5, 7)];
+      if (isNum(lt)) h += `<div class="fact"><dt>Regime-weighted AMU lightning odds</dt><dd>${Math.round(lt)}%${mo ? ` (${mo.all}% for all ${new Date(state.dates[di] + 'T12:00Z').toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' })} days)` : ' (warm-season table)'}</dd></div>`;
+      for (const { m, d } of per) if (d.xmean) h += `<div class="fact"><dt>${esc(m.name)} mean XMR flow, ${d.n} members</dt><dd>${deg(d.xmean.dir)} at ${kt(d.xmean.spd)} kt</dd></div>`;
+    } else {
+      const secTxt = ['SW/W', 'SE/S', 'NE/E', 'NW/N', 'Light'].map((k) => `${k} ${Math.round((c.sectors[k] || 0) * 100)}%`).join(', ');
+      h += `<div class="fact"><dt>Flow direction odds</dt><dd>${secTxt}</dd></div>`;
+    }
+    for (const { m, d } of per) {
+      const rr = d.ridge;
+      const ridgeTxt = rr.nIn >= 3 ? `median ${rr.p50.toFixed(1)}°N, 10–90% ${rr.p10.toFixed(1)}–${rr.p90.toFixed(1)}°N` : 'not resolved in most members';
+      if (!CAPE) h += `<div class="fact"><dt>${esc(m.name)} mean flow, ${d.n} members</dt><dd>${deg(d.mean.dir)} at ${kt(d.mean.spd)} kt, regime ${d.meanReg}</dd></div>`;
+      h += `<div class="fact"><dt>${esc(m.name)} ridge axis</dt><dd>${ridgeTxt}${rr.north >= 0.1 ? `; ${Math.round(rr.north * 100)}% north of 31.5°N` : ''}${rr.south >= 0.1 ? `; ${Math.round(rr.south * 100)}% south of 24°N` : ''}</dd></div>`;
+    }
+    const amu = Object.entries(c.amu).sort((a, b) => b[1] - a[1]).filter((x) => x[1] >= 0.05).map(([k, v]) => `${k} ${Math.round(v * 100)}%`).join(', ');
+    if (amu && !CAPE) h += `<div class="fact"><dt>Ridge-position regime odds</dt><dd>${esc(amu)}</dd></div>`;
+    h += '</dl></div></div>';
+  }
+  el.innerHTML = h;
+}
+
+// ---------- map
+function renderMap() {
+  const svg = $('#map'), W = 640, H = 600;
+  const g = state.grid[state.model];
+  if (!state.geo) { svg.innerHTML = `<text x="20" y="40" fill="var(--muted)" font-size="14">Basemap could not load from jsDelivr.</text>`; }
+  const ext = CAPE ? [[-81.85, 27.45], [-79.7, 29.6]] : [[-88.2, 23.4], [-79.0, 31.9]];
+  const proj = d3.geoMercator().fitExtent([[6, 6], [W - 6, H - 6]], { type: 'MultiPoint', coordinates: ext }).clipExtent([[0, 0], [W, H]]);
+  const path = d3.geoPath(proj);
+  let s = '';
+  if (state.geo) {
+    const P = (g, attrs) => { const d = path(g); return d ? `<path d="${d}" ${attrs}/>` : ''; }; // geometry fully outside the view returns null
+    s += P(d3.geoGraticule().step(CAPE ? [0.5, 0.5] : [1, 1])(), 'fill="none" stroke="var(--ink)" stroke-opacity="0.06"');
+    s += P(state.geo.countries, 'fill="var(--land)" stroke="var(--land-line)" stroke-width="0.8"');
+    s += P(state.geo.states, 'fill="var(--land)" stroke="var(--land-line)" stroke-width="0.8"');
+    s += P(state.geo.mesh, 'fill="none" stroke="var(--land-line)" stroke-width="0.6" stroke-dasharray="3 3"');
+  }
+  const [bx0, by0] = proj([S.boxW, S.boxN]), [bx1, by1] = proj([S.boxE, S.boxS]);
+  if (CAPE) { // AMU reference rings around the SLF (5, 10, 20, 30 n mi)
+    for (const nm of [5, 10, 20, 30]) {
+      const circ = d3.geoCircle().center([CAPE_PTS[0].lon, CAPE_PTS[0].lat]).radius(nm / 60)();
+      s += `<path d="${path(circ)}" fill="none" stroke="var(--ink)" stroke-opacity="${nm === 5 ? 0.7 : 0.35}" stroke-dasharray="${nm === 5 ? '' : '4 4'}"/>`;
+      const [lx, ly] = proj([CAPE_PTS[0].lon, CAPE_PTS[0].lat + nm / 60]);
+      s += `<text x="${lx}" y="${ly - 3}" text-anchor="middle" font-size="11" fill="var(--muted)">${nm} n mi</text>`;
+    }
+  } else s += `<rect x="${bx0}" y="${by0}" width="${bx1 - bx0}" height="${by1 - by0}" fill="var(--ink)" fill-opacity="0.05" stroke="var(--ink)" stroke-opacity="0.7" stroke-dasharray="5 4" data-tip="Regime analysis box (approximates the NWS TBW box near Tampa Bay)"/>`;
+  void 0;
+  if (g && !g.error) {
+    const i = idxOf(g.times, state.dates[state.day], state.mapHour);
+    const lm = g.pts.map((p, k) => lmAt(g.res[k].hourly, i));
+    // ridge polyline: per longitude column
+    const ridge = [];
+    g.lons.forEach((lo) => {
+      const col = g.pts.map((p, k) => ({ p, k })).filter((q) => q.p.lon === lo);
+      const rr = FR.ridgeLat(col.map((q) => q.p.lat), col.map((q) => (lm[q.k] ? lm[q.k].u : null)));
+      if (rr && rr.where === 'in') ridge.push(proj([lo, rr.lat]));
+    });
+    if (ridge.length > 1) {
+      s += `<path d="${d3.line().curve(d3.curveCatmullRom)(ridge)}" fill="none" stroke="var(--ridge)" stroke-width="3.5" stroke-dasharray="10 6" stroke-linecap="round" opacity="0.95"/>`;
+      const last = ridge[ridge.length - 1];
+      s += `<text x="${Math.min(last[0], W - 8)}" y="${last[1] - 10}" text-anchor="end" font-size="13" font-weight="600" fill="var(--ridge)">Ridge axis</text>`;
+    }
+    g.pts.forEach((p, k) => {
+      const w = lm[k]; if (!w) return;
+      const [x, y] = proj([p.lon, p.lat]);
+      const reg = FR.classify(w.dir, w.spd, S), sec = FR.amuSector(w.dir);
+      const len = (CAPE ? 6 : 7) + Math.min(w.spd, 22) * (CAPE ? 1.15 : 1.35), a = ((w.dir + 180) * Math.PI) / 180;
+      const dx = Math.sin(a) * len, dy = -Math.cos(a) * len;
+      const x0 = x - dx / 2, y0 = y - dy / 2, x1 = x + dx / 2, y1 = y + dy / 2;
+      const hx = Math.sin(a), hy = -Math.cos(a), px = -hy, py = hx, hs = 5.5;
+      const col = CAPE ? (w.spd <= 4 ? 'var(--muted)' : `var(--${{ NE: 'r2', SE: 'r6', SW: 'r4', NW: 'r8' }[sec]})`) : (reg === 1 ? 'var(--muted)' : `var(--r${reg})`);
+      s += `<g data-tip="${p.lat.toFixed(2)}°N ${(-p.lon).toFixed(2)}°W: ${deg(w.dir)} ${kt(w.spd)} kt (${CAPE ? sec + ' sector' : 'regime ' + reg})">
+        <line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M${x1 + hx * 2},${y1 + hy * 2}L${x1 - hx * hs + px * hs * 0.6},${y1 - hy * hs + py * hs * 0.6}L${x1 - hx * hs - px * hs * 0.6},${y1 - hy * hs - py * hs * 0.6}Z" fill="${col}"/>
+        <circle cx="${x}" cy="${y}" r="9" fill="transparent"/></g>`;
+    });
+  } else if (g && g.error) {
+    s += `<text x="20" y="${H - 20}" fill="var(--muted)" font-size="14">${esc(curModel().name)} grid did not load: ${esc(g.error)}</text>`;
+  } else {
+    s += `<text x="20" y="${H - 20}" fill="var(--muted)" font-size="14">Loading ${esc(curModel().name)} grid…</text>`;
+  }
+  const md = state.core[state.model]?.days?.[state.day];
+  if (CAPE) for (const q of CAPE_PTS) {
+    const [x, y] = proj([q.lon, q.lat]);
+    s += `<g data-tip="${esc(q.name)}"><rect x="${x - 5}" y="${y - 5}" width="10" height="10" fill="var(--ridge)" stroke="var(--ink)" stroke-width="1.2" transform="rotate(45 ${x} ${y})"/>
+      <text x="${q.id === 'SLF' ? x - 10 : x + 10}" y="${y + 4}" text-anchor="${q.id === 'SLF' ? 'end' : 'start'}" font-size="12" font-weight="600" fill="var(--ink)" paint-order="stroke" stroke="var(--water)" stroke-width="3">${esc(q.id)}</text></g>`;
+  }
+  for (const st of (CAPE ? [] : SITES)) {
+    const [x, y] = proj([st.lon, st.lat]);
+    const w = md?.sites?.[st.id], reg = w ? FR.classify(w.dir, w.spd, S) : null;
+    s += `<g data-tip="${esc(st.name)} (${st.id}) ${esc(curModel().name)} 12Z: ${w ? `${deg(w.dir)} ${kt(w.spd)} kt, regime ${reg}` : 'no data'}">
+      <circle cx="${x}" cy="${y}" r="6.5" fill="${reg ? `var(--r${reg})` : 'var(--panel)'}" stroke="var(--ink)" stroke-width="1.6"/>
+      <text x="${x + 10}" y="${y + 4}" font-size="12.5" font-weight="600" fill="var(--ink)" paint-order="stroke" stroke="var(--water)" stroke-width="3">${st.id}</text></g>`;
+  }
+  svg.innerHTML = s;
+  $('#mapLegend').innerHTML = `<span><svg width="26" height="8"><line x1="1" y1="4" x2="25" y2="4" stroke="var(--ridge)" stroke-width="3" stroke-dasharray="7 4"/></svg>Ridge axis (easterlies to the south)</span>
+    <span><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" fill="none" stroke="var(--ink)" stroke-dasharray="4 3"/></svg>Analysis box</span>
+    <span>Arrows: ${esc(curModel().name)} 1000–700 mb mean wind, colored by ${CAPE ? 'AMU sector (gray at 4 kt or less)' : 'the regime it would imply'}</span>`;
+  if (CAPE) $('#mapLegend').innerHTML = `<span><svg width="22" height="12"><circle cx="11" cy="6" r="5" fill="none" stroke="var(--ink)"/></svg>5, 10, 20 and 30 n mi rings around the SLF</span>
+    <span><svg width="12" height="12"><rect x="2" y="2" width="8" height="8" fill="var(--ridge)" transform="rotate(45 6 6)"/></svg>Planning Forecast points</span>
+    <span>Arrows: ${esc(curModel().name)} 1000–700 mb mean wind, colored by AMU sector (gray at 4 kt or less)</span>`;
+}
+
+// ---------- ingredients
+function renderSiteSeg() {
+  $('#siteSeg').innerHTML = `<div class="seg">${SITES.map((s) => `<button data-site="${s.id}" aria-pressed="${s.id === state.site}">${s.id}</button>`).join('')}</div>`;
+}
+function spark(vals, bands, selIdx, P, whisk) {
+  const W = 300, H = 34, n = vals.length;
+  const all = [...vals.filter(isNum), ...bands.flatMap((b) => (b ? [b[2], b[18]] : [])).filter(isNum), ...(whisk || []).flatMap((w) => (w ? [w[0], w[1]] : [])).filter(isNum)];
+  if (!all.length) return '<svg viewBox="0 0 300 34"></svg>';
+  let lo = Math.min(...all), hi = Math.max(...all); if (hi - lo < 1e-6) { hi += 1; lo -= 1; }
+  const pad = (hi - lo) * 0.08; lo -= pad; hi += pad;
+  const x = (i) => 6 + (i / Math.max(1, n - 1)) * (W - 12), y = (v) => H - 3 - ((v - lo) / (hi - lo)) * (H - 6);
+  let s = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">`;
+  const band = (a, b, op) => {
+    const ok = bands.map((q, i) => (q && isNum(q[a]) && isNum(q[b]) ? i : -1)).filter((i) => i >= 0);
+    if (ok.length < 2) return '';
+    return `<path d="M${ok.map((i) => `${x(i)},${y(bands[i][b])}`).join('L')}L${ok.slice().reverse().map((i) => `${x(i)},${y(bands[i][a])}`).join('L')}Z" fill="var(--breeze)" fill-opacity="${op}"/>`;
+  };
+  s += band(2, 18, 0.12) + band(5, 15, 0.2);
+  const med = bands.map((q, i) => (q && isNum(q[10]) ? [x(i), y(q[10])] : null)).filter(Boolean);
+  if (med.length > 1) s += `<path d="M${med.map((p) => p.join(',')).join('L')}" fill="none" stroke="var(--breeze)" stroke-opacity="0.6" stroke-dasharray="3 3"/>`;
+  if (whisk) whisk.forEach((w, i) => { if (w && isNum(w[0]) && isNum(w[1])) s += `<line x1="${x(i)}" x2="${x(i)}" y1="${y(w[0])}" y2="${y(w[1])}" stroke="var(--ink)" stroke-opacity="0.45" stroke-width="3" stroke-linecap="round"/>`; });
+  const pts = vals.map((v, i) => (isNum(v) ? [x(i), y(v)] : null));
+  const seg = pts.filter(Boolean);
+  if (seg.length > 1) s += `<path d="M${seg.map((p) => p.join(',')).join('L')}" fill="none" stroke="var(--ink)" stroke-width="1.6"/>`;
+  pts.forEach((p, i) => { if (p) s += `<circle cx="${p[0]}" cy="${p[1]}" r="${i === selIdx ? 4 : 2}" fill="${i === selIdx ? 'var(--ridge)' : 'var(--ink)'}"/>`; });
+  return s + '</svg>';
+}
+function gauge(v, q) {
+  const W = 300, H = 34;
+  if (!q || !isNum(v)) return `<svg viewBox="0 0 ${W} ${H}"></svg>`;
+  const lo = q[0], hi = q[20], x = (val) => 6 + ((Math.max(lo, Math.min(hi, val)) - lo) / (hi - lo || 1)) * (W - 12);
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <rect x="6" y="14" width="${W - 12}" height="6" rx="3" fill="var(--line)"/>
+    <rect x="${x(q[2])}" y="12" width="${x(q[18]) - x(q[2])}" height="10" rx="3" fill="var(--breeze)" fill-opacity="0.18"/>
+    <rect x="${x(q[5])}" y="12" width="${x(q[15]) - x(q[5])}" height="10" rx="2" fill="var(--breeze)" fill-opacity="0.32"/>
+    <line x1="${x(q[10])}" x2="${x(q[10])}" y1="9" y2="25" stroke="var(--breeze)" stroke-width="1.5"/>
+    <circle cx="${x(v)}" cy="17" r="6" fill="var(--ridge)" stroke="var(--panel)" stroke-width="2"/></svg>`;
+}
+const ensSegHTML = () => `<div class="seg" style="margin:-4px 0 12px">${ENS.map((m) => `<button data-ens="${m.key}" aria-pressed="${m.key === state.ensSel}">${esc(m.name)}</button>`).join('')}</div>`;
+function renderIngredients() {
+  const el = $('#ingredients'), site = SITES.find((s) => s.id === state.site);
+  const r = ingredientRows(state.src);
+  if (!r) {
+    const e = state.ensThermo[state.ensSel];
+    el.innerHTML = `${state.src === 'ens' ? ensSegHTML() : ''}<div class="empty">${state.src === 'obs' ? `No recent sounding found for ${esc(site.name)}.`
+      : state.src === 'ens' ? (e && e.error ? `Ensemble profiles did not load: ${esc(e.error)}` : 'Loading ensemble profiles…')
+      : `${esc(curModel().name)} profiles for ${esc(site.name)} are not loaded yet or not available for this day.`}</div>`;
+    return;
+  }
+  const regNow = CAPE ? null : (r.m.regime || (callFor(state.day) || {}).regime);
+  let h = `${state.src === 'ens' ? ensSegHTML() : ''}<div class="ing"><div class="hd">${esc(r.label)}</div><div class="hd" style="text-align:right">Value</div>
+    <div class="hd h3">${state.src === 'obs' ? 'Where it falls in the climatology' : state.src === 'ens' ? '8-day ensemble mean, member 10–90% range, and climatology bands' : '8-day trend vs 10–90th and 25–75th percentile bands'}</div><div class="hd h4">Percentile</div>`;
+  for (const P of PARAMS) {
+    const v = r.m[P.k];
+    const q = climoFor(site.iem, r.cycle, P.k, r.date);
+    const pct = FR.pctOf(v, q), d = describePct(pct, P.sign);
+    const qr = regNow ? byRegimeQ(site.iem, P.k, regNow) : null, pr = FR.pctOf(v, qr);
+    let viz;
+    let ensTxt = '';
+    if (state.src === 'model') {
+      const t = state.thermo[state.model][site.id];
+      const vals = t.map((x) => x.z12 && x.z12[P.k]);
+      const bands = state.dates.map((dt) => climoFor(site.iem, '12', P.k, dt));
+      viz = spark(vals, bands, state.day, P);
+    } else if (state.src === 'ens') {
+      const days = state.ensThermo[state.ensSel].sites[site.id];
+      const st = days.map((x) => ensStats(x.vals[P.k]));
+      const bands = state.dates.map((dt) => climoFor(site.iem, '12', P.k, dt));
+      viz = spark(st.map((z) => z && z.mean), bands, state.day, P, st.map((z) => (z ? [z.p10, z.p90] : null)));
+      const z = r.ens[P.k];
+      if (z && q) { const above = z.vals.filter((x) => x > q[10]).length / z.n; ensTxt = `<br><span class="note">${Math.round(above * 100)}% of members above the median</span>`; }
+    } else viz = gauge(v, q);
+    h += `<div class="nm">${esc(P.name)}<small>${esc(P.desc)}</small></div>
+      <div class="val">${isNum(v) ? P.fmt(v) : '–'}${isNum(v) && P.sub ? `<div class="note" style="font-family:Barlow;font-size:12px;font-weight:400">${P.sub(v)}</div>` : ''}</div>
+      <div class="bar">${viz}</div>
+      <div class="pc">${isNum(pct) ? `<b style="color:${d.cls ? `var(--${d.cls})` : 'inherit'}">${ordinal(Math.round(pct))}</b> ${d.word}` : '<span class="note">No climatology</span>'}${isNum(pr) ? `<br><span class="note">${ordinal(Math.round(pr))} for regime ${regNow}</span>` : ''}${ensTxt}</div>`;
+  }
+  h += '</div>';
+  if (!state.climo) h += `<p class="note" style="margin-top:10px">Percentiles appear once <code>data/climo.json</code> exists. Run the “Soundings” GitHub Action once to build it.</p>`;
+  el.innerHTML = h;
+}
+
+// ---------- Cape lightning odds: First Strike Timing Tool lookup + AMU regime tables
+function timingChart(curves, lk) {
+  const W = 760, H = 190, L0 = 44, B = 28, hrs = state.ltg.hours;
+  const x = (i) => L0 + (i + 0.5) * ((W - L0 - 10) / hrs.length), bw = ((W - L0 - 10) / hrs.length) * 0.62;
+  const y = (v) => H - B - v * (H - B - 14);
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="season-svg" role="img" aria-label="First lightning timing">`;
+  for (const t of [0, 0.25, 0.5, 0.75, 1]) s += `<line x1="${L0}" x2="${W - 10}" y1="${y(t)}" y2="${y(t)}" stroke="var(--ink)" stroke-opacity="0.07"/><text x="${L0 - 6}" y="${y(t) + 4}" font-size="11" text-anchor="end" fill="var(--muted)">${t * 100}%</text>`;
+  const main = curves[0];
+  main.cum.forEach((c, i) => { const inc = c - (i ? main.cum[i - 1] : 0); s += `<rect x="${x(i) - bw / 2}" y="${y(inc)}" width="${bw}" height="${y(0) - y(inc)}" fill="var(--storm)" fill-opacity="0.55" data-tip="${String(hrs[i]).padStart(2, '0')}–${String(hrs[i] + 1).padStart(2, '0')} local: ${Math.round(inc * 100)}% chance the first strike comes in this hour"/>`; });
+  curves.forEach((cv, k) => {
+    s += `<path d="M${cv.cum.map((c, i) => `${x(i)},${y(c)}`).join('L')}" fill="none" stroke="${cv.color}" stroke-width="${k ? 1.6 : 2.4}" ${k ? 'stroke-dasharray="5 4"' : ''}/>`;
+    const last = cv.cum[cv.cum.length - 1];
+    s += `<text x="${W - 12}" y="${y(last) - 6}" text-anchor="end" font-size="11.5" fill="${cv.color}">${esc(cv.label)} ${Math.round(last * 100)}%</text>`;
+  });
+  hrs.forEach((h, i) => { if (i % 2 === 0) s += `<text x="${x(i)}" y="${H - 9}" font-size="11" text-anchor="middle" fill="var(--muted)">${String(h).padStart(2, '0')}L</text>`; });
+  return s + '</svg>';
+}
+function renderLightning() {
+  const el = $('#popBody'), di = state.day, date = state.dates[di], mo = +date.slice(5, 7), T = AMU_MONTHLY[mo];
+  const monthName = (m) => new Date(Date.UTC(2000, m - 1, 1)).toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' });
+  const c = callFor(di), ec = ensCombined(di);
+  let h = '';
+  if (state.ltg) {
+    const src = ltgSources(di), det = src.find((x) => x.key === 'obs') || src.find((x) => x.key === 'model'), ens = src.filter((x) => x.ens);
+    const G = state.ltg.groups[LTG_GROUP(mo) || 'All'];
+    const ensMean = ens.length ? ens.reduce((a, x) => a + x.p, 0) / ens.length : null;
+    h += `<div class="ltg-top">`;
+    h += `<div class="ltg-big"><span class="note">${det ? `${esc(det.name)}: ${det.lk.sec} flow${det.lk.bin ? `, TI ${det.lk.bin.replace('>=', '≥')}` : ''}` : 'XMR flow and Thompson index'}</span><b class="cond">${det ? Math.round(det.lk.p * 100) + '%' : '–'}</b></div>`;
+    h += `<div class="ltg-big"><span class="note">Ensemble mean${ens.length ? `, ${ens.map((x) => x.n).reduce((a, b) => a + b, 0)} members` : ''}</span><b class="cond">${isNum(ensMean) ? Math.round(ensMean * 100) + '%' : '–'}</b>${ens.length ? `<span class="note">${ens.map((x) => `${esc(x.name)} ${Math.round(x.p10 * 100)}–${Math.round(x.p90 * 100)}%`).join(', ')} (10–90% of members)</span>` : ''}</div>`;
+    h += `<div class="ltg-big"><span class="note">All ${G.months.length === 1 ? monthName(G.months[0]) : G.months.length === 3 ? 'June–August' : 'May–October'} days</span><b class="cond">${Math.round(G.p * 100)}%</b></div></div>`;
+    h += `<p class="note">${LTG_GROUP(mo) ? '' : `${monthName(mo)} is outside the May–October record, so May–October values are shown. `}Chance of lightning on KSC/CCSFS during the day, looked up from the XMR morning 1000–700 mb flow sector and Thompson index in the AMU First Strike Timing Tool record (${state.ltg.meta.days.toLocaleString()} days, ${state.ltg.meta.years[0]}–${state.ltg.meta.years[1]}). Each model and ensemble member gets its own lookup.</p>`;
+    // by-source table
+    h += `<div class="matrix-scroll"><table class="ltg-table src"><thead><tr><th>Source</th><th>XMR flow</th><th>Thompson</th><th>Lightning</th><th>Days in cell</th></tr></thead><tbody>`;
+    for (const x of src) {
+      if (x.ens) h += `<tr><th>${esc(x.name)} members</th><td>${x.w ? `${deg(x.w.dir)} ${kt(x.w.spd)} kt mean` : '–'}</td><td>${x.withTi}/${x.n} with TI</td><td><b>${Math.round(x.p * 100)}%</b> <span class="note">${Math.round(x.p10 * 100)}–${Math.round(x.p90 * 100)}%</span></td><td>–</td></tr>`;
+      else h += `<tr><th>${esc(x.name)}</th><td>${x.lk.sec}, ${deg(x.w.dir)} ${kt(x.w.spd)} kt</td><td>${isNum(x.ti) ? Math.round(x.ti) : '–'}</td><td><b>${Math.round(x.lk.p * 100)}%</b></td><td>${x.lk.n}${x.lk.n < 20 ? ' <span class="note">thin</span>' : ''}</td></tr>`;
+    }
+    h += '</tbody></table></div>';
+    // first strike timing
+    const curves = [];
+    if (det) curves.push({ label: det.name, color: 'var(--ink)', cum: ltgTiming(det.lk) });
+    for (const x of ens) {
+      const cs = x.lks.map((lk) => ltgTiming(lk));
+      curves.push({ label: x.name, color: ENS.find((m) => m.key === x.key).c, cum: cs[0].map((_, i) => cs.reduce((a, cc) => a + cc[i], 0) / cs.length) });
+    }
+    if (curves.length) {
+      h += `<h3 class="ltg-h">When the first strike comes</h3><p class="note">Chance that lightning has started on KSC/CCSFS by the end of each local hour. Bars split ${esc(curves[0].label)}'s odds across the hour of the first strike, using that flow sector's timing record.</p>`;
+      h += timingChart(curves);
+    }
+    // sector x TI table
+    const cur = det ? det.lk : null;
+    h += `<h3 class="ltg-h">Lightning odds by XMR flow and Thompson index, ${G.months.length === 1 ? monthName(G.months[0]) : G.months.length === 3 ? 'June–August' : 'May–October'}</h3><div class="matrix-scroll"><table class="ltg-table heat"><thead><tr><th>XMR flow</th><th>All days</th><th>TI &lt; 25</th><th>TI 25–34</th><th>TI ≥ 34</th></tr></thead><tbody>`;
+    for (const sc of state.ltg.sectors) {
+      const C = G.sector[sc];
+      const td = (v, n, on, tip) => `<td class="${on ? 'cur' : ''}" style="background:color-mix(in srgb, var(--storm) ${Math.round(v * 70)}%, transparent)" data-tip="${esc(tip)}">${Math.round(v * 100)}%${n < 20 ? '<sup>*</sup>' : ''}</td>`;
+      h += `<tr><th>${sc}</th>${td(C.p, C.n, cur && cur.sec === sc && !cur.bin, `${sc}: ${C.yes} of ${C.n} days`)}${state.ltg.tiBins.map((bn) => td(C.ti[bn].p, C.ti[bn].n, cur && cur.sec === sc && cur.bin === bn, `${sc}, TI ${bn}: ${C.ti[bn].yes} of ${C.ti[bn].n} days`)).join('')}</tr>`;
+    }
+    h += `</tbody></table></div><p class="note"><sup>*</sup> fewer than 20 days. Each cell is pulled toward its row total by ${state.ltg.meta.shrinkage_pseudo_days} pseudo-days, so thin cells lean on the broader record.</p>`;
+  } else {
+    h += `<div class="empty">The XMR flow and Thompson lookup (data/cape_ltg.json) did not load.</div>`;
+  }
+  // AMU regime tables
+  h += `<h3 class="ltg-h">By AMU flow regime</h3><div class="ltg-top small">`;
+  const det2 = c ? amuLtg(date, c.regime) : null, ens2 = ec ? amuEnsLtg(date, ec.dist) : null;
+  h += `<div class="ltg-big"><span class="note">${c && c.src === 'obs' ? 'Observed regime' : 'Consensus regime'}${c ? `, ${esc(c.regime)}` : ''}</span><b class="cond">${det2 ? det2.p + '%' : '–'}</b></div>`;
+  h += `<div class="ltg-big"><span class="note">Weighted by ensemble regime odds</span><b class="cond">${isNum(ens2) ? Math.round(ens2) + '%' : '–'}</b></div>`;
+  h += `<div class="ltg-big"><span class="note">${T ? `All ${monthName(mo)} days` : 'All warm-season days'}</span><b class="cond">${T ? T.all : 39}%</b></div></div>`;
+  h += `<div class="matrix-scroll"><table class="ltg-table"><thead><tr><th>Regime</th>${[5, 6, 7, 8, 9].map((m) => `<th class="${m === mo ? 'on' : ''}">${monthName(m).slice(0, 3)}</th>`).join('')}<th>Season</th><th>45 WS</th></tr></thead><tbody>`;
+  for (const k of FR.AMU_ORDER) {
+    h += `<tr class="${c && c.regime === k ? 'on' : ''}"><th><span class="chip ${regClass(k)}">${k}</span> ${esc(AMU[k].name)}</th>${[5, 6, 7, 8, 9].map((m) => `<td class="${m === mo ? 'on' : ''}">${AMU_MONTHLY[m][k]}%</td>`).join('')}<td>${AMU[k].season}%</td><td>${WS45[k]}%</td></tr>`;
+  }
+  h += `<tr><th>Low speed (XMR ≤ 4 kt, any ridge position)</th>${[5, 6, 7, 8, 9].map(() => '<td>–</td>').join('')}<td>–</td><td>${WS45.Low}%</td></tr>`;
+  h += `<tr class="tot"><th>All regimes</th>${[5, 6, 7, 8, 9].map((m) => `<td class="${m === mo ? 'on' : ''}">${AMU_MONTHLY[m].all}%</td>`).join('')}<td>39%</td><td></td></tr></tbody></table></div>`;
+  h += `<p class="note">Monthly and season columns: ≥1 CG in the 10 KSC/CCSFS 5 n mi warning circles, 0700–0000 EDT, 1989–2005 (Lambert 2007). SW-1/SW-2 and, in June–August, SE-1/SE-2 share values. The 45 WS column is from the squadron's "Flow Regime: Critical Concept" briefing slide, which adds a low-speed category.</p>`;
+  h += `<div class="ltg-slot"><b>Next: PWAT × Thompson tables by regime</b><p class="note">The AMU PWAT/TI-stratified pages (1-, 3- and 6-hour windows at 5–30 n mi for COF, TTS and XMR) will add time-window and distance detail here once their data is loaded.</p></div>`;
+  el.innerHTML = h;
+}
+
+// ---------- PoP climo
+function renderPoP() {
+  if (CAPE) return renderLightning();
+  const c = callFor(state.day); const reg = c ? c.regime : 1;
+  const img = reg === 9 ? 8 : reg;
+  $('#popSeg').innerHTML = POP.map((p) => `<button data-pop="${p.k}" aria-pressed="${p.k === state.pop}">${p.label}</button>`).join('');
+  const im = $('#popImg');
+  im.onerror = () => { im.style.display = 'none'; $('#popSide').insertAdjacentHTML('afterbegin', '<p class="note">The NWS image did not load. Open the Quick Reference link below.</p>'); };
+  im.style.display = '';
+  im.src = `https://www.weather.gov/images/tbw/SBClimo/TBW_Regime${img}_${state.pop}.gif`;
+  const R = REG[reg];
+  $('#popSide').innerHTML = `<p><span class="chip ${regClass(reg)}">${reg}</span> <b>${esc(R.name)}</b></p>
+    <p>${esc(R.def)}${R.days ? ` ${R.days} days in the 2002–2019 TBW climatology.` : ''}</p>
+    ${reg === 9 ? '<p class="note">TBW does not publish separate graphics for the strong NW/N sub-regime, so regime 8 is shown.</p>' : ''}
+    <p class="note">Probability of measurable rain for the NWS Tampa Bay forecast area, by regime and time of day.</p>
+    <p><a href="https://www.weather.gov/tbw/TBWTstmClimoQuickReference" target="_blank" rel="noopener">TBW Quick Reference</a><br>
+    <a href="https://www.weather.gov/tbw/ThunderstormClimatology" target="_blank" rel="noopener">Statewide point graphs (TBW, MFL, MLB, JAX, TAE)</a><br>
+    <a href="https://www.weather.gov/tbw/TSbrowser" target="_blank" rel="noopener">First-CG convective environment browser</a></p>`;
+}
+
+// ---------- soundings
+function skewT(m) {
+  const W = 330, H = 300, P0 = 1050, P1 = 150;
+  const hh = (p) => (H * Math.log(P0 / p)) / Math.log(P0 / P1);
+  const y = (p) => H - hh(p);
+  const x = (t, p) => 6 + (t + 22) * 4.6 + hh(p) * 0.92;
+  const prof = m.prof;
+  let s = `<svg viewBox="0 0 ${W} ${H}"><defs><clipPath id="skc"><rect x="0" y="0" width="${W - 34}" height="${H}"/></clipPath></defs>`;
+  s += `<rect x="0" y="${y(700)}" width="${W - 34}" height="${y(1000) - y(700)}" fill="var(--breeze)" fill-opacity="0.08"/>`;
+  for (const p of [1000, 850, 700, 500, 300, 200]) s += `<line x1="0" x2="${W - 34}" y1="${y(p)}" y2="${y(p)}" stroke="var(--ink)" stroke-opacity="0.1"/><text x="2" y="${y(p) - 3}" font-size="9.5" fill="var(--muted)">${p}</text>`;
+  s += '<g clip-path="url(#skc)">';
+  for (let t = -80; t <= 40; t += 10) s += `<line x1="${x(t, P0)}" y1="${y(P0)}" x2="${x(t, P1)}" y2="${y(P1)}" stroke="var(--ink)" stroke-opacity="${t === 0 ? 0.22 : 0.07}"/>`;
+  const line = (key, col, w, dash) => {
+    const pts = prof.filter((q) => isNum(q[key]) && q.p >= P1).map((q) => `${x(q[key], q.p)},${y(q.p)}`);
+    return pts.length > 1 ? `<path d="M${pts.join('L')}" fill="none" stroke="${col}" stroke-width="${w}" ${dash ? `stroke-dasharray="${dash}"` : ''}/>` : '';
+  };
+  if (m.parcel) {
+    const ps = []; for (let p = m.parcel.p; p >= 200; p -= 10) ps.push(p);
+    const path = FR.parcelPath(m.parcel, ps).map((q) => `${x(q.tk - 273.15, q.p)},${y(q.p)}`);
+    s += `<path d="M${path.join('L')}" fill="none" stroke="var(--ink)" stroke-opacity="0.7" stroke-width="1.3" stroke-dasharray="4 3"/>`;
+  }
+  s += line('td', 'var(--good)', 2) + line('t', 'var(--storm)', 2.2) + '</g>';
+  for (const p of [1000, 925, 850, 700, 500, 400, 300, 250, 200]) {
+    const u = FR.interp(prof, p, 'u'), v = FR.interp(prof, p, 'v');
+    if (isNum(u) && isNum(v)) { const w = FR.fromUV(u, v); s += barb(W - 16, y(p), w.dir, w.spd); }
+  }
+  return s + '</svg>';
+}
+function barb(x, y, dir, spd) {
+  const L = 22, a = (dir * Math.PI) / 180, ux = Math.sin(a), uy = -Math.cos(a);
+  const ex = x + ux * L, ey = y + uy * L;
+  const fx = Math.sin(a + (Math.PI * 7) / 18), fy = -Math.cos(a + (Math.PI * 7) / 18);
+  let s = `<g stroke="var(--ink-2)" stroke-width="1.3" fill="var(--ink-2)"><line x1="${x}" y1="${y}" x2="${ex}" y2="${ey}"/>`;
+  if (spd < 2.5) return `<circle cx="${x}" cy="${y}" r="3" fill="none" stroke="var(--ink-2)"/>`;
+  let r = Math.round(spd / 5) * 5, pos = 0;
+  while (r >= 50) { const bx = ex - ux * pos, by = ey - uy * pos, cx = bx - ux * 5, cy = by - uy * 5; s += `<path d="M${bx},${by}L${bx + fx * 10},${by + fy * 10}L${cx},${cy}Z" stroke="none"/>`; pos += 7; r -= 50; }
+  while (r >= 10) { const bx = ex - ux * pos, by = ey - uy * pos; s += `<line x1="${bx}" y1="${by}" x2="${bx + fx * 10}" y2="${by + fy * 10}"/>`; pos += 4; r -= 10; }
+  if (r >= 5) { if (pos === 0) pos = 4; const bx = ex - ux * pos, by = ey - uy * pos; s += `<line x1="${bx}" y1="${by}" x2="${bx + fx * 5.5}" y2="${by + fy * 5.5}"/>`; }
+  return s + '</g>';
+}
+function renderSoundings() {
+  $('#soundings').innerHTML = SITES.map((st) => {
+    const o = state.obs[st.id]?.latest;
+    if (!o) return `<div class="snd"><h3>${esc(st.name)} <span class="t">${st.id}</span></h3><div class="empty">No sounding in the last 48 hours from IEM.</div></div>`;
+    const m = o.m, cyc = o.valid.slice(11, 13), date = o.valid.slice(0, 10);
+    const pc = (k) => { const p = FR.pctOf(m[k], climoFor(st.iem, cyc, k, date)); return isNum(p) ? ` <span class="note">${ordinal(Math.round(p))}</span>` : ''; };
+    const P = (k) => PARAMS.find((x) => x.k === k);
+    return `<div class="snd"><h3><span>${esc(st.name)} <span class="t">${st.id} ${cyc}Z ${date.slice(5)}</span></span>${CAPE ? (m.mw ? `<span class="chip ${{ NE: 'rg2', SE: 'rg6', SW: 'rg4', NW: 'rg8' }[FR.amuSector(m.mw.dir)]}" data-tip="1000–700 mb sector at this site">${FR.amuSector(m.mw.dir)}</span>` : '') : (m.regime ? `<span class="chip ${regClass(m.regime)}" data-tip="${esc(REG[m.regime].name)}">${m.regime}</span>` : '')}</h3>
+      ${skewT(m)}
+      <dl>
+        <div><dt>PWAT</dt><dd>${isNum(m.pwat) ? P('pwat').fmt(m.pwat) : '–'}${pc('pwat')}</dd></div>
+        <div><dt>Thompson</dt><dd>${isNum(m.ti) ? P('ti').fmt(m.ti) : '–'}${pc('ti')}</dd></div>
+        <div><dt>K index</dt><dd>${isNum(m.ki) ? P('ki').fmt(m.ki) : '–'}${pc('ki')}</dd></div>
+        <div><dt>Lifted index</dt><dd>${isNum(m.li) ? P('li').fmt(m.li) : '–'}${pc('li')}</dd></div>
+        <div><dt>MLCAPE</dt><dd>${isNum(m.mlcape) ? Math.round(m.mlcape) : '–'}${pc('mlcape')}</dd></div>
+        <div><dt>1000–700 mean</dt><dd>${m.mw ? `${deg(m.mw.dir)} ${kt(m.mw.spd)} kt` : '–'}</dd></div>
+      </dl></div>`;
+  }).join('');
+}
+
+// ---------- season
+function renderSeason() {
+  const el = $('#season'), rec = state.recent, ST = CAPE ? 'KXMR' : 'KTBW', stName = CAPE ? 'Cape Canaveral' : 'Tampa Bay';
+  const rows = (rec?.stations?.[ST]?.filter((r) => r.cycle === '12') || []).map((r) => ({ ...r }));
+  if (CAPE) { // AMU regime per day from the same-day MFL/TBW/JAX 12Z and XMR morning soundings
+    const vec = (st, date) => { const q = rec.stations?.[st]?.find((x) => x.date === date && x.cycle === '12'); return q && isNum(q.mwdir) ? { dir: q.mwdir, spd: q.mwspd, ...FR.toUV(q.mwdir, q.mwspd) } : null; };
+    rows.forEach((r) => { const reg = FR.amuRegime(vec('KMFL', r.date), vec('KTBW', r.date), vec('KJAX', r.date), vec('KXMR', r.date)); r.regime = reg === 'Missing' ? null : reg; });
+  }
+  if (!rows.length) {
+    el.innerHTML = `<div class="empty">The season log fills in after the “Soundings” GitHub Action runs. It records each morning's ${stName} regime and moisture so you can see how this summer has evolved.</div>`;
+    $('#seasonNote').textContent = '';
+    return;
+  }
+  $('#seasonNote').textContent = `${stName} ${CAPE ? 'morning' : '12Z'} soundings, last ${rows.length} days. Updated ${rec.built.replace('T', ' ')} UTC`;
+  const counts = {}; rows.forEach((r) => { if (r.regime) counts[r.regime] = (counts[r.regime] || 0) + 1; });
+  const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+  let h = `<div class="season-strip">${rows.map((r) => `<span class="chip ${regClass(r.regime)}" data-tip="${r.date}: ${r.regime ? `regime ${r.regime}, ` : ''}${isNum(r.mwdir) ? `${deg(r.mwdir)} ${kt(r.mwspd)} kt` : 'no wind'}${isNum(r.pwat) ? `, PWAT ${(r.pwat / 25.4).toFixed(2)} in` : ''}">${r.regime ? esc(RS.label(r.regime)) : '·'}</span>`).join('')}</div>`;
+  if (top) h += `<p class="note" style="margin:8px 0 0">Most common: ${CAPE ? `${top[0]} (${esc(AMU[top[0]].name.toLowerCase())})` : `regime ${top[0]} (${esc(REG[top[0]].name.toLowerCase())})`}, ${top[1]} of ${rows.length} days.</p>`;
+  // PWAT vs climo chart
+  const W = 1000, H = 170, n = rows.length, x = (i) => 40 + (i / Math.max(1, n - 1)) * (W - 50);
+  const vals = rows.map((r) => (isNum(r.pwat) ? r.pwat / 25.4 : null));
+  const bands = rows.map((r) => { const q = climoFor(ST, '12', 'pwat', r.date); return q ? q.map((v) => v / 25.4) : null; });
+  const all = [...vals.filter(isNum), ...bands.flatMap((b) => (b ? [b[2], b[18]] : []))];
+  if (all.length) {
+    const lo = Math.min(...all) - 0.1, hi = Math.max(...all) + 0.1, y = (v) => H - 20 - ((v - lo) / (hi - lo)) * (H - 34);
+    let s = `<svg class="season-svg" viewBox="0 0 ${W} ${H}">`;
+    for (let t = Math.ceil(lo * 4) / 4; t <= hi; t += 0.25) s += `<line x1="40" x2="${W - 10}" y1="${y(t)}" y2="${y(t)}" stroke="var(--ink)" stroke-opacity="0.07"/><text x="34" y="${y(t) + 4}" font-size="11" text-anchor="end" fill="var(--muted)">${t.toFixed(2)}</text>`;
+    const ok = bands.map((b, i) => (b ? i : -1)).filter((i) => i >= 0);
+    if (ok.length > 1) {
+      s += `<path d="M${ok.map((i) => `${x(i)},${y(bands[i][18])}`).join('L')}L${ok.slice().reverse().map((i) => `${x(i)},${y(bands[i][2])}`).join('L')}Z" fill="var(--breeze)" fill-opacity="0.12"/>`;
+      s += `<path d="M${ok.map((i) => `${x(i)},${y(bands[i][15])}`).join('L')}L${ok.slice().reverse().map((i) => `${x(i)},${y(bands[i][5])}`).join('L')}Z" fill="var(--breeze)" fill-opacity="0.18"/>`;
+    }
+    const pts = vals.map((v, i) => (isNum(v) ? `${x(i)},${y(v)}` : null)).filter(Boolean);
+    if (pts.length > 1) s += `<path d="M${pts.join('L')}" fill="none" stroke="var(--ink)" stroke-width="2"/>`;
+    s += `<text x="40" y="12" font-size="12" fill="var(--muted)">${stName} ${CAPE ? 'morning' : '12Z'} precipitable water (in) against the 10–90th and 25–75th percentile bands</text></svg>`;
+    h += s;
+  }
+  el.innerHTML = h;
+}
+
+// ---------- reference + method
+function renderRefCape() {
+  $('#ref').innerHTML = FR.AMU_ORDER.map((k) => `<article class="wide"><span class="chip ${regClass(k)}">${k}</span><div><h3>${esc(AMU[k].name)}</h3><div class="def">${esc(AMU[k].def)}. ${AMU[k].season}% warm-season lightning odds.</div><p>${esc(AMU[k].flow)}.</p></div></article>`).join('');
+  const meta = state.climo?.meta;
+  $('#method').innerHTML = `
+    <p><b>Regime.</b> This page uses the AMU flow regimes the 45 WS lightning tools are built on (Lambert 2007, after Lericos et al. 2002). The 1000–700 mb layer-mean direction at Miami, Tampa Bay and Jacksonville is binned into 0–90°, 90–180°, 180–270° and 270–360° sectors, and the combination sets the synoptic regime: SW-1, SW-2, SE-1, SE-2, NE, NW, or Other.</p>
+    <p><b>XMR tie-breaker.</b> When the XMR morning flow is above 4 kt, it replaces Other and Missing with a local regime (SE flow becomes SE-1, SW becomes SW-2, plus NE and NW), and flips SE-1 to SW-2 or SW-2 to SE-1 when XMR says the ridge is on the other side of the Cape. SW-1 and SE-2 are never changed. The page looks for the 10Z XMR launch first, then 11Z and 12Z.</p>
+    <p><b>Models and ensembles.</b> The same rule runs on 12Z 1000–700 mb winds from every model at MFL, TBW, JAX and XMR, and on every GEFS and EC ENS member. Ensemble odds weight the two systems equally, and each ensemble votes in the consensus with its most likely regime.</p>
+    <p><b>Lightning odds.</b> The AMU table gives the chance of at least one CG strike in the 10 KSC/CCSFS 5 n mi warning circles between 0700 and 0000 EDT, by regime and month, for May–September 1989–2005. The regime-weighted value multiplies each regime's odds by its ensemble probability. These are climatology, not a forecast; your PWAT and Thompson stratified tables will refine them.</p>
+    <p><b>Ingredients.</b> ${meta ? `Percentiles compare against ${meta.years[0]}–${meta.years[1]} soundings; Cape Canaveral uses your own XMR archive.` : 'Percentiles appear once the climatology file is built.'} Parameters are computed with the same code as the statewide page.</p>
+    <p><b>Sources.</b> Lambert (2007), NASA/CR-2007-214732; Bauman et al. (2008), AMS Conference on Meteorological Applications of Lightning Data; Lericos et al. (2002), Weather and Forecasting 17, 83–98. Data from Open-Meteo and the Iowa Environmental Mesonet.</p>`;
+}
+function renderRef() {
+  if (CAPE) return renderRefCape();
+  $('#ref').innerHTML = Object.entries(REG).map(([k, R]) => `<article><span class="chip ${regClass(+k)}">${k}</span><div><h3>${esc(R.name)}</h3><div class="def">${esc(R.def)}${R.days ? ` ${R.days} climatology days.` : ''}</div><p>${esc(R.favored)}.</p></div></article>`).join('');
+  const meta = state.climo?.meta;
+  $('#method').innerHTML = `
+    <p><b>Regime.</b> Following NWS Tampa Bay, the regime is set by the 12Z 1000–700 mb layer-mean vector wind. Below ${S.light} kt is regime 1; otherwise the direction sector (NE/E 360–120°, SE/S 120–190°, SW/W 190–290°, NW/N 290–360°) and speed (${S.light}–${S.strong} kt or above ${S.strong} kt) pick regimes 2–9. Thresholds are editable in Settings. Older TBW material and the Chavez et al. (2022) study used 4 kt for regime 1.</p>
+    <p><b>Observed.</b> Sounding winds are averaged with pressure weighting from 1000 to 700 mb at full vertical resolution. Today's call uses the Tampa Bay 12Z sounding once it is in; before that, and for days 1–7, it uses the model consensus.</p>
+    <p><b>Models.</b> Open-Meteo pressure-level winds at 1000, 925, 850 and 700 mb are averaged the same way at each point of an analysis box near Tampa Bay (${S.boxS}–${S.boxN}°N, ${-S.boxW}–${-S.boxE}°W), standing in for the TBW RAP analysis box. The consensus is the most common regime across models, with ties broken by the regime of the model-mean vector.</p>
+    <p><b>Ensembles.</b> Every GEFS (31) and ECMWF ENS (51) member is run through the same analysis-box calculation, giving a regime per member. Regime odds are the share of members in each regime; the combined odds weight the two systems equally. The ensemble-mean rows show the regime of the mean vector. When members disagree on direction, averaging their vectors shrinks the speed and pulls that mean toward regime 1, so in the consensus each ensemble votes with its most likely member regime instead. Ensemble profiles at the sounding sites give mean ingredients, a 10–90% member range, and the share of members above the climatological median. Ensemble pulls are cached in the browser for 3 hours; Refresh clears them.</p>
+    <p><b>Ridge axis.</b> Along north–south lines through the peninsula, the axis is placed where the layer-mean east–west wind turns from easterly (south of the ridge) to westerly. The ridge-position regime (SW-1, SW-2, SE-1, SE-2, NE, NW) follows the Lericos et al. (2002) and NASA AMU scheme built on the Miami, Tampa and Jacksonville soundings.</p>
+    <p><b>Ingredients.</b> PWAT (surface to 300 mb; the model's own total column water vapor when available), K index, a lowest-100 mb mixed-layer lifted index and CAPE, Thompson index (K minus LI), 500 mb temperature, 700–500 mb lapse rate and mean 850/700/500 mb RH are computed with the same code for soundings, model profiles and the climatology.</p>
+    <p><b>Normal.</b> ${meta ? `Percentiles come from ${meta.years[0]}–${meta.years[1]} IEM soundings at each site, using a ±${meta.window_days}-day window around the date. Built ${esc(meta.built)}.` : 'Percentiles come from the IEM sounding archive, built by the repository\'s GitHub Action (not built yet).'} “For regime N” percentiles compare against only June–September 12Z soundings in that same regime. Model values are compared against sounding climatology, so small model biases carry through.</p>
+    <p><b>Sources.</b> NWS Tampa Bay Thunderstorm Climatology and Quick Reference; Chavez, Milrad, Halperin, Mroczka and Tyle (2022), Weather and Forecasting 37, 1867–1883; Lericos, Fuelberg, Watson and Holle (2002), Weather and Forecasting 17, 83–98. Data from Open-Meteo (NOAA, ECMWF, DWD, ECCC models) and the Iowa Environmental Mesonet.</p>`;
+}
+
+// ------------------------------------------------------------------ orchestration
+function renderAll() {
+  renderDays(); renderCall(); renderWheel(); renderMatrix(); renderEnsemble(); renderMap(); renderSiteSeg(); renderIngredients(); renderPoP(); renderSoundings(); renderSeason(); renderRef();
+  document.querySelectorAll('#srcSeg button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.s === state.src));
+  document.querySelectorAll('#hourSeg button').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.h === state.mapHour));
+}
+function selectDay(i) { state.day = i; renderAll(); }
+
+async function loadSelected() {
+  const m = curModel();
+  await Promise.all([loadGrid(m), loadThermo(m)]);
+  renderAll();
+}
+
+function pageChrome() {
+  if (!CAPE) { $('#pageLink').href = 'cape.html'; $('#pageLink').textContent = 'Cape view'; return; }
+  document.body.classList.add('cape');
+  document.title = 'Cape Canaveral Flow Regime';
+  $('.brand h1').textContent = 'Cape Canaveral Flow Regime';
+  $('.brand span').textContent = 'AMU flow regimes and lightning odds for KSC and CCSFS';
+  $('#pageLink').href = 'index.html'; $('#pageLink').textContent = 'Statewide view';
+  $('#popTitle').textContent = 'Lightning odds by flow regime';
+  $('#popSeg').style.display = 'none';
+  $('#refNote').textContent = 'Definitions from Lambert (2007), NASA/CR-2007-214732, Table 1';
+  $('#matrixNote').textContent = 'AMU regime from 12Z 1000–700 mb winds at MFL, TBW and JAX, with XMR as the tie-breaker. Cells show the XMR flow.';
+  $('#ensNote').textContent = 'Share of GEFS and EC ENS members in each AMU regime. Select a day for the detail.';
+  $('#mapTitle').textContent = 'Layer flow over the Cape';
+  const order = ['XMR', 'TBW', 'MFL', 'JAX', 'KEY', 'TLH'];
+  SITES.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+}
+
+async function boot() {
+  pageChrome();
+  const today = nyDate(Date.now());
+  state.dates = Array.from({ length: 8 }, (_, i) => addDays(today, i));
+  $('#modelSel').innerHTML = MODELS.map((m) => `<option value="${m.key}" ${m.key === state.model ? 'selected' : ''}>${m.name}</option>`).join('');
+  renderAll();
+  const jobs = [
+    loadGeo().then(renderMap),
+    loadJSON(S.climoUrl, 'climo', 'Climatology').then(renderAll),
+    loadJSON(S.recentUrl, 'recent', 'Season log').then(renderSeason),
+    ...(CAPE ? [loadJSON('data/cape_ltg.json', 'ltg', 'Lightning lookup').then(renderPoP)] : []),
+    loadObs().then(renderAll),
+    ...MODELS.map((m) => loadCore(m).then(() => { renderDays(); renderCall(); renderWheel(); renderMatrix(); renderPoP(); })),
+    loadSelected(),
+    // ensembles are heavy, so they run one after another and are cached for 3 hours
+    (async () => {
+      for (const m of ENS) { await loadEnsemble(m); renderAll(); }
+      // the Cape lightning lookup pairs every member's XMR flow with its own Thompson index, so it needs both systems' profiles
+      for (const m of (CAPE ? ENS : ENS.filter((x) => x.key === state.ensSel))) { await loadEnsThermo(m); renderIngredients(); renderCall(); renderPoP(); }
+    })(),
+  ];
+  await Promise.allSettled(jobs);
+  renderAll();
+}
+
+// ------------------------------------------------------------------ events
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.matches('.day, .cell, .ecell')) selectDay(+t.dataset.i);
+  else if (t.id === 'memToggle') { state.showMembers = !state.showMembers; save('ffr-members', state.showMembers); renderWheel(); }
+  else if (t.dataset.ens) {
+    state.ensSel = t.dataset.ens; renderIngredients();
+    if (!state.ensThermo[state.ensSel]) loadEnsThermo(ENS.find((m) => m.key === state.ensSel)).then(() => { renderIngredients(); renderCall(); });
+  }
+  else if (t.dataset.site) { state.site = t.dataset.site; renderSiteSeg(); renderIngredients(); renderCall(); }
+  else if (t.dataset.s) { state.src = t.dataset.s; renderAll(); }
+  else if (t.dataset.h) { state.mapHour = +t.dataset.h; renderAll(); }
+  else if (t.dataset.pop) { state.pop = t.dataset.pop; renderPoP(); }
+});
+$('#modelSel').addEventListener('change', (e) => { state.model = e.target.value; save('ffr-model', state.model); renderAll(); loadSelected(); });
+$('#refreshBtn').addEventListener('click', () => {
+  try { Object.keys(localStorage).filter((k) => k.startsWith('ffr-ens-')).forEach((k) => localStorage.removeItem(k)); } catch (e) { /* ignore */ }
+  state.core = {}; state.grid = {}; state.thermo = {}; state.obs = {}; state.ens = {}; state.ensThermo = {}; state.status = {}; boot(); });
+$('#themeBtn').addEventListener('click', () => {
+  const t = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = t; try { localStorage.setItem('ffr-theme', t); } catch (e) { /* ignore */ }
+});
+const dlg = $('#settingsDlg'), form = $('#settingsForm');
+$('#settingsBtn').addEventListener('click', () => { for (const k of Object.keys(DEFAULTS)) form.elements[k].value = S[k]; dlg.showModal(); });
+dlg.addEventListener('close', () => {
+  if (dlg.returnValue === 'save') {
+    const n = {}; for (const k of Object.keys(DEFAULTS)) { const v = form.elements[k].value; n[k] = typeof DEFAULTS[k] === 'number' ? parseFloat(v) : v; }
+    if (!(n.light > 0 && n.strong > n.light && n.boxN > n.boxS && n.boxE > n.boxW)) { alert('Check the values: strong must exceed light, and the box north/east edges must exceed south/west.'); return; }
+    S = { ...DEFAULTS, ...n }; save('ffr-settings', S); location.reload();
+  } else if (dlg.returnValue === 'reset') { save('ffr-settings', {}); location.reload(); }
+});
+const tip = $('#tip');
+document.addEventListener('mousemove', (e) => {
+  const t = e.target.closest && e.target.closest('[data-tip]');
+  if (!t) { tip.style.opacity = 0; return; }
+  tip.textContent = t.getAttribute('data-tip'); tip.style.opacity = 1;
+  const x = Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 8), y = Math.min(e.clientY + 16, window.innerHeight - tip.offsetHeight - 8);
+  tip.style.left = x + 'px'; tip.style.top = y + 'px';
+});
+
+boot();
+})();
+
+</script>
+</body>
+</html>

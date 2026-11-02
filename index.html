@@ -274,6 +274,42 @@ dialog h2 { margin: 0 0 10px; font-family: "Barlow Condensed", sans-serif; font-
 .ens-facts { margin-top: 0; grid-template-columns: 1fr; }
 @media (max-width: 860px) { .ens-detail { grid-template-columns: 1fr; } }
 
+/* Cape page */
+.cape .day .num { width: 46px; font-size: 16px; }
+.cape .day { flex-basis: 112px; }
+.call .big.amu { font-size: clamp(76px, 8vw, 118px); letter-spacing: -0.02em; line-height: 0.9; }
+.strip-wrap { grid-column: 1 / -1; margin-top: 16px; }
+.strip { width: 100%; max-width: 640px; height: auto; display: block; }
+.prow.wide { grid-template-columns: 58px 1fr 42px; }
+.ref article.wide { grid-template-columns: 64px 1fr; }
+.ref article.wide .chip { width: 56px; font-size: 18px; }
+.cape .cell .n { font-size: 17px; }
+.cape .season-strip .chip { min-width: 34px; font-size: 11.5px; }
+.pop-grid#popBody:has(.ltg-top) { display: block; }
+.ltg-top { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-bottom: 1px solid var(--line-soft); margin-bottom: 10px; }
+.ltg-big { padding: 4px 16px 12px 0; }
+.ltg-big b { display: block; font-size: 54px; font-weight: 700; line-height: 1; margin-top: 4px; }
+.ltg-big + .ltg-big { padding-left: 16px; border-left: 1px solid var(--line-soft); }
+.ltg-table { border-collapse: collapse; width: 100%; max-width: 900px; font-size: 14px; margin: 8px 0; }
+.ltg-table th, .ltg-table td { padding: 6px 10px; border-bottom: 1px solid var(--line-soft); text-align: right; white-space: nowrap; }
+.ltg-table th:first-child { text-align: left; font-weight: 500; }
+.ltg-table thead th { color: var(--muted); font-weight: 500; }
+.ltg-table .on { background: color-mix(in srgb, var(--ridge) 14%, transparent); font-weight: 600; }
+.ltg-table tr.on th, .ltg-table tr.on td { background: color-mix(in srgb, var(--ink) 7%, transparent); }
+.ltg-table tr.tot th, .ltg-table tr.tot td { color: var(--ink-2); font-weight: 600; }
+.ltg-table .chip { font-size: 13px; height: 20px; min-width: 44px; margin-right: 6px; }
+.ltg-slot { margin-top: 14px; padding: 12px 14px; border: 1px dashed var(--line); border-radius: 8px; }
+.ltg-slot p { margin: 4px 0 0; }
+@media (max-width: 640px) { .ltg-top { grid-template-columns: 1fr; } .ltg-big + .ltg-big { border-left: 0; padding-left: 0; border-top: 1px solid var(--line-soft); padding-top: 8px; } }
+.ltg-h { font-family: "Barlow Condensed", sans-serif; font-weight: 600; font-size: 18px; margin: 20px 0 4px; }
+.ltg-top.small .ltg-big b { font-size: 38px; }
+.ltg-big .note { display: block; }
+.ltg-table.heat { max-width: 640px; }
+.ltg-table.heat td { text-align: center; font-weight: 600; }
+.ltg-table.heat td.cur { outline: 2.5px solid var(--ink); outline-offset: -2px; }
+.ltg-table.src { max-width: 820px; }
+.ltg-table.src td, .ltg-table.src th { text-align: left; }
+
 </style>
 </head>
 <body>
@@ -282,6 +318,7 @@ dialog h2 { margin: 0 0 10px; font-family: "Barlow Condensed", sans-serif; font-
     <div class="brand"><h1>Florida Flow Regime</h1><span>Summer sea breeze thunderstorm regimes, 1000–700 mb layer flow</span></div>
     <div class="ctrl"><label for="modelSel">Model</label><select id="modelSel"></select></div>
     <div class="ctrl">
+      <a class="btn" id="pageLink" href="cape.html" style="text-decoration:none;color:inherit">Cape view</a>
       <button class="btn" id="refreshBtn" title="Reload all data">Refresh</button>
       <button class="btn icon" id="themeBtn" title="Switch light or dark">◐</button>
       <button class="btn icon" id="settingsBtn" title="Settings">⚙</button>
@@ -301,19 +338,19 @@ dialog h2 { margin: 0 0 10px; font-family: "Barlow Condensed", sans-serif; font-
   </section>
 
   <section class="panel">
-    <header><h2>Seven-day regime outlook</h2><span class="note">12Z 1000–700 mb mean vector in the Tampa Bay analysis box. Select a column to change the day.</span></header>
+    <header><h2>Seven-day regime outlook</h2><span class="note" id="matrixNote">12Z 1000–700 mb mean vector in the Tampa Bay analysis box. Select a column to change the day.</span></header>
     <div class="body matrix-scroll"><table class="matrix" id="matrix"></table></div>
   </section>
 
   <section class="panel">
-    <header><h2>Ensemble regime probabilities</h2><span class="note">Share of GEFS and EC ENS members in each regime at 12Z. Select a day for the detail.</span></header>
+    <header><h2>Ensemble regime probabilities</h2><span class="note" id="ensNote">Share of GEFS and EC ENS members in each regime at 12Z. Select a day for the detail.</span></header>
     <div class="body" id="ensBody"></div>
   </section>
 
   <div class="two">
     <section class="panel">
       <header>
-        <h2>Layer flow and ridge axis</h2>
+        <h2 id="mapTitle">Layer flow and ridge axis</h2>
         <div class="seg" id="hourSeg"><button data-h="12" aria-pressed="true">12Z</button><button data-h="18">18Z</button><button data-h="0">00Z</button></div>
       </header>
       <div class="body">
@@ -335,8 +372,8 @@ dialog h2 { margin: 0 0 10px; font-family: "Barlow Condensed", sans-serif; font-
   </div>
 
   <section class="panel">
-    <header><h2>Regime rain climatology, NWS Tampa Bay</h2><div class="seg" id="popSeg"></div></header>
-    <div class="body pop-grid">
+    <header><h2 id="popTitle">Regime rain climatology, NWS Tampa Bay</h2><div class="seg" id="popSeg"></div></header>
+    <div class="body pop-grid" id="popBody">
       <img id="popImg" class="pop-img" alt="NWS Tampa Bay regime probability of precipitation climatology">
       <div class="pop-side" id="popSide"></div>
     </div>
@@ -353,7 +390,7 @@ dialog h2 { margin: 0 0 10px; font-family: "Barlow Condensed", sans-serif; font-
   </section>
 
   <section class="panel">
-    <header><h2>Regime guide</h2><span class="note">Definitions from the NWS Tampa Bay Thunderstorm Climatology Quick Reference</span></header>
+    <header><h2>Regime guide</h2><span class="note" id="refNote">Definitions from the NWS Tampa Bay Thunderstorm Climatology Quick Reference</span></header>
     <div class="body"><div class="ref" id="ref"></div></div>
   </section>
 
@@ -386,6 +423,7 @@ dialog h2 { margin: 0 0 10px; font-family: "Barlow Condensed", sans-serif; font-
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script>window.FFR_PAGE = 'state';</script>
 <script>
 /* ===================================================================
    Florida Flow Regime core engine
@@ -612,26 +650,33 @@ const FR = (() => {
     return null;
   }
 
-  // AMU / Lericos et al. (2002) style ridge position from MFL, TBW, JAX layer means
-  function amuRegime(mfl, tbw, jax) {
-    if (![mfl, tbw, jax].every((x) => x && isNum(x.dir))) return null;
-    const all = (f) => [mfl, tbw, jax].every(f);
-    if (all((x) => x.dir >= 270 && x.dir < 360)) return 'NW';
-    if (all((x) => x.dir >= 0 && x.dir < 90)) return 'NE';
-    const e = (x) => x.u < 0;
-    if (!e(mfl) && !e(tbw) && !e(jax)) return 'SW-1';
-    if (e(mfl) && !e(tbw) && !e(jax)) return 'SW-2';
-    if (e(mfl) && e(tbw) && !e(jax)) return 'SE-1';
-    if (e(mfl) && e(tbw) && e(jax)) return 'SE-2';
-    return 'Other';
+  // ---------- AMU flow regimes (Lambert 2007, NASA/CR-2007-214732, Table 1) ----------
+  // Synoptic regime from the 1000-700 mb mean direction sectors at MFL, TBW and JAX;
+  // the XMR morning sounding resolves Other/Missing and the SE-1 / SW-2 boundary.
+  const AMU_ORDER = ['SW-1', 'SW-2', 'SE-1', 'SE-2', 'NE', 'NW', 'Other'];
+  function amuSector(dir) {
+    if (!isNum(dir)) return null;
+    const d = ((dir % 360) + 360) % 360;
+    return d < 90 ? 'NE' : d < 180 ? 'SE' : d < 270 ? 'SW' : 'NW';
   }
-  function amuFromRidge(lat) {
-    if (!isNum(lat)) return null;
-    if (lat < 25.75) return 'SW-1';
-    if (lat < 27.7) return 'SW-2';
-    if (lat < 30.5) return 'SE-1';
-    return 'SE-2';
+  const AMU_PATTERNS = { 'SW,SW,SW': 'SW-1', 'SE,SW,SW': 'SW-2', 'SE,SE,SW': 'SE-1', 'SE,SE,SE': 'SE-2', 'NW,NW,NW': 'NW', 'NE,NE,NE': 'NE' };
+  function amuSynoptic(mfl, tbw, jax) {
+    if (![mfl, tbw, jax].every((x) => x && isNum(x.dir))) return 'Missing';
+    return AMU_PATTERNS[[mfl, tbw, jax].map((x) => amuSector(x.dir)).join(',')] || 'Other';
   }
+  function amuLocal(xmr, minSpd = 4) {
+    if (!xmr || !isNum(xmr.dir) || !(xmr.spd > minSpd)) return null;
+    return { SW: 'SW-2', SE: 'SE-1', NW: 'NW', NE: 'NE' }[amuSector(xmr.dir)];
+  }
+  function amuFinal(syn, xmr) {
+    const loc = amuLocal(xmr);
+    if (!loc) return syn;
+    if (syn === 'Other' || syn === 'Missing') return loc;
+    if (syn === 'SW-2' && loc === 'SE-1') return 'SE-1';
+    if (syn === 'SE-1' && loc === 'SW-2') return 'SW-2';
+    return syn;
+  }
+  const amuRegime = (mfl, tbw, jax, xmr) => amuFinal(amuSynoptic(mfl, tbw, jax), xmr);
 
   // ---------- climatology ----------
   // climo.stations[ST][cycle][var] = array (one per stored day) of 21 percentiles (0,5,..,100)
@@ -670,7 +715,7 @@ const FR = (() => {
   return {
     isNum, esat, mixr, tdFromRH, rhOf, toUV, fromUV, normalize, interp, layerMeanWind,
     mlParcel, lcl, parcelPath, capeOf, metrics, classify, sectorOf, SECTORS, ridgeLat,
-    amuRegime, amuFromRidge, doyOf, climoQ, pctOf, meanVector,
+    amuRegime, amuSynoptic, amuLocal, amuFinal, amuSector, AMU_ORDER, doyOf, climoQ, pctOf, meanVector,
   };
 })();
 if (typeof module !== 'undefined') module.exports = FR;
@@ -719,6 +764,60 @@ const ENS = [
   { key: 'ecens', name: 'EC ENS', full: 'ECMWF IFS ensemble', ids: ['ecmwf_ifs025_ensemble', 'ecmwf_ifs025'], c: '#f2b33d' },
   { key: 'gefs', name: 'GEFS', full: 'NCEP GEFS', ids: ['ncep_gefs025', 'gfs025', 'ncep_gefs05', 'gfs05', 'gfs_seamless'], c: '#5cc9d8' },
 ];
+const PAGE = window.FFR_PAGE || 'state';
+const CAPE = PAGE === 'cape';
+
+// AMU regimes (Lambert 2007). Warm-season and monthly probabilities of >=1 CG strike in the
+// 10 KSC/CCAFS 5 n mi warning circles, 0700-0000 EDT, 1989-2005 (NASA/CR-2007-214732, Tables 3-4).
+const AMU = {
+  'SW-1': { v: 'r5', name: 'Ridge south of Miami', flow: 'Southwest flow over KSC/CCSFS', def: 'MFL, TBW and JAX all 180–270°', season: 62,
+    expect: 'The subtropical ridge sits south of the peninsula and southwest flow pins the Atlantic sea breeze at or near the coast. Storms that build over the interior push east toward the Cape in the afternoon, making this the most lightning-prone regime for the KSC/CCSFS warning circles.' },
+  'SW-2': { v: 'r4', name: 'Ridge between Miami and Tampa', flow: 'Southwest flow over KSC/CCSFS', def: 'MFL 90–180°, TBW and JAX 180–270°', season: 57,
+    expect: 'Southwest flow over the Cape with the ridge across south Florida. The east coast sea breeze stays close to the coast and the sea breeze collision tends to set up near or over Brevard in the afternoon. Also assigned when the three-station pattern is undefined but XMR flow is SW above 4 kt.' },
+  'SE-1': { v: 'r6', name: 'Ridge between Tampa and Jacksonville', flow: 'Southeast flow over KSC/CCSFS', def: 'MFL and TBW 90–180°, JAX 180–270°', season: 32,
+    expect: 'The ridge axis lies across north-central Florida. Onshore flow carries the Atlantic sea breeze inland, so the strongest storms usually develop west of the Cape over the interior and west coast. Also assigned when the three-station pattern is undefined but XMR flow is SE above 4 kt.' },
+  'SE-2': { v: 'r7', name: 'Ridge north of Jacksonville', flow: 'Southeast flow over KSC/CCSFS', def: 'MFL, TBW and JAX all 90–180°', season: 26,
+    expect: 'Deep easterly to southeasterly flow with the ridge north of Florida. The sea breeze moves well inland early and convection favors the western peninsula, keeping the Cape on the quieter side. Watch for Atlantic showers moving onshore in the morning.' },
+  'NE': { v: 'r2', name: 'Overall northeast flow', flow: 'Northeast flow over Florida', def: 'MFL, TBW and JAX all 0–90°', season: 11,
+    expect: 'Northeast flow, often from a strong ridge over the Southeast U.S. The lowest lightning odds for the KSC/CCSFS warning circles. Coastal showers are possible but convection focuses well inland and on the west coast.' },
+  'NW': { v: 'r8', name: 'Overall northwest flow', flow: 'Northwest flow over Florida', def: 'MFL, TBW and JAX all 270–360°', season: 32,
+    expect: 'Northwest flow, often with the ridge south of Florida extending into the Gulf. Offshore flow keeps the sea breeze near the coast, and storms that develop inland can reach the Cape later in the day.' },
+  'Other': { v: 'r1', name: 'Undefined regime', flow: 'No consistent pattern', def: 'No three-station pattern and XMR flow 4 kt or less', season: 35,
+    expect: 'The three soundings do not fit a defined pattern and the XMR flow is too light to decide it. Expect local sea breeze and outflow interactions to drive the day.' },
+};
+const WS45 = { 'SW-1': 63, 'SW-2': 57, 'SE-1': 27, 'SE-2': 25, NW: 30, NE: 15, Other: 30, Low: 30 }; // 45 WS "Flow Regime: Critical Concept" slide
+const AMU_MONTHLY = { // month -> regime -> % (SW-1/2 combined; SE-1/2 combined Jun-Aug)
+  5: { 'SW-1': 30, 'SW-2': 30, 'SE-1': 19, 'SE-2': 6, NW: 16, NE: 2, Other: 16, all: 18 },
+  6: { 'SW-1': 68, 'SW-2': 68, 'SE-1': 32, 'SE-2': 32, NW: 46, NE: 11, Other: 30, all: 46 },
+  7: { 'SW-1': 68, 'SW-2': 68, 'SE-1': 32, 'SE-2': 32, NW: 53, NE: 14, Other: 43, all: 48 },
+  8: { 'SW-1': 68, 'SW-2': 68, 'SE-1': 32, 'SE-2': 32, NW: 38, NE: 12, Other: 55, all: 49 },
+  9: { 'SW-1': 55, 'SW-2': 55, 'SE-1': 42, 'SE-2': 29, NW: 16, NE: 17, Other: 24, all: 33 },
+};
+const CAPE_PTS = [ // points from the Daily Planning Forecast
+  { id: 'SLF', name: 'KSC Inland (SLF)', lat: 28.615, lon: -80.6945 },
+  { id: '39B', name: 'KSC Launch Pads (LC-39B)', lat: 28.6272, lon: -80.6208 },
+  { id: 'XMR', name: 'Cape Inland (XMR)', lat: 28.481, lon: -80.555 },
+  { id: '37', name: 'Cape Launch Pads (SLC-37)', lat: 28.5317, lon: -80.565 },
+  { id: 'COF', name: 'Patrick SFB (KCOF)', lat: 28.2349, lon: -80.6101 },
+];
+const TBW_ORDER = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+const RS = CAPE ? {
+  order: FR.AMU_ORDER,
+  of: (d) => d && d.amuR,
+  memOf: (m) => m.amuR,
+  cls: (r) => (AMU[r] ? `rg${AMU[r].v.slice(1)}` : ''),
+  color: (r) => (AMU[r] ? `var(--${AMU[r].v})` : 'var(--muted)'),
+  name: (r) => (AMU[r] ? `${r}: ${AMU[r].name}` : String(r)),
+  label: (r) => r,
+} : {
+  order: TBW_ORDER,
+  of: (d) => d && d.regime,
+  memOf: (m) => m.reg,
+  cls: (r) => (r ? `rg${r}` : ''),
+  color: (r) => `var(--r${r})`,
+  name: (r) => (REG[r] ? `Regime ${r}: ${REG[r].name}` : String(r)),
+  label: (r) => String(r),
+};
 const SECTOR_OF_REG = { 1: 'Light', 2: 'NE/E', 3: 'NE/E', 4: 'SW/W', 5: 'SW/W', 6: 'SE/S', 7: 'SE/S', 8: 'NW/N', 9: 'NW/N' };
 
 const REG = {
@@ -778,7 +877,7 @@ const POP = [
 
 // ------------------------------------------------------------------ state
 const state = {
-  model: load('ffr-model') || 'gfs', day: 0, site: 'TBW', mapHour: 12, src: 'model', pop: '12-1',
+  model: load('ffr-model') || 'gfs', day: 0, site: CAPE ? 'XMR' : 'TBW', mapHour: 12, src: 'model', pop: '12-1',
   dates: [], core: {}, grid: {}, thermo: {}, obs: {}, climo: null, recent: null, geo: null, status: {},
   ens: {}, ensThermo: {}, ensSel: 'ecens', showMembers: load('ffr-members') !== false,
 };
@@ -792,7 +891,7 @@ const dayLabel = (ds) => {
   return { wd: d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }), md: `${d.getUTCMonth() + 1}/${d.getUTCDate()}` };
 };
 const range = (a, b, s) => { const o = []; for (let x = a; x <= b + 1e-9; x += s) o.push(Math.round(x * 1000) / 1000); return o; };
-const regClass = (r) => (r ? `rg${r}` : '');
+const regClass = (r) => (r ? RS.cls(r) : '');
 const kt = (x) => (isNum(x) ? Math.round(x) : '–');
 const deg = (x) => (isNum(x) ? String(Math.round(x)).padStart(3, '0') + '°' : '–');
 const median = (xs) => { const a = xs.filter(isNum).sort((x, y) => x - y); if (!a.length) return null; const m = a.length >> 1; return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
@@ -902,12 +1001,15 @@ async function loadCore(model) {
         const ins = rl.filter((r) => r.where === 'in');
         out.ridge = ins.length ? { lat: ins.reduce((s, r) => s + r.lat, 0) / ins.length, where: 'in' } : rl[0];
       }
-      const { MFL, TBW, JAX } = out.sites;
-      out.amu = FR.amuRegime(MFL, TBW, JAX);
+      const { MFL, TBW, JAX, XMR } = out.sites;
+      out.amuSyn = FR.amuSynoptic(MFL, TBW, JAX);
+      const fin = FR.amuFinal(out.amuSyn, XMR);
+      out.amuR = fin === 'Missing' ? null : fin; // no data: never shown or counted as a regime
+      out.amu = out.amuR;
       return out;
     });
     state.core[model.key] = { days };
-    const nOk = days.filter((d) => d.regime).length;
+    const nOk = days.filter((d) => RS.of(d)).length;
     setStatus('om-' + model.key, nOk ? 'ok' : 'err', `${model.name}${nOk ? '' : ' (no data)'}`, nOk ? `${nOk} of ${days.length} days` : 'Request worked but the 1000–700 mb winds came back empty');
   } catch (e) {
     state.core[model.key] = { error: e.message };
@@ -917,7 +1019,7 @@ async function loadCore(model) {
 
 async function loadGrid(model) {
   if (state.grid[model.key]) return;
-  const lats = range(24, 31.5, 0.75), lons = range(-87.75, -79.5, 0.75);
+  const lats = CAPE ? range(27.5, 29.5, 0.25) : range(24, 31.5, 0.75), lons = CAPE ? range(-81.75, -79.75, 0.25) : range(-87.75, -79.5, 0.75);
   const pts = []; for (const la of lats) for (const lo of lons) pts.push({ lat: la, lon: lo });
   try {
     const res = await omFetch(model, pts, windVars());
@@ -959,10 +1061,10 @@ function ensPoints() {
   const pts = [];
   for (const la of range(S.boxS, S.boxN, (S.boxN - S.boxS) / 2)) for (const lo of range(S.boxW, S.boxE, (S.boxE - S.boxW) / 2)) pts.push({ lat: la, lon: lo, tag: 'box' });
   for (const la of range(24, 31.5, 0.75)) pts.push({ lat: la, lon: -82.0, tag: 'tr' });
-  for (const id of ['TBW', 'MFL', 'JAX']) { const st = SITES.find((x) => x.id === id); pts.push({ lat: st.lat, lon: st.lon, tag: 'site', site: id }); }
+  for (const id of ['TBW', 'MFL', 'JAX', 'XMR']) { const st = SITES.find((x) => x.id === id); pts.push({ lat: st.lat, lon: st.lon, tag: 'site', site: id }); }
   return pts;
 }
-const ensCacheKey = (k, kind) => `ffr-ens-${kind}-${k}-${state.dates[0]}-${[S.light, S.strong, S.boxS, S.boxN, S.boxW, S.boxE].join('_')}`;
+const ensCacheKey = (k, kind) => `ffr-ens-v2-${PAGE}-${kind}-${k}-${state.dates[0]}-${[S.light, S.strong, S.boxS, S.boxN, S.boxW, S.boxE].join('_')}`;
 function cacheGet(key) { const c = load(key); return c && Date.now() - c.t < ENS_TTL ? c.v : null; }
 function cacheSet(key, v) { try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), v })); } catch (e) { /* storage full: skip cache */ } }
 const r2 = (x) => (isNum(x) ? Math.round(x * 100) / 100 : null);
@@ -993,7 +1095,8 @@ async function loadEnsemble(model) {
         if (!mv || mv.n < box.length * 0.6) continue;
         const rl = FR.ridgeLat(tr.map((q) => q.lat), tr.map((q) => q.u));
         mem.push({ reg: FR.classify(mv.dir, mv.spd, S), u: r2(mv.u), v: r2(mv.v), dir: r2(mv.dir), spd: r2(mv.spd),
-          rl: rl ? r2(rl.lat) : null, rw: rl ? rl.where : null, amu: FR.amuRegime(site.MFL, site.TBW, site.JAX) });
+          rl: rl ? r2(rl.lat) : null, rw: rl ? rl.where : null, amuR: ((a) => (a === 'Missing' ? null : a))(FR.amuRegime(site.MFL, site.TBW, site.JAX, site.XMR)),
+          xd: site.XMR ? r2(site.XMR.dir) : null, xs: site.XMR ? r2(site.XMR.spd) : null, sf });
       }
       return summarizeEnsDay(date, mem);
     });
@@ -1013,8 +1116,10 @@ function summarizeEnsDay(date, mem) {
   const mean = FR.meanVector(mem);
   const ins = mem.filter((m) => m.rw === 'in' && isNum(m.rl)).map((m) => m.rl).sort((a, b) => a - b);
   const q = (f) => (ins.length ? ins[Math.min(ins.length - 1, Math.floor(f * (ins.length - 1) + 0.5))] : null);
-  const amu = {}; mem.forEach((m) => { if (m.amu) amu[m.amu] = (amu[m.amu] || 0) + 1 / n; });
-  return { date, n, mem, probs, mean, meanReg: FR.classify(mean.dir, mean.spd, S),
+  const amu = {}; mem.forEach((m) => { if (m.amuR) amu[m.amuR] = (amu[m.amuR] || 0) + 1 / n; });
+  const dist = {}; mem.forEach((m) => { const r = RS.memOf(m); if (r) dist[r] = (dist[r] || 0) + 1 / n; });
+  const xm = FR.meanVector(mem.filter((m) => isNum(m.xd)).map((m) => ({ ...FR.toUV(m.xd, m.xs) })));
+  return { date, n, mem, probs, dist, xmean: xm, mean, meanReg: FR.classify(mean.dir, mean.spd, S),
     ridge: { p10: q(0.1), p50: q(0.5), p90: q(0.9), north: mem.filter((m) => m.rw === 'north').length / n, south: mem.filter((m) => m.rw === 'south').length / n, nIn: ins.length },
     amu };
 }
@@ -1031,7 +1136,7 @@ async function loadEnsThermo(model) {
       const h = res[k].hourly, sufs = memberSuffixes(h, 'temperature_500hPa');
       out.sites[st.id] = state.dates.map((date) => {
         const i = idxOf(h.time, date, 12);
-        const vals = {}; PARAMS.forEach((P) => (vals[P.k] = []));
+        const vals = {}, bySuf = {}; PARAMS.forEach((P) => (vals[P.k] = []));
         if (i >= 0) for (const sf of sufs) {
           const g = (v) => h[v + sf]?.[i];
           const ps = g('surface_pressure'), lv = [];
@@ -1044,8 +1149,9 @@ async function loadEnsThermo(model) {
           if (lv.length < 6) continue;
           const m = FR.metrics(lv, S);
           PARAMS.forEach((P) => { if (isNum(m[P.k])) vals[P.k].push(r2(m[P.k])); });
+          if (st.id === 'XMR' && isNum(m.ti)) bySuf[sf] = r2(m.ti);
         }
-        return { date, vals };
+        return st.id === 'XMR' ? { date, vals, tiBySuf: bySuf } : { date, vals };
       });
     });
     state.ensThermo[model.key] = out; cacheSet(ck, out);
@@ -1057,12 +1163,19 @@ function ensCombined(di) {
   const ds = ENS.map((m) => state.ens[m.key]?.days?.[di]).filter((d) => d && d.n);
   if (!ds.length) return null;
   const probs = Array(9).fill(0); ds.forEach((d) => d.probs.forEach((p, k) => (probs[k] += p / ds.length)));
+  const dist = {}; ds.forEach((d) => Object.entries(d.dist || {}).forEach(([k, v]) => (dist[k] = (dist[k] || 0) + v / ds.length)));
+  const mode = Object.keys(dist).sort((a, b) => dist[b] - dist[a])[0];
   const top = probs.indexOf(Math.max(...probs)) + 1;
   const sectors = {}; probs.forEach((p, k) => { const s = SECTOR_OF_REG[k + 1]; sectors[s] = (sectors[s] || 0) + p; });
   const amu = {}; ds.forEach((d) => Object.entries(d.amu).forEach(([k, v]) => (amu[k] = (amu[k] || 0) + v / ds.length)));
-  return { probs, top, topP: probs[top - 1], sectors, amu, systems: ds.length, members: ds.reduce((s, d) => s + d.n, 0) };
+  return { probs, dist, mode, top, topP: probs[top - 1], sectors, amu, systems: ds.length, members: ds.reduce((s, d) => s + d.n, 0) };
 }
-const ensMode = (d) => (d && d.n ? d.probs.indexOf(Math.max(...d.probs)) + 1 : null);
+const distOrder = (dist) => RS.order.map((k) => [k, (dist && dist[k]) || 0]);
+const ensMode = (d) => {
+  if (!d || !d.n || !d.dist) return null;
+  const k = Object.keys(d.dist).sort((a, b) => d.dist[b] - d.dist[a])[0];
+  return CAPE ? k : Number(k);
+};
 function ensStats(xs) {
   const a = xs.filter(isNum).sort((x, y) => x - y);
   if (!a.length) return null;
@@ -1092,6 +1205,14 @@ async function loadObs() {
     if (rec.latest && rec.latest.valid === today12) rec.today12 = rec.latest;
     else if (Date.parse(today12) < now && ['TBW', 'MFL', 'JAX'].includes(s.id)) {
       try { rec.today12 = await fetchSounding(s, today12); } catch (e) { /* not yet */ }
+    }
+    if (s.id === 'XMR') { // AMU uses the 10Z XMR launch; fall back to 12Z
+      for (const hh of ['10', '11', '12']) {
+        const ts = `${state.dates[0]}T${hh}:00:00Z`;
+        if (Date.parse(ts) > now) break;
+        if (rec.latest && rec.latest.valid === ts) { rec.morning = rec.latest; break; }
+        try { const r = await fetchSounding(s, ts); if (r) { rec.morning = r; break; } } catch (e) { /* next */ }
+      }
     }
     if (rec.latest) got++;
     state.obs[s.id] = rec;
@@ -1126,29 +1247,43 @@ async function loadGeo() {
 const curModel = () => MODELS.find((m) => m.key === state.model);
 function consensus(di) {
   const votes = {}, vecs = []; let n = 0;
+  const stations = { MFL: [], TBW: [], JAX: [], XMR: [] };
   for (const m of MODELS) {
-    const d = state.core[m.key]?.days?.[di];
-    if (d && d.regime) { votes[d.regime] = (votes[d.regime] || 0) + 1; vecs.push(d.box); n++; }
+    const d = state.core[m.key]?.days?.[di], r = RS.of(d);
+    if (r) { votes[r] = (votes[r] || 0) + 1; vecs.push(CAPE ? d.sites.XMR : d.box); n++; Object.keys(stations).forEach((k) => stations[k].push(d.sites[k])); }
   }
   for (const m of ENS) {
     const d = state.ens[m.key]?.days?.[di];
     const mr = ensMode(d); // vote with the most likely member regime, not the damped mean vector
-    if (mr) { votes[mr] = (votes[mr] || 0) + 1; vecs.push(d.mean); n++; }
+    if (mr) { votes[mr] = (votes[mr] || 0) + 1; vecs.push(CAPE ? d.xmean : d.mean); n++; }
   }
   if (!n) return null;
   const max = Math.max(...Object.values(votes));
-  const tops = Object.keys(votes).filter((k) => votes[k] === max).map(Number);
+  const tops = Object.keys(votes).filter((k) => votes[k] === max).map((k) => (CAPE ? k : Number(k)));
   const mv = FR.meanVector(vecs);
-  let reg = tops.length === 1 ? tops[0] : FR.classify(mv.dir, mv.spd, S);
-  if (!tops.includes(reg)) reg = tops[0];
+  let reg = tops[0];
+  if (tops.length > 1) { // tie: regime of the mean wind
+    const alt = CAPE ? FR.amuRegime(...['MFL', 'TBW', 'JAX', 'XMR'].map((k) => FR.meanVector(stations[k]))) : FR.classify(mv.dir, mv.spd, S);
+    if (tops.includes(alt)) reg = alt;
+  }
   return { regime: reg, agree: votes[reg], n, mv, votes };
 }
-function obsToday() { const o = state.obs.TBW && state.obs.TBW.today12; return o && o.m && o.m.regime ? o : null; }
+function obsToday() {
+  if (CAPE) {
+    const g = (id) => state.obs[id]?.today12?.m?.mw, x = state.obs.XMR?.morning;
+    const syn = FR.amuSynoptic(g('MFL'), g('TBW'), g('JAX'));
+    if (syn === 'Missing' && !(x && x.m.mw)) return null;
+    const reg = FR.amuFinal(syn, x && x.m.mw);
+    if (reg === 'Missing') return null;
+    return { m: { regime: reg, mw: x && x.m.mw, syn }, valid: x ? x.valid : null, cape: true };
+  }
+  const o = state.obs.TBW && state.obs.TBW.today12; return o && o.m && o.m.regime ? o : null;
+}
 function callFor(di) {
   const c = consensus(di);
   if (di === 0 && obsToday()) {
     const o = obsToday();
-    return { regime: o.m.regime, src: 'obs', vec: o.m.mw, cons: c };
+    return { regime: o.m.regime, src: 'obs', vec: o.m.mw, cons: c, obs: o };
   }
   return c ? { regime: c.regime, src: 'models', vec: c.mv, cons: c } : null;
 }
@@ -1183,12 +1318,121 @@ function renderDays() {
   $('#days').innerHTML = state.dates.map((d, i) => {
     const c = callFor(i), L = dayLabel(d);
     return `<button class="day" data-i="${i}" aria-pressed="${i === state.day}">
-      <span class="num ${regClass(c && c.regime)}">${c ? c.regime : '–'}</span>
+      <span class="num ${regClass(c && c.regime)}">${c ? RS.label(c.regime) : '–'}</span>
       <span class="d1">${i === 0 ? 'Today' : L.wd}</span><span class="d2">${L.md}</span></button>`;
   }).join('');
 }
 
+// ---------- First Strike Timing Tool lookup (XMR 1000-700 mb flow sector x Thompson index)
+const LTG_GROUP = (mo) => (mo === 5 ? 'May' : mo >= 6 && mo <= 8 ? 'JJA' : mo === 9 ? 'Sep' : mo === 10 ? 'Oct' : null);
+function sector8(d) {
+  d = ((d % 360) + 360) % 360;
+  if (d > 335 || d <= 20) return 'N';
+  for (const [k, lo, hi] of [['NE', 20, 66], ['E', 66, 110], ['SE', 110, 155], ['S', 155, 200], ['SW', 200, 245], ['W', 245, 290], ['NW', 290, 335]]) if (d > lo && d <= hi) return k;
+  return 'N';
+}
+const tiBin = (t) => (!isNum(t) ? null : t < 25 ? '<25' : t < 34 ? '25-34' : '>=34');
+function ltgLookup(date, w, ti) {
+  const L = state.ltg; if (!L || !w || !isNum(w.dir)) return null;
+  const mo = +date.slice(5, 7), gk = LTG_GROUP(mo) || 'All', G = L.groups[gk];
+  const sec = sector8(w.dir), cell = G.sector[sec], b = tiBin(ti);
+  const c2 = b ? cell.ti[b] : null;
+  return { p: (c2 || cell).p, n: (c2 || cell).n, sec, bin: b, group: gk, inSeason: !!LTG_GROUP(mo) };
+}
+// chance the first strike has happened by the end of each local hour (07-23), given a lookup
+function ltgTiming(lk) {
+  const L = state.ltg, G = L.groups[lk.group], all = G.timing.all, mine = G.timing[lk.sec];
+  const tot = (a) => a.reduce((x, y) => x + y, 0), ta = tot(all), tm = tot(mine), KT = 10;
+  const sh = all.map((v, i) => (mine[i] + KT * (v / ta)) / (tm + KT)); // shrink sector timing toward the group
+  let c = 0; return sh.map((v) => (c += v * lk.p));
+}
+function ltgSources(di) {
+  const date = state.dates[di], out = [];
+  const ob = state.obs.XMR?.morning;
+  if (di === 0 && ob && ob.m.mw) out.push({ key: 'obs', name: `XMR ${ob.valid.slice(11, 13)}Z sounding`, w: ob.m.mw, ti: ob.m.ti, lk: ltgLookup(date, ob.m.mw, ob.m.ti) });
+  const md = state.core[state.model]?.days?.[di], th = state.thermo[state.model]?.XMR?.[di]?.z12;
+  if (md && md.sites.XMR) out.push({ key: 'model', name: curModel().name, w: md.sites.XMR, ti: th && th.ti, lk: ltgLookup(date, md.sites.XMR, th && th.ti) });
+  for (const m of ENS) {
+    const d = state.ens[m.key]?.days?.[di], et = state.ensThermo[m.key]?.sites?.XMR?.[di];
+    if (!d || !d.n) continue;
+    const lks = d.mem.filter((q) => isNum(q.xd)).map((q) => ltgLookup(date, { dir: q.xd, spd: q.xs }, et && et.tiBySuf ? et.tiBySuf[q.sf] : null)).filter(Boolean);
+    if (!lks.length) continue;
+    const ps = lks.map((x) => x.p).sort((a, b) => a - b), q = (f) => ps[Math.min(ps.length - 1, Math.floor(f * (ps.length - 1) + 0.5))];
+    out.push({ key: m.key, name: m.name, ens: true, n: lks.length, withTi: lks.filter((x) => x.bin).length, p: ps.reduce((a, b) => a + b, 0) / ps.length, p10: q(0.1), p90: q(0.9), lks, w: d.xmean });
+  }
+  return out;
+}
+
+function amuLtg(date, reg) {
+  const mo = +date.slice(5, 7), t = AMU_MONTHLY[mo];
+  if (!reg || !AMU[reg]) return null;
+  return t ? { p: t[reg], all: t.all, month: mo, monthly: true } : { p: AMU[reg].season, all: 39, month: mo, monthly: false };
+}
+function amuEnsLtg(date, dist) {
+  if (!dist) return null;
+  let sum = 0, w = 0;
+  for (const [k, v] of Object.entries(dist)) { const L = amuLtg(date, k); if (L) { sum += v * L.p; w += v; } }
+  return w ? sum / w : null;
+}
+function stationStrip(sites, title) {
+  const W = 560, H = 96, cols = [['JAX', 'Jacksonville'], ['TBW', 'Tampa Bay'], ['MFL', 'Miami'], ['XMR', 'Cape (XMR)']];
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="strip" role="img" aria-label="${esc(title)}">`;
+  cols.forEach(([id, nm], k) => {
+    const x0 = k * (W / 4), cx = x0 + 34, cy = 52, w = sites && sites[id];
+    const sec = w ? FR.amuSector(w.dir) : null;
+    const col = { NE: 'var(--r2)', SE: 'var(--r6)', SW: 'var(--r4)', NW: 'var(--r8)' }[sec] || 'var(--muted)';
+    s += `<text x="${x0 + 4}" y="16" font-size="12.5" fill="var(--muted)">${nm}</text>`;
+    if (w) {
+      const a = ((w.dir + 180) * Math.PI) / 180, L = 15 + Math.min(w.spd, 20) * 0.9;
+      const dx = Math.sin(a) * L, dy = -Math.cos(a) * L;
+      const hx = Math.sin(a), hy = -Math.cos(a), x1 = cx + dx / 2, y1 = cy + dy / 2;
+      s += `<circle cx="${cx}" cy="${cy}" r="27" fill="none" stroke="var(--line)"/><line x1="${cx - dx / 2}" y1="${cy - dy / 2}" x2="${x1}" y2="${y1}" stroke="${col}" stroke-width="3" stroke-linecap="round"/>`
+        + `<path d="M${x1 + hx * 3},${y1 + hy * 3}L${x1 - hx * 6 - hy * 5},${y1 - hy * 6 + hx * 5}L${x1 - hx * 6 + hy * 5},${y1 - hy * 6 - hx * 5}Z" fill="${col}"/>`;
+      s += `<text x="${x0 + 70}" y="48" font-size="19" font-weight="700" class="cond" fill="${col}">${sec}</text><text x="${x0 + 70}" y="68" font-size="12.5" fill="var(--ink-2)">${deg(w.dir)} ${kt(w.spd)} kt</text>`;
+    } else s += `<text x="${x0 + 4}" y="56" font-size="13" fill="var(--muted)">missing</text>`;
+  });
+  return s + '</svg>';
+}
+function renderCallCape() {
+  const di = state.day, c = callFor(di), m = curModel(), md = state.core[m.key]?.days?.[di];
+  const el = $('#call');
+  if (!c) { el.innerHTML = `<div class="empty" style="grid-column:1/-1">Waiting for model or sounding data. If this persists, use Refresh or check the status line above.</div>`; return; }
+  const R = AMU[c.regime] || { name: c.regime, flow: '', expect: '', def: '' }, L = dayLabel(state.dates[di]);
+  let srcTxt, sites;
+  if (c.src === 'obs') {
+    const o = c.obs;
+    srcTxt = `From the 12Z MFL, TBW and JAX soundings${o.valid ? ` and the ${o.valid.slice(11, 13)}Z XMR` : ''}${o.m.syn !== c.regime ? ` (three-station pattern ${o.m.syn}, resolved by XMR)` : ''}`;
+    sites = { MFL: state.obs.MFL?.today12?.m?.mw, TBW: state.obs.TBW?.today12?.m?.mw, JAX: state.obs.JAX?.today12?.m?.mw, XMR: o.m.mw };
+  } else {
+    srcTxt = `Consensus of ${c.cons.n} models and ensembles, ${c.cons.agree} agree`;
+    sites = md && md.sites;
+  }
+  const facts = [];
+  const xv = sites && sites.XMR;
+  if (xv) facts.push([c.src === 'obs' ? 'XMR 1000–700 mb flow' : `XMR flow (${m.name})`, `${deg(xv.dir)} at ${kt(xv.spd)} kt`]);
+  if (md && c.src === 'obs') facts.push([`${m.name} regime`, `${md.amuR}${md.amuSyn !== md.amuR ? ` (pattern ${md.amuSyn})` : ''}`]);
+  if (c.src === 'obs' && c.cons) facts.push(['Model consensus', `${c.cons.regime}, ${c.cons.agree} of ${c.cons.n}`]);
+  const ec = ensCombined(di);
+  if (ec) facts.push([`Ensemble odds (${ec.members} members)`, distOrder(ec.dist).filter((x) => x[1] >= 0.05).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k, p]) => `${k} ${Math.round(p * 100)}%`).join(', ')]);
+  if (md && md.ridge) facts.push([`Ridge axis (${m.name})`, ridgeWords(md.ridge)]);
+  const ls = state.ltg ? ltgSources(di) : [], d0 = ls.find((x) => x.key === 'obs') || ls.find((x) => x.key === 'model');
+  const en = ls.filter((x) => x.ens);
+  if (d0) facts.push(['Lightning odds, XMR flow and TI', `${Math.round(d0.lk.p * 100)}% (${d0.name})${en.length ? `, ensembles ${Math.round((en.reduce((a, x) => a + x.p, 0) / en.length) * 100)}%` : ''}`]);
+  if (xv && xv.spd <= 4) facts.push(['45 WS low-speed category', `XMR flow ${kt(xv.spd)} kt; ${WS45.Low}% warm-season lightning odds`]);
+  const lt = amuLtg(state.dates[di], c.regime);
+  if (lt) facts.push([lt.monthly ? `AMU lightning odds, ${new Date(Date.UTC(2000, lt.month - 1, 1)).toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' })}` : 'AMU lightning odds (warm season)', `${lt.p}% vs ${lt.all}% all regimes`]);
+  el.innerHTML = `
+    <div class="big amu" style="color:${RS.color(c.regime)}">${esc(c.regime)}</div>
+    <div class="kicker">${di === 0 ? 'Today' : L.wd} ${L.md}, morning flow</div>
+    <div class="title">${esc(R.name)}</div>
+    <div class="src">${esc(R.flow)}. ${esc(srcTxt)}</div>
+    <div class="strip-wrap">${stationStrip(sites, 'Station 1000–700 mb flow')}</div>
+    <dl class="facts">${facts.map(([a, b]) => `<div class="fact"><dt>${esc(a)}</dt><dd>${esc(b)}</dd></div>`).join('')}</dl>
+    <div class="expect"><p>${esc(R.expect)}</p></div>
+    ${signalHTML(c.regime)}`;
+}
 function renderCall() {
+  if (CAPE) return renderCallCape();
   const di = state.day, c = callFor(di), m = curModel(), md = state.core[m.key]?.days?.[di];
   const el = $('#call');
   if (!c) { el.innerHTML = `<div class="empty" style="grid-column:1/-1">Waiting for model or sounding data. If this persists, use Refresh or check the status line above.</div>`; return; }
@@ -1205,10 +1449,11 @@ function renderCall() {
   const ec = ensCombined(di);
   if (ec) {
     const top3 = ec.probs.map((p, k) => [k + 1, p]).sort((a, b) => b[1] - a[1]).filter((x) => x[1] >= 0.05).slice(0, 3);
+    // (statewide page: regime odds use the TBW scheme)
     facts.push([`Ensemble odds (${ec.members} members)`, top3.map(([r, p]) => `R${r} ${Math.round(p * 100)}%`).join(', ')]);
   }
   if (md && md.ridge) facts.push([`Ridge axis (${m.name})`, ridgeWords(md.ridge)]);
-  const amu = di === 0 && obsAmu() ? obsAmu() + ' (soundings)' : (md && md.amu ? md.amu + ` (${m.name})` : null);
+  const amu = di === 0 && obsAmu() ? obsAmu() + ' (soundings)' : (md && md.amuR ? md.amuR + ` (${m.name})` : null);
   if (amu) facts.push(['Ridge-position regime', amu]);
   facts.push(['Storms favored', R.favored]);
   el.innerHTML = `
@@ -1222,7 +1467,8 @@ function renderCall() {
 }
 function obsAmu() {
   const g = (id) => state.obs[id]?.today12?.m?.mw;
-  return FR.amuRegime(g('MFL'), g('TBW'), g('JAX'));
+  const r = FR.amuRegime(g('MFL'), g('TBW'), g('JAX'), state.obs.XMR?.morning?.m?.mw);
+  return r === 'Missing' ? null : r;
 }
 
 function ingredientRows(src) {
@@ -1257,7 +1503,7 @@ function signalHTML(regime) {
   if (!r || !state.climo) return '';
   const ps = ['pwat', 'ti', 'rhmid'].map((k) => {
     const P = PARAMS.find((p) => p.k === k);
-    const q = byRegimeQ(site.iem, k, regime) || climoFor(site.iem, r.cycle, k, r.date);
+    const q = (!CAPE && byRegimeQ(site.iem, k, regime)) || climoFor(site.iem, r.cycle, k, r.date);
     const p = FR.pctOf(r.m[k], q);
     return isNum(p) ? P.sign * (p - 50) : null;
   }).filter(isNum);
@@ -1265,11 +1511,77 @@ function signalHTML(regime) {
   const score = ps.reduce((a, b) => a + b, 0) / ps.length;
   const tilt = score > 15 ? 'the high side' : score < -15 ? 'the low side' : 'about typical';
   const lead = score > 15 ? 'Moisture and instability run above normal' : score < -15 ? 'Moisture and instability run below normal' : 'Moisture and instability are close to normal';
-  return `<div class="signal"><b>Coverage signal (experimental).</b> ${lead} for regime ${regime} days at ${esc(site.name)}, so expect coverage on ${tilt} of this regime's climatology. Based on PWAT, Thompson index and mid-level RH percentiles from ${esc(r.label)}.</div>`;
+  return `<div class="signal"><b>Coverage signal (experimental).</b> ${lead} for ${CAPE ? 'this date' : `regime ${regime} days`} at ${esc(site.name)}, so expect coverage on ${tilt} of this regime's climatology. Based on PWAT, Thompson index and mid-level RH percentiles from ${esc(r.label)}.</div>`;
+}
+
+// ---------- Cape wheel: XMR 1000-700 mb flow in the AMU local sectors
+function renderWheelCape() {
+  const cx = 260, cy = 262, R = 214, MAX = 20, LT = 4;
+  const r = (s) => (s <= LT ? (Math.max(0, s) / LT) * 0.24 * R : 0.24 * R + ((Math.min(s, MAX) - LT) / (MAX - LT)) * 0.76 * R);
+  const pt = (a, rr) => { const t = (a * Math.PI) / 180; return [cx + rr * Math.sin(t), cy - rr * Math.cos(t)]; };
+  const wedge = (a0, a1, r0, r1) => {
+    const [x0, y0] = pt(a0, r1), [x1, y1] = pt(a1, r1), [x2, y2] = pt(a1, r0), [x3, y3] = pt(a0, r0);
+    return `M${x0},${y0}A${r1},${r1} 0 0 1 ${x1},${y1}L${x2},${y2}A${r0},${r0} 0 0 0 ${x3},${y3}Z`;
+  };
+  const c = callFor(state.day);
+  const xNow = c && c.src === 'obs' ? c.obs.m.mw : state.core[state.model]?.days?.[state.day]?.sites?.XMR;
+  const curSec = xNow && xNow.spd > LT ? FR.amuSector(xNow.dir) : null;
+  const Q = [['NE', 0, 90, 'r2', 'NE'], ['SE', 90, 180, 'r6', 'SE-1'], ['SW', 180, 270, 'r4', 'SW-2'], ['NW', 270, 360, 'r8', 'NW']];
+  let s = '';
+  for (const [k, a0, a1, v, loc] of Q) {
+    const on = k === curSec;
+    s += `<path d="${wedge(a0, a1, r(LT), R)}" fill="var(--${v})" fill-opacity="${on ? 0.5 : 0.15}" stroke="var(--panel-2)" stroke-width="2" data-tip="XMR flow from ${a0}–${a1}° above 4 kt: local regime ${loc}"/>`;
+    const [lx, ly] = pt((a0 + a1) / 2, R * 0.78);
+    s += `<text x="${lx}" y="${ly + 6}" text-anchor="middle" class="cond" font-size="${on ? 26 : 21}" font-weight="700" fill="var(--ink)" fill-opacity="${on ? 1 : 0.55}" pointer-events="none">${k}</text>`;
+    s += `<text x="${lx}" y="${ly + 24}" text-anchor="middle" font-size="11.5" fill="var(--muted)" pointer-events="none">local ${loc}</text>`;
+  }
+  s += `<circle cx="${cx}" cy="${cy}" r="${r(LT)}" fill="var(--r1)" fill-opacity="${xNow && xNow.spd <= LT ? 0.5 : 0.15}" stroke="var(--panel-2)" stroke-width="2" data-tip="4 kt or less: XMR does not resolve the regime"/>`;
+  s += `<text x="${cx}" y="${cy + 4}" text-anchor="middle" font-size="11" fill="var(--muted)" pointer-events="none">≤4 kt</text>`;
+  for (const k of [10, 15]) s += `<circle cx="${cx}" cy="${cy}" r="${r(k)}" fill="none" stroke="var(--ink)" stroke-opacity="0.12" stroke-dasharray="2 4"/>`;
+  for (const [k, lab] of [[LT, '4 kt'], [10, '10'], [15, '15'], [MAX, '20+ kt']]) { const [x, y] = pt(200, r(k)); s += `<text x="${x - 4}" y="${y + 4}" font-size="11" fill="var(--muted)" text-anchor="end">${lab}</text>`; }
+  for (const a of [0, 90, 180, 270]) { const [tx, ty] = pt(a, R + 18); s += `<text x="${tx}" y="${ty + 4}" font-size="11" fill="var(--muted)" text-anchor="middle">${a}°</text>`; }
+  if (state.showMembers) for (const m of ENS) {
+    const d = state.ens[m.key]?.days?.[state.day];
+    if (!d || !d.n) continue;
+    for (const q of d.mem) if (isNum(q.xd)) { const [x, y] = pt(q.xd, r(q.xs)); s += `<circle cx="${x}" cy="${y}" r="2.6" fill="${m.c}" fill-opacity="0.55" pointer-events="none"/>`; }
+  }
+  for (const m of ENS) {
+    const d = state.ens[m.key]?.days?.[state.day];
+    if (!d || !d.xmean) continue;
+    const [x, y] = pt(d.xmean.dir, r(d.xmean.spd));
+    s += `<g data-tip="${esc(m.name)} mean XMR flow: ${deg(d.xmean.dir)} ${kt(d.xmean.spd)} kt; most likely regime ${ensMode(d)}"><rect x="${x - 7}" y="${y - 7}" width="14" height="14" rx="2" fill="var(--panel)" stroke="${m.c}" stroke-width="2.5"/></g>`;
+  }
+  for (const m of MODELS) {
+    if (m.key === state.model) continue;
+    const d = state.core[m.key]?.days?.[state.day], w = d?.sites?.XMR;
+    if (!w) continue;
+    const [x, y] = pt(w.dir, r(w.spd));
+    s += `<g data-tip="${esc(m.name)} XMR: ${deg(w.dir)} ${kt(w.spd)} kt, regime ${d.amuR}"><circle cx="${x}" cy="${y}" r="7" fill="var(--panel)" stroke="${m.c}" stroke-width="2"/><text x="${x}" y="${y + 3.5}" font-size="9" font-weight="600" text-anchor="middle" fill="var(--ink)">${m.name[0]}</text></g>`;
+  }
+  const md = state.core[state.model]?.days || [];
+  const tr = md.map((d, i) => (d.sites?.XMR ? { i, ...d.sites.XMR, reg: d.amuR, xy: pt(d.sites.XMR.dir, r(d.sites.XMR.spd)) } : null)).filter(Boolean);
+  if (tr.length > 1) s += `<path d="M${tr.map((q) => q.xy.join(',')).join('L')}" fill="none" stroke="var(--ink)" stroke-opacity="0.55" stroke-width="1.6"/>`;
+  for (const q of tr) {
+    const sel = q.i === state.day;
+    s += `<g data-tip="${esc(curModel().name)} ${q.i === 0 ? 'today' : 'day ' + q.i}: XMR ${deg(q.dir)} ${kt(q.spd)} kt, regime ${q.reg}" style="cursor:pointer" data-day="${q.i}">
+      <circle cx="${q.xy[0]}" cy="${q.xy[1]}" r="${sel ? 13 : 9}" fill="var(--ink)" stroke="var(--panel-2)" stroke-width="2"/>
+      <text x="${q.xy[0]}" y="${q.xy[1] + (sel ? 5 : 4)}" text-anchor="middle" font-size="${sel ? 13 : 10.5}" font-weight="700" fill="var(--bg)" pointer-events="none">${q.i}</text></g>`;
+  }
+  const ob = state.day === 0 ? state.obs.XMR?.morning : null;
+  if (ob && ob.m.mw) { const [x, y] = pt(ob.m.mw.dir, r(ob.m.mw.spd)); s += `<g data-tip="XMR ${ob.valid.slice(11, 13)}Z sounding: ${deg(ob.m.mw.dir)} ${kt(ob.m.mw.spd)} kt"><rect x="${x - 8}" y="${y - 8}" width="16" height="16" transform="rotate(45 ${x} ${y})" fill="var(--ridge)" stroke="var(--panel-2)" stroke-width="2"/></g>`; }
+  $('#wheel').innerHTML = s;
+  $('#wheel').querySelectorAll('[data-day]').forEach((g) => g.addEventListener('click', () => selectDay(+g.dataset.day)));
+  $('#wheelLegend').innerHTML = `<span><i style="background:var(--ink)"></i>${esc(curModel().name)} days 0–7 at XMR</span>`
+    + MODELS.filter((m) => m.key !== state.model && state.core[m.key]?.days).map((m) => `<span><i style="border:2px solid ${m.c};background:transparent"></i>${esc(m.name)}</span>`).join('')
+    + ENS.filter((m) => state.ens[m.key]?.days).map((m) => `<span><i style="background:${m.c};opacity:.7"></i>${esc(m.name)} members and mean (□)</span>`).join('')
+    + `<span><i style="background:var(--ridge);border-radius:2px;transform:rotate(45deg)"></i>XMR sounding</span>`
+    + `<span><button class="btn" id="memToggle" style="padding:2px 8px;font-size:12px">${state.showMembers ? 'Hide' : 'Show'} members</button></span>`
+    + `<span>XMR 1000–700 mb flow, the AMU tie-breaker. Points sit in the direction the flow comes from.</span>`;
 }
 
 // ---------- regime wheel
 function renderWheel() {
+  if (CAPE) return renderWheelCape();
   const W = 520, cx = 260, cy = 262, R = 214, MAX = 20;
   // piecewise radius: give the light and moderate bands room, since most summer days live there
   const r = (s) => {
@@ -1355,18 +1667,22 @@ function renderWheel() {
 function renderMatrix() {
   const head = `<thead><tr><th></th>${state.dates.map((d, i) => { const L = dayLabel(d); return `<th>${i === 0 ? 'Today' : L.wd} ${L.md}</th>`; }).join('')}</tr></thead>`;
   const cell = (reg, vec, i, tip) => reg
-    ? `<td><button class="cell ${regClass(reg)} ${i === state.day ? 'sel' : ''}" data-i="${i}" data-tip="${esc(tip)}"><span class="n">${reg}</span><span class="w">${deg(vec?.dir)}<br>${kt(vec?.spd)} kt</span></button></td>`
+    ? `<td><button class="cell ${regClass(reg)} ${i === state.day ? 'sel' : ''}" data-i="${i}" data-tip="${esc(tip)}"><span class="n">${esc(RS.label(reg))}</span><span class="w">${deg(vec?.dir)}<br>${kt(vec?.spd)} kt</span></button></td>`
     : `<td><div class="cell na">–</div></td>`;
   let rows = '';
   const o = obsToday();
-  rows += `<tr><th>TBW sounding</th>${state.dates.map((d, i) => (i === 0 && o ? cell(o.m.regime, o.m.mw, i, 'Observed 12Z Tampa Bay sounding') : `<td><div class="cell na">${i === 0 ? 'after 12Z' : ''}</div></td>`)).join('')}</tr>`;
+  rows += `<tr><th>${CAPE ? 'Soundings' : 'TBW sounding'}</th>${state.dates.map((d, i) => (i === 0 && o ? cell(o.m.regime, o.m.mw, i, CAPE ? `Observed: MFL/TBW/JAX 12Z pattern ${o.m.syn}${o.valid ? `, XMR ${o.valid.slice(11, 13)}Z` : ''}` : 'Observed 12Z Tampa Bay sounding') : `<td><div class="cell na">${i === 0 ? 'after 12Z' : ''}</div></td>`)).join('')}</tr>`;
   for (const m of MODELS) {
     const c = state.core[m.key];
-    rows += `<tr><th>${esc(m.name)}</th>${state.dates.map((d, i) => { const x = c?.days?.[i]; return cell(x?.regime, x?.box, i, `${m.name}: ridge ${ridgeWords(x?.ridge)}`); }).join('')}</tr>`;
+    rows += `<tr><th>${esc(m.name)}</th>${state.dates.map((d, i) => { const x = c?.days?.[i]; return CAPE
+      ? cell(x?.amuR, x?.sites?.XMR, i, `${m.name}: pattern ${x?.amuSyn}; XMR flow shown; ridge ${ridgeWords(x?.ridge)}`)
+      : cell(x?.regime, x?.box, i, `${m.name}: ridge ${ridgeWords(x?.ridge)}`); }).join('')}</tr>`;
   }
   for (const m of ENS) {
     const e = state.ens[m.key];
-    rows += `<tr><th>${esc(m.name)} mean</th>${state.dates.map((d, i) => { const x = e?.days?.[i]; return x && x.n ? cell(x.meanReg, x.mean, i, `${m.name} mean of ${x.n} members; ${Math.round(x.probs[x.meanReg - 1] * 100)}% of members in regime ${x.meanReg}`) : '<td><div class="cell na">–</div></td>'; }).join('')}</tr>`;
+    rows += `<tr><th>${esc(m.name)} ${CAPE ? 'most likely' : 'mean'}</th>${state.dates.map((d, i) => { const x = e?.days?.[i]; if (!x || !x.n) return '<td><div class="cell na">–</div></td>';
+      if (CAPE) { const k = ensMode(x); return cell(k, x.xmean, i, `${m.name}: ${Math.round(x.dist[k] * 100)}% of ${x.n} members in ${k}; mean XMR flow shown`); }
+      return cell(x.meanReg, x.mean, i, `${m.name} mean of ${x.n} members; ${Math.round(x.probs[x.meanReg - 1] * 100)}% of members in regime ${x.meanReg}`); }).join('')}</tr>`;
   }
   rows += `<tr class="row-consensus"><th>Consensus</th>${state.dates.map((d, i) => { const c = consensus(i); return c ? cell(c.regime, c.mv, i, `${c.agree} of ${c.n} models`) : '<td><div class="cell na">–</div></td>'; }).join('')}</tr>`;
   rows += `<tr><th></th>${state.dates.map((d, i) => { const c = consensus(i); return `<td class="agree">${c ? `${c.agree}/${c.n} agree` : ''}</td>`; }).join('')}</tr>`;
@@ -1374,9 +1690,9 @@ function renderMatrix() {
 }
 
 // ---------- ensemble probabilities
-function stackBar(probs, h = 16) {
+function stackBar(pairs, h = 16) { // pairs: [[regime, prob], ...]
   let x = 0, s = `<svg viewBox="0 0 100 ${h}" preserveAspectRatio="none" style="width:100%;height:${h}px;display:block;border-radius:4px;overflow:hidden">`;
-  probs.forEach((p, k) => { if (p > 0) { s += `<rect x="${x}" y="0" width="${p * 100}" height="${h}" fill="var(--r${k + 1})"/>`; x += p * 100; } });
+  pairs.forEach(([k, p]) => { if (p > 0) { s += `<rect x="${x}" y="0" width="${p * 100}" height="${h}" fill="${RS.color(k)}"/>`; x += p * 100; } });
   return s + '</svg>';
 }
 function renderEnsemble() {
@@ -1387,16 +1703,18 @@ function renderEnsemble() {
     el.innerHTML = `<div class="empty">${errs.length ? `Ensemble data did not load. ${esc(errs.join('. '))}` : 'Loading GEFS and EC ENS members…'}</div>`;
     return;
   }
-  const rowsDef = [{ key: 'comb', name: 'Combined', get: (i) => { const c = ensCombined(i); return c ? { probs: c.probs, n: c.members } : null; } },
-    ...ENS.map((m) => ({ key: m.key, name: `${m.name}`, get: (i) => { const d = state.ens[m.key]?.days?.[i]; return d && d.n ? { probs: d.probs, n: d.n } : null; } }))];
+  const rowsDef = [{ key: 'comb', name: 'Combined', get: (i) => { const c = ensCombined(i); return c ? { pairs: distOrder(c.dist), n: c.members } : null; } },
+    ...ENS.map((m) => ({ key: m.key, name: `${m.name}`, get: (i) => { const d = state.ens[m.key]?.days?.[i]; return d && d.n ? { pairs: distOrder(d.dist), n: d.n } : null; } }))];
   let h = `<div class="matrix-scroll"><table class="matrix ensm"><thead><tr><th></th>${state.dates.map((d, i) => { const L = dayLabel(d); return `<th>${i === 0 ? 'Today' : L.wd} ${L.md}</th>`; }).join('')}</tr></thead><tbody>`;
   for (const R of rowsDef) {
     h += `<tr><th>${esc(R.name)}</th>${state.dates.map((d, i) => {
       const x = R.get(i);
       if (!x) return '<td><div class="cell na">–</div></td>';
-      const top = x.probs.indexOf(Math.max(...x.probs)) + 1, tp = Math.round(x.probs[top - 1] * 100);
-      const tip = x.probs.map((p, k) => [k + 1, p]).filter((q) => q[1] > 0).sort((a, b) => b[1] - a[1]).map(([r, p]) => `R${r} ${Math.round(p * 100)}%`).join(', ');
-      return `<td><button class="ecell ${i === state.day ? 'sel' : ''}" data-i="${i}" data-tip="${esc(R.name)} (${x.n} members): ${esc(tip)}">${stackBar(x.probs)}<span><b class="cond">${top}</b> ${tp}%</span></button></td>`;
+      const srt = x.pairs.filter((q) => q[1] > 0).sort((a, b) => b[1] - a[1]);
+      const [top, tpp] = srt[0] || ['–', 0], tp = Math.round(tpp * 100);
+      const ltg = CAPE ? amuEnsLtg(d, Object.fromEntries(x.pairs)) : null;
+      const tip = srt.map(([r, p]) => `${CAPE ? r : 'R' + r} ${Math.round(p * 100)}%`).join(', ') + (isNum(ltg) ? `. Regime-weighted AMU lightning odds ${Math.round(ltg)}%` : '');
+      return `<td><button class="ecell ${i === state.day ? 'sel' : ''}" data-i="${i}" data-tip="${esc(R.name)} (${x.n} members): ${esc(tip)}">${stackBar(x.pairs)}<span><b class="cond">${esc(RS.label(top))}</b> ${tp}%</span></button></td>`;
     }).join('')}</tr>`;
   }
   h += '</tbody></table></div>';
@@ -1405,24 +1723,32 @@ function renderEnsemble() {
   if (c) {
     const per = ENS.map((m) => ({ m, d: state.ens[m.key]?.days?.[di] })).filter((x) => x.d && x.d.n);
     h += `<div class="ens-detail"><div><h3>Regime odds, ${di === 0 ? 'today' : dayLabel(state.dates[di]).wd + ' ' + dayLabel(state.dates[di]).md}</h3><div class="probs">`;
-    for (let k = 1; k <= 9; k++) {
-      const pc = c.probs[k - 1];
-      h += `<div class="prow" data-tip="${esc(REG[k].name)}"><span class="chip ${regClass(k)}">${k}</span>
-        <div class="ptrack"><div class="pfill" style="width:${pc * 100}%;background:var(--r${k})"></div>
-        ${per.map(({ m, d }) => `<i style="left:${d.probs[k - 1] * 100}%;border-color:${m.c}" title="${esc(m.name)} ${Math.round(d.probs[k - 1] * 100)}%"></i>`).join('')}</div>
+    for (const k of RS.order) {
+      const pc = c.dist[k] || 0;
+      h += `<div class="prow${CAPE ? ' wide' : ''}" data-tip="${esc(RS.name(k))}"><span class="chip ${regClass(k)}">${esc(RS.label(k))}</span>
+        <div class="ptrack"><div class="pfill" style="width:${pc * 100}%;background:${RS.color(k)}"></div>
+        ${per.map(({ m, d }) => `<i style="left:${(d.dist[k] || 0) * 100}%;border-color:${m.c}" title="${esc(m.name)} ${Math.round((d.dist[k] || 0) * 100)}%"></i>`).join('')}</div>
         <b>${Math.round(pc * 100)}%</b></div>`;
     }
     h += `</div><p class="note">Bars are the combined odds, weighting each ensemble equally. Ticks mark ${per.map(({ m }) => `<span style="color:${m.c}">${esc(m.name)}</span>`).join(' and ')}.</p></div><div><h3>Flow pattern</h3><dl class="facts ens-facts">`;
-    const secTxt = ['SW/W', 'SE/S', 'NE/E', 'NW/N', 'Light'].map((k) => `${k} ${Math.round((c.sectors[k] || 0) * 100)}%`).join(', ');
-    h += `<div class="fact"><dt>Flow direction odds</dt><dd>${secTxt}</dd></div>`;
+    if (CAPE) {
+      const sw = (c.dist['SW-1'] || 0) + (c.dist['SW-2'] || 0), se = (c.dist['SE-1'] || 0) + (c.dist['SE-2'] || 0);
+      h += `<div class="fact"><dt>Flow over the Cape</dt><dd>SW ${Math.round(sw * 100)}%, SE ${Math.round(se * 100)}%, NE ${Math.round((c.dist.NE || 0) * 100)}%, NW ${Math.round((c.dist.NW || 0) * 100)}%, undefined ${Math.round((c.dist.Other || 0) * 100)}%</dd></div>`;
+      const lt = amuEnsLtg(state.dates[di], c.dist), mo = AMU_MONTHLY[+state.dates[di].slice(5, 7)];
+      if (isNum(lt)) h += `<div class="fact"><dt>Regime-weighted AMU lightning odds</dt><dd>${Math.round(lt)}%${mo ? ` (${mo.all}% for all ${new Date(state.dates[di] + 'T12:00Z').toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' })} days)` : ' (warm-season table)'}</dd></div>`;
+      for (const { m, d } of per) if (d.xmean) h += `<div class="fact"><dt>${esc(m.name)} mean XMR flow, ${d.n} members</dt><dd>${deg(d.xmean.dir)} at ${kt(d.xmean.spd)} kt</dd></div>`;
+    } else {
+      const secTxt = ['SW/W', 'SE/S', 'NE/E', 'NW/N', 'Light'].map((k) => `${k} ${Math.round((c.sectors[k] || 0) * 100)}%`).join(', ');
+      h += `<div class="fact"><dt>Flow direction odds</dt><dd>${secTxt}</dd></div>`;
+    }
     for (const { m, d } of per) {
       const rr = d.ridge;
       const ridgeTxt = rr.nIn >= 3 ? `median ${rr.p50.toFixed(1)}°N, 10–90% ${rr.p10.toFixed(1)}–${rr.p90.toFixed(1)}°N` : 'not resolved in most members';
-      h += `<div class="fact"><dt>${esc(m.name)} mean flow, ${d.n} members</dt><dd>${deg(d.mean.dir)} at ${kt(d.mean.spd)} kt, regime ${d.meanReg}</dd></div>`;
+      if (!CAPE) h += `<div class="fact"><dt>${esc(m.name)} mean flow, ${d.n} members</dt><dd>${deg(d.mean.dir)} at ${kt(d.mean.spd)} kt, regime ${d.meanReg}</dd></div>`;
       h += `<div class="fact"><dt>${esc(m.name)} ridge axis</dt><dd>${ridgeTxt}${rr.north >= 0.1 ? `; ${Math.round(rr.north * 100)}% north of 31.5°N` : ''}${rr.south >= 0.1 ? `; ${Math.round(rr.south * 100)}% south of 24°N` : ''}</dd></div>`;
     }
     const amu = Object.entries(c.amu).sort((a, b) => b[1] - a[1]).filter((x) => x[1] >= 0.05).map(([k, v]) => `${k} ${Math.round(v * 100)}%`).join(', ');
-    if (amu) h += `<div class="fact"><dt>Ridge-position regime odds</dt><dd>${esc(amu)}</dd></div>`;
+    if (amu && !CAPE) h += `<div class="fact"><dt>Ridge-position regime odds</dt><dd>${esc(amu)}</dd></div>`;
     h += '</dl></div></div>';
   }
   el.innerHTML = h;
@@ -1433,17 +1759,27 @@ function renderMap() {
   const svg = $('#map'), W = 640, H = 600;
   const g = state.grid[state.model];
   if (!state.geo) { svg.innerHTML = `<text x="20" y="40" fill="var(--muted)" font-size="14">Basemap could not load from jsDelivr.</text>`; }
-  const proj = d3.geoMercator().fitExtent([[6, 6], [W - 6, H - 6]], { type: 'MultiPoint', coordinates: [[-88.2, 23.4], [-79.0, 31.9]] }).clipExtent([[0, 0], [W, H]]);
+  const ext = CAPE ? [[-81.85, 27.45], [-79.7, 29.6]] : [[-88.2, 23.4], [-79.0, 31.9]];
+  const proj = d3.geoMercator().fitExtent([[6, 6], [W - 6, H - 6]], { type: 'MultiPoint', coordinates: ext }).clipExtent([[0, 0], [W, H]]);
   const path = d3.geoPath(proj);
   let s = '';
   if (state.geo) {
-    s += `<path d="${path(d3.geoGraticule().step([1, 1])())}" fill="none" stroke="var(--ink)" stroke-opacity="0.06"/>`;
-    s += `<path d="${path(state.geo.countries)}" fill="var(--land)" stroke="var(--land-line)" stroke-width="0.8"/>`;
-    s += `<path d="${path(state.geo.states)}" fill="var(--land)" stroke="var(--land-line)" stroke-width="0.8"/>`;
-    s += `<path d="${path(state.geo.mesh)}" fill="none" stroke="var(--land-line)" stroke-width="0.6" stroke-dasharray="3 3"/>`;
+    const P = (g, attrs) => { const d = path(g); return d ? `<path d="${d}" ${attrs}/>` : ''; }; // geometry fully outside the view returns null
+    s += P(d3.geoGraticule().step(CAPE ? [0.5, 0.5] : [1, 1])(), 'fill="none" stroke="var(--ink)" stroke-opacity="0.06"');
+    s += P(state.geo.countries, 'fill="var(--land)" stroke="var(--land-line)" stroke-width="0.8"');
+    s += P(state.geo.states, 'fill="var(--land)" stroke="var(--land-line)" stroke-width="0.8"');
+    s += P(state.geo.mesh, 'fill="none" stroke="var(--land-line)" stroke-width="0.6" stroke-dasharray="3 3"');
   }
   const [bx0, by0] = proj([S.boxW, S.boxN]), [bx1, by1] = proj([S.boxE, S.boxS]);
-  s += `<rect x="${bx0}" y="${by0}" width="${bx1 - bx0}" height="${by1 - by0}" fill="var(--ink)" fill-opacity="0.05" stroke="var(--ink)" stroke-opacity="0.7" stroke-dasharray="5 4" data-tip="Regime analysis box (approximates the NWS TBW box near Tampa Bay)"/>`;
+  if (CAPE) { // AMU reference rings around the SLF (5, 10, 20, 30 n mi)
+    for (const nm of [5, 10, 20, 30]) {
+      const circ = d3.geoCircle().center([CAPE_PTS[0].lon, CAPE_PTS[0].lat]).radius(nm / 60)();
+      s += `<path d="${path(circ)}" fill="none" stroke="var(--ink)" stroke-opacity="${nm === 5 ? 0.7 : 0.35}" stroke-dasharray="${nm === 5 ? '' : '4 4'}"/>`;
+      const [lx, ly] = proj([CAPE_PTS[0].lon, CAPE_PTS[0].lat + nm / 60]);
+      s += `<text x="${lx}" y="${ly - 3}" text-anchor="middle" font-size="11" fill="var(--muted)">${nm} n mi</text>`;
+    }
+  } else s += `<rect x="${bx0}" y="${by0}" width="${bx1 - bx0}" height="${by1 - by0}" fill="var(--ink)" fill-opacity="0.05" stroke="var(--ink)" stroke-opacity="0.7" stroke-dasharray="5 4" data-tip="Regime analysis box (approximates the NWS TBW box near Tampa Bay)"/>`;
+  void 0;
   if (g && !g.error) {
     const i = idxOf(g.times, state.dates[state.day], state.mapHour);
     const lm = g.pts.map((p, k) => lmAt(g.res[k].hourly, i));
@@ -1462,13 +1798,13 @@ function renderMap() {
     g.pts.forEach((p, k) => {
       const w = lm[k]; if (!w) return;
       const [x, y] = proj([p.lon, p.lat]);
-      const reg = FR.classify(w.dir, w.spd, S);
-      const len = 7 + Math.min(w.spd, 22) * 1.35, a = ((w.dir + 180) * Math.PI) / 180;
+      const reg = FR.classify(w.dir, w.spd, S), sec = FR.amuSector(w.dir);
+      const len = (CAPE ? 6 : 7) + Math.min(w.spd, 22) * (CAPE ? 1.15 : 1.35), a = ((w.dir + 180) * Math.PI) / 180;
       const dx = Math.sin(a) * len, dy = -Math.cos(a) * len;
       const x0 = x - dx / 2, y0 = y - dy / 2, x1 = x + dx / 2, y1 = y + dy / 2;
       const hx = Math.sin(a), hy = -Math.cos(a), px = -hy, py = hx, hs = 5.5;
-      const col = reg === 1 ? 'var(--muted)' : `var(--r${reg})`;
-      s += `<g data-tip="${p.lat.toFixed(2)}°N ${(-p.lon).toFixed(2)}°W: ${deg(w.dir)} ${kt(w.spd)} kt (regime ${reg})">
+      const col = CAPE ? (w.spd <= 4 ? 'var(--muted)' : `var(--${{ NE: 'r2', SE: 'r6', SW: 'r4', NW: 'r8' }[sec]})`) : (reg === 1 ? 'var(--muted)' : `var(--r${reg})`);
+      s += `<g data-tip="${p.lat.toFixed(2)}°N ${(-p.lon).toFixed(2)}°W: ${deg(w.dir)} ${kt(w.spd)} kt (${CAPE ? sec + ' sector' : 'regime ' + reg})">
         <line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="${col}" stroke-width="2.2" stroke-linecap="round"/>
         <path d="M${x1 + hx * 2},${y1 + hy * 2}L${x1 - hx * hs + px * hs * 0.6},${y1 - hy * hs + py * hs * 0.6}L${x1 - hx * hs - px * hs * 0.6},${y1 - hy * hs - py * hs * 0.6}Z" fill="${col}"/>
         <circle cx="${x}" cy="${y}" r="9" fill="transparent"/></g>`;
@@ -1479,7 +1815,12 @@ function renderMap() {
     s += `<text x="20" y="${H - 20}" fill="var(--muted)" font-size="14">Loading ${esc(curModel().name)} grid…</text>`;
   }
   const md = state.core[state.model]?.days?.[state.day];
-  for (const st of SITES) {
+  if (CAPE) for (const q of CAPE_PTS) {
+    const [x, y] = proj([q.lon, q.lat]);
+    s += `<g data-tip="${esc(q.name)}"><rect x="${x - 5}" y="${y - 5}" width="10" height="10" fill="var(--ridge)" stroke="var(--ink)" stroke-width="1.2" transform="rotate(45 ${x} ${y})"/>
+      <text x="${q.id === 'SLF' ? x - 10 : x + 10}" y="${y + 4}" text-anchor="${q.id === 'SLF' ? 'end' : 'start'}" font-size="12" font-weight="600" fill="var(--ink)" paint-order="stroke" stroke="var(--water)" stroke-width="3">${esc(q.id)}</text></g>`;
+  }
+  for (const st of (CAPE ? [] : SITES)) {
     const [x, y] = proj([st.lon, st.lat]);
     const w = md?.sites?.[st.id], reg = w ? FR.classify(w.dir, w.spd, S) : null;
     s += `<g data-tip="${esc(st.name)} (${st.id}) ${esc(curModel().name)} 12Z: ${w ? `${deg(w.dir)} ${kt(w.spd)} kt, regime ${reg}` : 'no data'}">
@@ -1489,7 +1830,10 @@ function renderMap() {
   svg.innerHTML = s;
   $('#mapLegend').innerHTML = `<span><svg width="26" height="8"><line x1="1" y1="4" x2="25" y2="4" stroke="var(--ridge)" stroke-width="3" stroke-dasharray="7 4"/></svg>Ridge axis (easterlies to the south)</span>
     <span><svg width="22" height="12"><rect x="1" y="1" width="20" height="10" fill="none" stroke="var(--ink)" stroke-dasharray="4 3"/></svg>Analysis box</span>
-    <span>Arrows: ${esc(curModel().name)} 1000–700 mb mean wind, colored by the regime it would imply</span>`;
+    <span>Arrows: ${esc(curModel().name)} 1000–700 mb mean wind, colored by ${CAPE ? 'AMU sector (gray at 4 kt or less)' : 'the regime it would imply'}</span>`;
+  if (CAPE) $('#mapLegend').innerHTML = `<span><svg width="22" height="12"><circle cx="11" cy="6" r="5" fill="none" stroke="var(--ink)"/></svg>5, 10, 20 and 30 n mi rings around the SLF</span>
+    <span><svg width="12" height="12"><rect x="2" y="2" width="8" height="8" fill="var(--ridge)" transform="rotate(45 6 6)"/></svg>Planning Forecast points</span>
+    <span>Arrows: ${esc(curModel().name)} 1000–700 mb mean wind, colored by AMU sector (gray at 4 kt or less)</span>`;
 }
 
 // ---------- ingredients
@@ -1541,7 +1885,7 @@ function renderIngredients() {
       : `${esc(curModel().name)} profiles for ${esc(site.name)} are not loaded yet or not available for this day.`}</div>`;
     return;
   }
-  const regNow = r.m.regime || (callFor(state.day) || {}).regime;
+  const regNow = CAPE ? null : (r.m.regime || (callFor(state.day) || {}).regime);
   let h = `${state.src === 'ens' ? ensSegHTML() : ''}<div class="ing"><div class="hd">${esc(r.label)}</div><div class="hd" style="text-align:right">Value</div>
     <div class="hd h3">${state.src === 'obs' ? 'Where it falls in the climatology' : state.src === 'ens' ? '8-day ensemble mean, member 10–90% range, and climatology bands' : '8-day trend vs 10–90th and 25–75th percentile bands'}</div><div class="hd h4">Percentile</div>`;
   for (const P of PARAMS) {
@@ -1574,8 +1918,87 @@ function renderIngredients() {
   el.innerHTML = h;
 }
 
+// ---------- Cape lightning odds: First Strike Timing Tool lookup + AMU regime tables
+function timingChart(curves, lk) {
+  const W = 760, H = 190, L0 = 44, B = 28, hrs = state.ltg.hours;
+  const x = (i) => L0 + (i + 0.5) * ((W - L0 - 10) / hrs.length), bw = ((W - L0 - 10) / hrs.length) * 0.62;
+  const y = (v) => H - B - v * (H - B - 14);
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="season-svg" role="img" aria-label="First lightning timing">`;
+  for (const t of [0, 0.25, 0.5, 0.75, 1]) s += `<line x1="${L0}" x2="${W - 10}" y1="${y(t)}" y2="${y(t)}" stroke="var(--ink)" stroke-opacity="0.07"/><text x="${L0 - 6}" y="${y(t) + 4}" font-size="11" text-anchor="end" fill="var(--muted)">${t * 100}%</text>`;
+  const main = curves[0];
+  main.cum.forEach((c, i) => { const inc = c - (i ? main.cum[i - 1] : 0); s += `<rect x="${x(i) - bw / 2}" y="${y(inc)}" width="${bw}" height="${y(0) - y(inc)}" fill="var(--storm)" fill-opacity="0.55" data-tip="${String(hrs[i]).padStart(2, '0')}–${String(hrs[i] + 1).padStart(2, '0')} local: ${Math.round(inc * 100)}% chance the first strike comes in this hour"/>`; });
+  curves.forEach((cv, k) => {
+    s += `<path d="M${cv.cum.map((c, i) => `${x(i)},${y(c)}`).join('L')}" fill="none" stroke="${cv.color}" stroke-width="${k ? 1.6 : 2.4}" ${k ? 'stroke-dasharray="5 4"' : ''}/>`;
+    const last = cv.cum[cv.cum.length - 1];
+    s += `<text x="${W - 12}" y="${y(last) - 6}" text-anchor="end" font-size="11.5" fill="${cv.color}">${esc(cv.label)} ${Math.round(last * 100)}%</text>`;
+  });
+  hrs.forEach((h, i) => { if (i % 2 === 0) s += `<text x="${x(i)}" y="${H - 9}" font-size="11" text-anchor="middle" fill="var(--muted)">${String(h).padStart(2, '0')}L</text>`; });
+  return s + '</svg>';
+}
+function renderLightning() {
+  const el = $('#popBody'), di = state.day, date = state.dates[di], mo = +date.slice(5, 7), T = AMU_MONTHLY[mo];
+  const monthName = (m) => new Date(Date.UTC(2000, m - 1, 1)).toLocaleDateString('en-US', { month: 'long', timeZone: 'UTC' });
+  const c = callFor(di), ec = ensCombined(di);
+  let h = '';
+  if (state.ltg) {
+    const src = ltgSources(di), det = src.find((x) => x.key === 'obs') || src.find((x) => x.key === 'model'), ens = src.filter((x) => x.ens);
+    const G = state.ltg.groups[LTG_GROUP(mo) || 'All'];
+    const ensMean = ens.length ? ens.reduce((a, x) => a + x.p, 0) / ens.length : null;
+    h += `<div class="ltg-top">`;
+    h += `<div class="ltg-big"><span class="note">${det ? `${esc(det.name)}: ${det.lk.sec} flow${det.lk.bin ? `, TI ${det.lk.bin.replace('>=', '≥')}` : ''}` : 'XMR flow and Thompson index'}</span><b class="cond">${det ? Math.round(det.lk.p * 100) + '%' : '–'}</b></div>`;
+    h += `<div class="ltg-big"><span class="note">Ensemble mean${ens.length ? `, ${ens.map((x) => x.n).reduce((a, b) => a + b, 0)} members` : ''}</span><b class="cond">${isNum(ensMean) ? Math.round(ensMean * 100) + '%' : '–'}</b>${ens.length ? `<span class="note">${ens.map((x) => `${esc(x.name)} ${Math.round(x.p10 * 100)}–${Math.round(x.p90 * 100)}%`).join(', ')} (10–90% of members)</span>` : ''}</div>`;
+    h += `<div class="ltg-big"><span class="note">All ${G.months.length === 1 ? monthName(G.months[0]) : G.months.length === 3 ? 'June–August' : 'May–October'} days</span><b class="cond">${Math.round(G.p * 100)}%</b></div></div>`;
+    h += `<p class="note">${LTG_GROUP(mo) ? '' : `${monthName(mo)} is outside the May–October record, so May–October values are shown. `}Chance of lightning on KSC/CCSFS during the day, looked up from the XMR morning 1000–700 mb flow sector and Thompson index in the AMU First Strike Timing Tool record (${state.ltg.meta.days.toLocaleString()} days, ${state.ltg.meta.years[0]}–${state.ltg.meta.years[1]}). Each model and ensemble member gets its own lookup.</p>`;
+    // by-source table
+    h += `<div class="matrix-scroll"><table class="ltg-table src"><thead><tr><th>Source</th><th>XMR flow</th><th>Thompson</th><th>Lightning</th><th>Days in cell</th></tr></thead><tbody>`;
+    for (const x of src) {
+      if (x.ens) h += `<tr><th>${esc(x.name)} members</th><td>${x.w ? `${deg(x.w.dir)} ${kt(x.w.spd)} kt mean` : '–'}</td><td>${x.withTi}/${x.n} with TI</td><td><b>${Math.round(x.p * 100)}%</b> <span class="note">${Math.round(x.p10 * 100)}–${Math.round(x.p90 * 100)}%</span></td><td>–</td></tr>`;
+      else h += `<tr><th>${esc(x.name)}</th><td>${x.lk.sec}, ${deg(x.w.dir)} ${kt(x.w.spd)} kt</td><td>${isNum(x.ti) ? Math.round(x.ti) : '–'}</td><td><b>${Math.round(x.lk.p * 100)}%</b></td><td>${x.lk.n}${x.lk.n < 20 ? ' <span class="note">thin</span>' : ''}</td></tr>`;
+    }
+    h += '</tbody></table></div>';
+    // first strike timing
+    const curves = [];
+    if (det) curves.push({ label: det.name, color: 'var(--ink)', cum: ltgTiming(det.lk) });
+    for (const x of ens) {
+      const cs = x.lks.map((lk) => ltgTiming(lk));
+      curves.push({ label: x.name, color: ENS.find((m) => m.key === x.key).c, cum: cs[0].map((_, i) => cs.reduce((a, cc) => a + cc[i], 0) / cs.length) });
+    }
+    if (curves.length) {
+      h += `<h3 class="ltg-h">When the first strike comes</h3><p class="note">Chance that lightning has started on KSC/CCSFS by the end of each local hour. Bars split ${esc(curves[0].label)}'s odds across the hour of the first strike, using that flow sector's timing record.</p>`;
+      h += timingChart(curves);
+    }
+    // sector x TI table
+    const cur = det ? det.lk : null;
+    h += `<h3 class="ltg-h">Lightning odds by XMR flow and Thompson index, ${G.months.length === 1 ? monthName(G.months[0]) : G.months.length === 3 ? 'June–August' : 'May–October'}</h3><div class="matrix-scroll"><table class="ltg-table heat"><thead><tr><th>XMR flow</th><th>All days</th><th>TI &lt; 25</th><th>TI 25–34</th><th>TI ≥ 34</th></tr></thead><tbody>`;
+    for (const sc of state.ltg.sectors) {
+      const C = G.sector[sc];
+      const td = (v, n, on, tip) => `<td class="${on ? 'cur' : ''}" style="background:color-mix(in srgb, var(--storm) ${Math.round(v * 70)}%, transparent)" data-tip="${esc(tip)}">${Math.round(v * 100)}%${n < 20 ? '<sup>*</sup>' : ''}</td>`;
+      h += `<tr><th>${sc}</th>${td(C.p, C.n, cur && cur.sec === sc && !cur.bin, `${sc}: ${C.yes} of ${C.n} days`)}${state.ltg.tiBins.map((bn) => td(C.ti[bn].p, C.ti[bn].n, cur && cur.sec === sc && cur.bin === bn, `${sc}, TI ${bn}: ${C.ti[bn].yes} of ${C.ti[bn].n} days`)).join('')}</tr>`;
+    }
+    h += `</tbody></table></div><p class="note"><sup>*</sup> fewer than 20 days. Each cell is pulled toward its row total by ${state.ltg.meta.shrinkage_pseudo_days} pseudo-days, so thin cells lean on the broader record.</p>`;
+  } else {
+    h += `<div class="empty">The XMR flow and Thompson lookup (data/cape_ltg.json) did not load.</div>`;
+  }
+  // AMU regime tables
+  h += `<h3 class="ltg-h">By AMU flow regime</h3><div class="ltg-top small">`;
+  const det2 = c ? amuLtg(date, c.regime) : null, ens2 = ec ? amuEnsLtg(date, ec.dist) : null;
+  h += `<div class="ltg-big"><span class="note">${c && c.src === 'obs' ? 'Observed regime' : 'Consensus regime'}${c ? `, ${esc(c.regime)}` : ''}</span><b class="cond">${det2 ? det2.p + '%' : '–'}</b></div>`;
+  h += `<div class="ltg-big"><span class="note">Weighted by ensemble regime odds</span><b class="cond">${isNum(ens2) ? Math.round(ens2) + '%' : '–'}</b></div>`;
+  h += `<div class="ltg-big"><span class="note">${T ? `All ${monthName(mo)} days` : 'All warm-season days'}</span><b class="cond">${T ? T.all : 39}%</b></div></div>`;
+  h += `<div class="matrix-scroll"><table class="ltg-table"><thead><tr><th>Regime</th>${[5, 6, 7, 8, 9].map((m) => `<th class="${m === mo ? 'on' : ''}">${monthName(m).slice(0, 3)}</th>`).join('')}<th>Season</th><th>45 WS</th></tr></thead><tbody>`;
+  for (const k of FR.AMU_ORDER) {
+    h += `<tr class="${c && c.regime === k ? 'on' : ''}"><th><span class="chip ${regClass(k)}">${k}</span> ${esc(AMU[k].name)}</th>${[5, 6, 7, 8, 9].map((m) => `<td class="${m === mo ? 'on' : ''}">${AMU_MONTHLY[m][k]}%</td>`).join('')}<td>${AMU[k].season}%</td><td>${WS45[k]}%</td></tr>`;
+  }
+  h += `<tr><th>Low speed (XMR ≤ 4 kt, any ridge position)</th>${[5, 6, 7, 8, 9].map(() => '<td>–</td>').join('')}<td>–</td><td>${WS45.Low}%</td></tr>`;
+  h += `<tr class="tot"><th>All regimes</th>${[5, 6, 7, 8, 9].map((m) => `<td class="${m === mo ? 'on' : ''}">${AMU_MONTHLY[m].all}%</td>`).join('')}<td>39%</td><td></td></tr></tbody></table></div>`;
+  h += `<p class="note">Monthly and season columns: ≥1 CG in the 10 KSC/CCSFS 5 n mi warning circles, 0700–0000 EDT, 1989–2005 (Lambert 2007). SW-1/SW-2 and, in June–August, SE-1/SE-2 share values. The 45 WS column is from the squadron's "Flow Regime: Critical Concept" briefing slide, which adds a low-speed category.</p>`;
+  h += `<div class="ltg-slot"><b>Next: PWAT × Thompson tables by regime</b><p class="note">The AMU PWAT/TI-stratified pages (1-, 3- and 6-hour windows at 5–30 n mi for COF, TTS and XMR) will add time-window and distance detail here once their data is loaded.</p></div>`;
+  el.innerHTML = h;
+}
+
 // ---------- PoP climo
 function renderPoP() {
+  if (CAPE) return renderLightning();
   const c = callFor(state.day); const reg = c ? c.regime : 1;
   const img = reg === 9 ? 8 : reg;
   $('#popSeg').innerHTML = POP.map((p) => `<button data-pop="${p.k}" aria-pressed="${p.k === state.pop}">${p.label}</button>`).join('');
@@ -1640,7 +2063,7 @@ function renderSoundings() {
     const m = o.m, cyc = o.valid.slice(11, 13), date = o.valid.slice(0, 10);
     const pc = (k) => { const p = FR.pctOf(m[k], climoFor(st.iem, cyc, k, date)); return isNum(p) ? ` <span class="note">${ordinal(Math.round(p))}</span>` : ''; };
     const P = (k) => PARAMS.find((x) => x.k === k);
-    return `<div class="snd"><h3><span>${esc(st.name)} <span class="t">${st.id} ${cyc}Z ${date.slice(5)}</span></span>${m.regime ? `<span class="chip ${regClass(m.regime)}" data-tip="${esc(REG[m.regime].name)}">${m.regime}</span>` : ''}</h3>
+    return `<div class="snd"><h3><span>${esc(st.name)} <span class="t">${st.id} ${cyc}Z ${date.slice(5)}</span></span>${CAPE ? (m.mw ? `<span class="chip ${{ NE: 'rg2', SE: 'rg6', SW: 'rg4', NW: 'rg8' }[FR.amuSector(m.mw.dir)]}" data-tip="1000–700 mb sector at this site">${FR.amuSector(m.mw.dir)}</span>` : '') : (m.regime ? `<span class="chip ${regClass(m.regime)}" data-tip="${esc(REG[m.regime].name)}">${m.regime}</span>` : '')}</h3>
       ${skewT(m)}
       <dl>
         <div><dt>PWAT</dt><dd>${isNum(m.pwat) ? P('pwat').fmt(m.pwat) : '–'}${pc('pwat')}</dd></div>
@@ -1655,22 +2078,26 @@ function renderSoundings() {
 
 // ---------- season
 function renderSeason() {
-  const el = $('#season'), rec = state.recent;
-  const rows = rec?.stations?.KTBW?.filter((r) => r.cycle === '12') || [];
+  const el = $('#season'), rec = state.recent, ST = CAPE ? 'KXMR' : 'KTBW', stName = CAPE ? 'Cape Canaveral' : 'Tampa Bay';
+  const rows = (rec?.stations?.[ST]?.filter((r) => r.cycle === '12') || []).map((r) => ({ ...r }));
+  if (CAPE) { // AMU regime per day from the same-day MFL/TBW/JAX 12Z and XMR morning soundings
+    const vec = (st, date) => { const q = rec.stations?.[st]?.find((x) => x.date === date && x.cycle === '12'); return q && isNum(q.mwdir) ? { dir: q.mwdir, spd: q.mwspd, ...FR.toUV(q.mwdir, q.mwspd) } : null; };
+    rows.forEach((r) => { const reg = FR.amuRegime(vec('KMFL', r.date), vec('KTBW', r.date), vec('KJAX', r.date), vec('KXMR', r.date)); r.regime = reg === 'Missing' ? null : reg; });
+  }
   if (!rows.length) {
-    el.innerHTML = `<div class="empty">The season log fills in after the “Soundings” GitHub Action runs. It records each morning's Tampa Bay regime and moisture so you can see how this summer has evolved.</div>`;
+    el.innerHTML = `<div class="empty">The season log fills in after the “Soundings” GitHub Action runs. It records each morning's ${stName} regime and moisture so you can see how this summer has evolved.</div>`;
     $('#seasonNote').textContent = '';
     return;
   }
-  $('#seasonNote').textContent = `Tampa Bay 12Z soundings, last ${rows.length} days. Updated ${rec.built.replace('T', ' ')} UTC`;
+  $('#seasonNote').textContent = `${stName} ${CAPE ? 'morning' : '12Z'} soundings, last ${rows.length} days. Updated ${rec.built.replace('T', ' ')} UTC`;
   const counts = {}; rows.forEach((r) => { if (r.regime) counts[r.regime] = (counts[r.regime] || 0) + 1; });
   const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
-  let h = `<div class="season-strip">${rows.map((r) => `<span class="chip ${regClass(r.regime)}" data-tip="${r.date}: ${r.regime ? `regime ${r.regime}, ` : ''}${isNum(r.mwdir) ? `${deg(r.mwdir)} ${kt(r.mwspd)} kt` : 'no wind'}${isNum(r.pwat) ? `, PWAT ${(r.pwat / 25.4).toFixed(2)} in` : ''}">${r.regime || '·'}</span>`).join('')}</div>`;
-  if (top) h += `<p class="note" style="margin:8px 0 0">Most common: regime ${top[0]} (${esc(REG[top[0]].name.toLowerCase())}), ${top[1]} of ${rows.length} days.</p>`;
+  let h = `<div class="season-strip">${rows.map((r) => `<span class="chip ${regClass(r.regime)}" data-tip="${r.date}: ${r.regime ? `regime ${r.regime}, ` : ''}${isNum(r.mwdir) ? `${deg(r.mwdir)} ${kt(r.mwspd)} kt` : 'no wind'}${isNum(r.pwat) ? `, PWAT ${(r.pwat / 25.4).toFixed(2)} in` : ''}">${r.regime ? esc(RS.label(r.regime)) : '·'}</span>`).join('')}</div>`;
+  if (top) h += `<p class="note" style="margin:8px 0 0">Most common: ${CAPE ? `${top[0]} (${esc(AMU[top[0]].name.toLowerCase())})` : `regime ${top[0]} (${esc(REG[top[0]].name.toLowerCase())})`}, ${top[1]} of ${rows.length} days.</p>`;
   // PWAT vs climo chart
   const W = 1000, H = 170, n = rows.length, x = (i) => 40 + (i / Math.max(1, n - 1)) * (W - 50);
   const vals = rows.map((r) => (isNum(r.pwat) ? r.pwat / 25.4 : null));
-  const bands = rows.map((r) => { const q = climoFor('KTBW', '12', 'pwat', r.date); return q ? q.map((v) => v / 25.4) : null; });
+  const bands = rows.map((r) => { const q = climoFor(ST, '12', 'pwat', r.date); return q ? q.map((v) => v / 25.4) : null; });
   const all = [...vals.filter(isNum), ...bands.flatMap((b) => (b ? [b[2], b[18]] : []))];
   if (all.length) {
     const lo = Math.min(...all) - 0.1, hi = Math.max(...all) + 0.1, y = (v) => H - 20 - ((v - lo) / (hi - lo)) * (H - 34);
@@ -1683,14 +2110,26 @@ function renderSeason() {
     }
     const pts = vals.map((v, i) => (isNum(v) ? `${x(i)},${y(v)}` : null)).filter(Boolean);
     if (pts.length > 1) s += `<path d="M${pts.join('L')}" fill="none" stroke="var(--ink)" stroke-width="2"/>`;
-    s += `<text x="40" y="12" font-size="12" fill="var(--muted)">Tampa Bay 12Z precipitable water (in) against the 10–90th and 25–75th percentile bands</text></svg>`;
+    s += `<text x="40" y="12" font-size="12" fill="var(--muted)">${stName} ${CAPE ? 'morning' : '12Z'} precipitable water (in) against the 10–90th and 25–75th percentile bands</text></svg>`;
     h += s;
   }
   el.innerHTML = h;
 }
 
 // ---------- reference + method
+function renderRefCape() {
+  $('#ref').innerHTML = FR.AMU_ORDER.map((k) => `<article class="wide"><span class="chip ${regClass(k)}">${k}</span><div><h3>${esc(AMU[k].name)}</h3><div class="def">${esc(AMU[k].def)}. ${AMU[k].season}% warm-season lightning odds.</div><p>${esc(AMU[k].flow)}.</p></div></article>`).join('');
+  const meta = state.climo?.meta;
+  $('#method').innerHTML = `
+    <p><b>Regime.</b> This page uses the AMU flow regimes the 45 WS lightning tools are built on (Lambert 2007, after Lericos et al. 2002). The 1000–700 mb layer-mean direction at Miami, Tampa Bay and Jacksonville is binned into 0–90°, 90–180°, 180–270° and 270–360° sectors, and the combination sets the synoptic regime: SW-1, SW-2, SE-1, SE-2, NE, NW, or Other.</p>
+    <p><b>XMR tie-breaker.</b> When the XMR morning flow is above 4 kt, it replaces Other and Missing with a local regime (SE flow becomes SE-1, SW becomes SW-2, plus NE and NW), and flips SE-1 to SW-2 or SW-2 to SE-1 when XMR says the ridge is on the other side of the Cape. SW-1 and SE-2 are never changed. The page looks for the 10Z XMR launch first, then 11Z and 12Z.</p>
+    <p><b>Models and ensembles.</b> The same rule runs on 12Z 1000–700 mb winds from every model at MFL, TBW, JAX and XMR, and on every GEFS and EC ENS member. Ensemble odds weight the two systems equally, and each ensemble votes in the consensus with its most likely regime.</p>
+    <p><b>Lightning odds.</b> The AMU table gives the chance of at least one CG strike in the 10 KSC/CCSFS 5 n mi warning circles between 0700 and 0000 EDT, by regime and month, for May–September 1989–2005. The regime-weighted value multiplies each regime's odds by its ensemble probability. These are climatology, not a forecast; your PWAT and Thompson stratified tables will refine them.</p>
+    <p><b>Ingredients.</b> ${meta ? `Percentiles compare against ${meta.years[0]}–${meta.years[1]} soundings; Cape Canaveral uses your own XMR archive.` : 'Percentiles appear once the climatology file is built.'} Parameters are computed with the same code as the statewide page.</p>
+    <p><b>Sources.</b> Lambert (2007), NASA/CR-2007-214732; Bauman et al. (2008), AMS Conference on Meteorological Applications of Lightning Data; Lericos et al. (2002), Weather and Forecasting 17, 83–98. Data from Open-Meteo and the Iowa Environmental Mesonet.</p>`;
+}
 function renderRef() {
+  if (CAPE) return renderRefCape();
   $('#ref').innerHTML = Object.entries(REG).map(([k, R]) => `<article><span class="chip ${regClass(+k)}">${k}</span><div><h3>${esc(R.name)}</h3><div class="def">${esc(R.def)}${R.days ? ` ${R.days} climatology days.` : ''}</div><p>${esc(R.favored)}.</p></div></article>`).join('');
   const meta = state.climo?.meta;
   $('#method').innerHTML = `
@@ -1718,7 +2157,25 @@ async function loadSelected() {
   renderAll();
 }
 
+function pageChrome() {
+  if (!CAPE) { $('#pageLink').href = 'cape.html'; $('#pageLink').textContent = 'Cape view'; return; }
+  document.body.classList.add('cape');
+  document.title = 'Cape Canaveral Flow Regime';
+  $('.brand h1').textContent = 'Cape Canaveral Flow Regime';
+  $('.brand span').textContent = 'AMU flow regimes and lightning odds for KSC and CCSFS';
+  $('#pageLink').href = 'index.html'; $('#pageLink').textContent = 'Statewide view';
+  $('#popTitle').textContent = 'Lightning odds by flow regime';
+  $('#popSeg').style.display = 'none';
+  $('#refNote').textContent = 'Definitions from Lambert (2007), NASA/CR-2007-214732, Table 1';
+  $('#matrixNote').textContent = 'AMU regime from 12Z 1000–700 mb winds at MFL, TBW and JAX, with XMR as the tie-breaker. Cells show the XMR flow.';
+  $('#ensNote').textContent = 'Share of GEFS and EC ENS members in each AMU regime. Select a day for the detail.';
+  $('#mapTitle').textContent = 'Layer flow over the Cape';
+  const order = ['XMR', 'TBW', 'MFL', 'JAX', 'KEY', 'TLH'];
+  SITES.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+}
+
 async function boot() {
+  pageChrome();
   const today = nyDate(Date.now());
   state.dates = Array.from({ length: 8 }, (_, i) => addDays(today, i));
   $('#modelSel').innerHTML = MODELS.map((m) => `<option value="${m.key}" ${m.key === state.model ? 'selected' : ''}>${m.name}</option>`).join('');
@@ -1727,11 +2184,16 @@ async function boot() {
     loadGeo().then(renderMap),
     loadJSON(S.climoUrl, 'climo', 'Climatology').then(renderAll),
     loadJSON(S.recentUrl, 'recent', 'Season log').then(renderSeason),
+    ...(CAPE ? [loadJSON('data/cape_ltg.json', 'ltg', 'Lightning lookup').then(renderPoP)] : []),
     loadObs().then(renderAll),
     ...MODELS.map((m) => loadCore(m).then(() => { renderDays(); renderCall(); renderWheel(); renderMatrix(); renderPoP(); })),
     loadSelected(),
     // ensembles are heavy, so they run one after another and are cached for 3 hours
-    (async () => { for (const m of ENS) { await loadEnsemble(m); renderAll(); } await loadEnsThermo(ENS.find((m) => m.key === state.ensSel)); renderIngredients(); renderCall(); })(),
+    (async () => {
+      for (const m of ENS) { await loadEnsemble(m); renderAll(); }
+      // the Cape lightning lookup pairs every member's XMR flow with its own Thompson index, so it needs both systems' profiles
+      for (const m of (CAPE ? ENS : ENS.filter((x) => x.key === state.ensSel))) { await loadEnsThermo(m); renderIngredients(); renderCall(); renderPoP(); }
+    })(),
   ];
   await Promise.allSettled(jobs);
   renderAll();

@@ -25,6 +25,31 @@ with moisture and instability compared against sounding climatology.
 - **Florida soundings.** Latest launches with mini skew-Ts and computed parameters.
 - **Season so far.** Each morning's Tampa Bay regime and PWAT against normal.
 
+## Cape Canaveral page (`cape.html`)
+
+Same data and code as the statewide page, focused on KSC and CCSFS:
+
+- **AMU flow regimes** (Lambert 2007, NASA/CR-2007-214732): 1000–700 mb sectors at
+  MFL, TBW and JAX set SW-1, SW-2, SE-1, SE-2, NE, NW or Other, and the XMR morning
+  flow (above 4 kt) resolves Other/Missing and the SE-1/SW-2 boundary. The same rule
+  runs on the soundings, every model and every GEFS and EC ENS member.
+- **XMR flow wheel** with the AMU local sectors, and a station strip showing the
+  four soundings' sectors behind the call.
+- **Lightning odds from XMR flow and Thompson index**, from the AMU First Strike
+  Timing Tool record (3,892 May–October days, 1989–2011): chance of lightning on
+  KSC/CCSFS by 8-sector XMR 1000–700 mb flow and TI bin, looked up separately for the
+  XMR sounding, the selected model and every GEFS and EC ENS member, plus the chance
+  the first strike has happened by each local hour. Rebuild with
+  `python scripts/build_cape_lightning.py "First Strike Timing Tool Excel2010.xlsm"`
+  (writes `data/cape_ltg.json`; the workbook itself doesn't need to be in the repo).
+- **Lightning odds** from the AMU flow-regime table (≥1 CG in the 10 KSC/CCSFS 5 n mi
+  warning circles, 0700–0000 EDT, May–September 1989–2005), for the regime call and
+  weighted by the ensemble regime odds.
+- **Local map** with 5/10/20/30 n mi rings around the SLF and the Planning Forecast
+  points.
+
+The two pages link to each other from the header.
+
 ## Setup (GitHub Pages)
 
 1. Create a repo (for example `FloridaFlowRegime`) and upload everything in this
